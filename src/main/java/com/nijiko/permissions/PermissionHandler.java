@@ -38,7 +38,7 @@ public abstract class PermissionHandler {
     public abstract boolean checkWorld(String world);
 
     public abstract void load();
-    public abstract void load(String world, Configuration config);
+    public abstract void load(String world, Configuration userConfig, Configuration groupConfig);
     public abstract void reload();
     public abstract boolean reload(String world);
 

@@ -53,7 +53,8 @@ public class Permissions extends JavaPlugin {
     public static Plugin instance;
     public static Server Server = null;
     public File directory;
-    private DefaultConfiguration config;
+    private DefaultConfiguration userConfig;
+    private DefaultConfiguration groupConfig;
     public static String name = "Permissions";
     public static String version = "3.0";
     public static String codename = "Yeti";
@@ -79,11 +80,15 @@ public class Permissions extends JavaPlugin {
         PropertyHandler server = new PropertyHandler("server.properties");
         DefaultWorld = server.getString("level-name");
 
-        Configuration configure = new NotNullConfiguration(new File("plugins" + File.separator + "Permissions", DefaultWorld + ".yml"));
-        configure.load();
-
+        Configuration userConfig = new NotNullConfiguration(new File("plugins" + File.separator + "Permissions" + File.separator + DefaultWorld, "users.yml"));
+        userConfig.load();
+        
+        Configuration groupConfig = new NotNullConfiguration(new File("plugins" + File.separator + "Permissions" + File.separator + DefaultWorld, "groups.yml"));
+        groupConfig.load();
+        
         // Gogo
-        this.config = new ConfigurationHandler(configure);
+        this.userConfig = new ConfigurationHandler(userConfig);
+        this.groupConfig = new ConfigurationHandler(groupConfig);
 
         instance = this;
 
@@ -120,7 +125,7 @@ public class Permissions extends JavaPlugin {
     }
 
     public void setupPermissions() {
-        Security = new Control(new NotNullConfiguration(new File("plugins" + File.separator + "Permissions", DefaultWorld + ".yml")));
+        Security = new Control(new NotNullConfiguration(new File("plugins" + File.separator + "Permissions", DefaultWorld + "users.yml")), new NotNullConfiguration(new File("plugins" + File.separator + "Permissions", DefaultWorld + "users.yml")));
         Security.setDefaultWorld(DefaultWorld);
         Security.load();
     }
@@ -138,13 +143,14 @@ public class Permissions extends JavaPlugin {
         DefaultWorld = server.getString("level-name");
 
         // Gogo
-        this.config = new ConfigurationHandler(getConfiguration());
-
-        // Load Configuration File
+        this.userConfig = new ConfigurationHandler(getConfiguration());
         getConfiguration().load();
-
+        this.groupConfig = new ConfigurationHandler(getConfiguration());
+        getConfiguration().load();
+        
         // Load Configuration Settings
-        this.config.load();
+        this.userConfig.load();
+        this.groupConfig.load();
 
         // Enabled
         log.info("[" + description.getName() + "] version [" + description.getVersion() + "] (" + codename + ")  loaded");

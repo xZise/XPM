@@ -62,11 +62,13 @@ public class Control extends PermissionHandler {
     private Map<String, Map<String, Boolean>> WorldCache = new HashMap<String, Map<String, Boolean>>();
 
     private String defaultWorld = "";
-    private Configuration config;
+    private Configuration userConfig;
+    private Configuration groupConfig;
 
     
-    public Control(Configuration config) {
-        this.config = config;
+    public Control(Configuration userConfig, Configuration groupConfig) {
+        this.userConfig = userConfig;
+        this.groupConfig = groupConfig;
     }
 
     public void reload() {
@@ -102,7 +104,7 @@ public class Control extends PermissionHandler {
 
     public boolean loadWorld(String world) {
         if(!this.Worlds.contains(world)) {
-            this.load(world, new NotNullConfiguration(new File(Permissions.instance.getDataFolder().getPath() + File.separator + world + ".yml")));
+            this.load(world, new NotNullConfiguration(new File(Permissions.instance.getDataFolder().getPath() + File.separator + world + "users.yml")), new NotNullConfiguration(new File(Permissions.instance.getDataFolder().getPath() + File.separator + world + "groups.yml")));
             log.info("Loaded world: " + world);
            return true;
         }
@@ -111,7 +113,7 @@ public class Control extends PermissionHandler {
     }
     
     public void forceLoadWorld(String world) {
-        this.load(world, new NotNullConfiguration(new File(Permissions.instance.getDataFolder().getPath() + File.separator + world + ".yml")));
+        this.load(world, new NotNullConfiguration(new File(Permissions.instance.getDataFolder().getPath() + File.separator + world + "users.yml")), new NotNullConfiguration(new File(Permissions.instance.getDataFolder().getPath() + File.separator + world + "groups.yml")));
     }
 
     public boolean checkWorld(String world) {
@@ -127,28 +129,43 @@ public class Control extends PermissionHandler {
             return;
         }
 
-        this.load(this.defaultWorld, this.config);
+        this.load(this.defaultWorld, this.userConfig, this.groupConfig);
     }
 
     @SuppressWarnings("unused")
-	public void load(String world, Configuration config) {
-        if (!(new File(Permissions.instance.getDataFolder().getPath() + File.separator + world + ".yml").exists())) {
-            FileManager file = new FileManager(Permissions.instance.getDataFolder().getPath() + File.separator, world + ".yml", true);
+	public void load(String world, Configuration userConfig, Configuration groupConfig) {
+        if (!(new File(Permissions.instance.getDataFolder().getPath() + File.separator + world + "users.yml").exists())) {
+            FileManager file = new FileManager(Permissions.instance.getDataFolder().getPath() + File.separator, world + "users.yml", true);
+        }
+        
+        if (!(new File(Permissions.instance.getDataFolder().getPath() + File.separator + world + "groups.yml").exists())) {
+            FileManager file = new FileManager(Permissions.instance.getDataFolder().getPath() + File.separator, world + "groups.yml", true);
         }
 
 
-        config.load();
+        userConfig.load();
+        groupConfig.load();
 
         this.Worlds.add(world);
-        this.WorldConfiguration.put(world, config);
+        this.WorldConfiguration.put(world, userConfig);
+        this.WorldConfiguration.put(world, groupConfig);
 
         if(!world.equals(this.defaultWorld)) {
-            if(!config.getString("plugin.permissions.copies", "").isEmpty()) {
-                this.WorldInheritance.put(world, config.getString("plugin.permissions.copies", ""));
+            if(!userConfig.getString("plugin.permissions.copies", "").isEmpty()) {
+                this.WorldInheritance.put(world, userConfig.getString("plugin.permissions.copies", ""));
                 return;
             }
             
-            if (!(new File(Permissions.instance.getDataFolder().getPath() + File.separator + world + ".yml").exists())) {
+            if (!(new File(Permissions.instance.getDataFolder().getPath() + File.separator + world + "users.yml").exists())) {
+            	this.WorldInheritance.put(world, defaultWorld);
+            }
+            
+            if(!userConfig.getString("plugin.permissions.copies", "").isEmpty()) {
+                this.WorldInheritance.put(world, groupConfig.getString("plugin.permissions.copies", ""));
+                return;
+            }
+            
+            if (!(new File(Permissions.instance.getDataFolder().getPath() + File.separator + world + "groups.yml").exists())) {
             	this.WorldInheritance.put(world, defaultWorld);
             }
             
@@ -163,8 +180,8 @@ public class Control extends PermissionHandler {
         this.WorldGroupsInheritance.put(world, new HashMap<String, Set<String>>());
 
         // Grab the keys we are going to need
-        List<String> userKeys = config.getKeys("users");
-        List<String> groupKeys = config.getKeys("groups");
+        List<String> userKeys = userConfig.getKeys("users");
+        List<String> groupKeys = groupConfig.getKeys("groups");
 
         // Permission set.
         Set<String> Permissions = new HashSet<String>();
@@ -183,12 +200,12 @@ public class Control extends PermissionHandler {
                 Permissions = new HashSet<String>();
 
                 // Configuration
-                inheritance = config.getStringList("groups." + key + ".inheritance", null);
-                permissions = config.getStringList("groups." + key + ".permissions", null);
-                boolean Default = config.getBoolean("groups." + key + ".default", false);
-                String prefix = config.getString("groups." + key + ".info.prefix", null);
-                String suffix = config.getString("groups." + key + ".info.suffix", null);
-                boolean build = config.getBoolean("groups." + key + ".info.build", false);
+                inheritance = groupConfig.getStringList("groups." + key + ".inheritance", null);
+                permissions = groupConfig.getStringList("groups." + key + ".permissions", null);
+                boolean Default = groupConfig.getBoolean("groups." + key + ".default", false);
+                String prefix = groupConfig.getString("groups." + key + ".info.prefix", null);
+                String suffix = groupConfig.getString("groups." + key + ".info.suffix", null);
+                boolean build = groupConfig.getBoolean("groups." + key + ".info.build", false);
 
                 if (Default && ( (this.WorldBase.get(world)==null)||(this.WorldBase.get(world).isEmpty()) ) ) {
                     this.WorldBase.put(world, key.toLowerCase());
@@ -216,8 +233,8 @@ public class Control extends PermissionHandler {
                 Permissions = new HashSet<String>();
 
                 // Configuration
-                permissions = config.getStringList("users." + key + ".permissions", null);
-                group = config.getString("users." + key + ".group");
+                permissions = userConfig.getStringList("users." + key + ".permissions", null);
+                group = userConfig.getString("users." + key + ".group");
 
                 if (group != null) {
                     if (!group.isEmpty()) {
@@ -261,7 +278,7 @@ public class Control extends PermissionHandler {
      * boolean canReload = Plugin.Permissions.Security.permission(player, "permission.reload");
      * if(canReload) {
      *	System.out.println("The user can reload!");
-     * } else {
+     * } else {2
      *	System.out.println("The user has no such permission!");
      * }
      * </pre></blockquote>
