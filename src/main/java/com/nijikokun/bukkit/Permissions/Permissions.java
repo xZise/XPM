@@ -55,8 +55,8 @@ public class Permissions extends JavaPlugin {
     public File directory;
     private DefaultConfiguration config;
     public static String name = "Permissions";
-    public static String version = "2.7";
-    public static String codename = "Phoenix";
+    public static String version = "3.0";
+    public static String codename = "Yeti";
     
     
     public Listener l = new Listener(this);
@@ -78,55 +78,6 @@ public class Permissions extends JavaPlugin {
 
         PropertyHandler server = new PropertyHandler("server.properties");
         DefaultWorld = server.getString("level-name");
-
-        // Attempt
-        try {
-        	if (!(new File("plugins" + File.separator + "Permissions", DefaultWorld + ".yml").exists())) {
-        		if (new File("plugins" + File.separator + "Permissions", "world.yml").exists()) {
-        			if (!DefaultWorld.equals("world")) {
-        				FileChannel source = null;
-        				FileChannel destination = null;
-        				try {
-        					source = new FileInputStream(new File("plugins" + File.separator + "Permissions", "world.yml")).getChannel();
-        					destination = new FileOutputStream(new File("plugins" + File.separator + "Permissions" + File.separator, DefaultWorld + ".yml")).getChannel();
-        					destination.transferFrom(source, 0, source.size());
-        				}
-        				finally {
-        					if (source != null) {
-        						source.close();
-        					}
-        					if (destination != null) {
-        						destination.close();
-        					}
-        				}
-        				Misc.delete("plugins" + File.separator + "Permissions" + File.separator + "world.yml");
-        				log.info("[Permissions] Invalid config file found and converted to proper name/format.");
-        			}
-        		}
-        		else if (new File("plugins" + File.separator + "Permissions", "config.yml").exists()) {
-        			FileChannel source = null;
-        			FileChannel destination = null;
-        		
-        			try {
-        				source = new FileInputStream(new File("plugins" + File.separator + "Permissions", "config.yml")).getChannel();
-        				destination = new FileOutputStream(new File("plugins" + File.separator + "Permissions"  + File.separator, DefaultWorld + ".yml")).getChannel();
-        				destination.transferFrom(source, 0, source.size());
-        			}
-        			finally {
-        				if (source != null) {
-        					source.close();
-        				}
-        				if (destination != null) {
-        					destination.close();
-        				}
-        			}
-        			Misc.delete("plugins" + File.separator + "Permissions" + File.separator + "config.yml");
-        			log.info("[Permissions] Invalid config file found and converted to proper name/format.");
-        		}           
-        	}
-        } catch (IOException e) {
-        	e.printStackTrace();
-        }
 
         Configuration configure = new NotNullConfiguration(new File("plugins" + File.separator + "Permissions", DefaultWorld + ".yml"));
         configure.load();
@@ -185,11 +136,6 @@ public class Permissions extends JavaPlugin {
 
         PropertyHandler server = new PropertyHandler("server.properties");
         DefaultWorld = server.getString("level-name");
-
-        // Attempt
-        if (!(new File(getDataFolder(), DefaultWorld + ".yml").exists())) {
-            com.nijiko.Misc.touch(getDataFolder() + DefaultWorld + ".yml");
-        }
 
         // Gogo
         this.config = new ConfigurationHandler(getConfiguration());
