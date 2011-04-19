@@ -135,11 +135,11 @@ public class Control extends PermissionHandler {
     @SuppressWarnings("unused")
 	public void load(String world, Configuration userConfig, Configuration groupConfig) {
         if (!(new File(Permissions.instance.getDataFolder().getPath() + File.separator + world + "users.yml").exists())) {
-            FileManager file = new FileManager(Permissions.instance.getDataFolder().getPath() + File.separator, world + "users.yml", true);
+            FileManager file1 = new FileManager(Permissions.instance.getDataFolder().getPath() + File.separator, world + "users.yml", true);
         }
         
         if (!(new File(Permissions.instance.getDataFolder().getPath() + File.separator + world + "groups.yml").exists())) {
-            FileManager file = new FileManager(Permissions.instance.getDataFolder().getPath() + File.separator, world + "groups.yml", true);
+            FileManager file2 = new FileManager(Permissions.instance.getDataFolder().getPath() + File.separator, world + "groups.yml", true);
         }
 
 
@@ -160,7 +160,7 @@ public class Control extends PermissionHandler {
             	this.WorldInheritance.put(world, defaultWorld);
             }
             
-            if(!userConfig.getString("plugin.permissions.copies", "").isEmpty()) {
+            if(!groupConfig.getString("plugin.permissions.copies", "").isEmpty()) {
                 this.WorldInheritance.put(world, groupConfig.getString("plugin.permissions.copies", ""));
                 return;
             }
