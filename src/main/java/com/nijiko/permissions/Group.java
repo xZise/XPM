@@ -17,7 +17,7 @@ public class Group extends Entry {
     
     public boolean isDefault()
     {
-        return data.isDefault(world, name, type);
+        return data.isDefault(world, name);
     }
 
 }

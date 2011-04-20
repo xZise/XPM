@@ -137,20 +137,21 @@ public abstract class Entry {
         }
         return permSet;
     }
-
+    
     protected Set<Group> getAncestors() {
         Set<Group> groupSet = new HashSet<Group>();
         Queue<Group> queue = new LinkedList<Group>();
 
         //Start with the direct ancestors
-        queue.addAll(controller.getGroups(world, this.getParents()));
+        Set<Group> parents = controller.stringToGroups(this.world, this.getParents());
+        if(parents!=null && parents.size() > 0) queue.addAll(parents);
 
         //Poll the queue
         while(queue.peek() != null) {
             Group grp = queue.poll();
             if(grp == null || groupSet.contains(grp)) continue;
-            Set<String> parents = grp.getParents();
-            if(parents!=null && parents.size() > 0) queue.addAll(controller.getGroups(grp.world, parents));
+            parents = controller.stringToGroups(grp.world, grp.getParents());
+            if(parents!=null && parents.size() > 0) queue.addAll(parents);
             groupSet.add(grp);
         }
 
@@ -159,7 +160,8 @@ public abstract class Entry {
 
     protected boolean inGroup(String group, Set<Group> checked)
     {
-        Set<Group> parents = controller.getGroups(world, getParents());
+        Set<Group> parents = controller.stringToGroups(world, getParents());
+        if(parents == null) return false;
         for(Group grp : parents)
         {
             if(checked.contains(grp)) continue;
@@ -176,6 +178,15 @@ public abstract class Entry {
         return this.inGroup(group, checked);
     }
     
-    
+    public Set<String> getGroups()
+    {
+        Set<Group> groupSet = this.getAncestors();
+        Set<String> nameSet = new HashSet<String>();
+        for(Group grp : groupSet)
+        {
+            if(grp!=null)nameSet.add(grp.name);
+        }
+        return nameSet;
+    }
 }
 

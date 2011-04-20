@@ -6,7 +6,7 @@ import com.nijiko.permissions.EntryType;
 
 public interface IStorage {
 
-    public boolean isDefault(String world, String name, EntryType type);
+    public boolean isDefault(String world, String name);
     public boolean canBuild(String world, String name, EntryType type);
     public String getPrefix(String world, String name, EntryType type);
     public String getSuffix(String world, String name, EntryType type);
@@ -20,4 +20,5 @@ public interface IStorage {
     public void addPermission(String world, String name, EntryType type, String permission);
     public void removePermission(String world, String name, EntryType type, String negated);
 
+    public void reload();
 }
