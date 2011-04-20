@@ -1,13 +1,25 @@
 package com.nijiko.permissions;
 
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 import org.bukkit.entity.Player;
 import org.bukkit.util.config.Configuration;
 
+import com.nijiko.data.IStorage;
+
 public class ModularControl extends PermissionHandler {
 
+    private List<String> Worlds = new LinkedList<String>();
+    private Map<String, IStorage> WorldStorage = new HashMap<String, IStorage>();
+    private Map<String, Map<String, Group>> WorldGroups;
+    private Map<String, Map<String, User>> WorldUser;
+    private Map<String, Group> WorldBase;
+    private Map<String, String> WorldInheritance = new HashMap<String, String>();
+    
     @Override
     public void setDefaultWorld(String world) {
         // TODO Auto-generated method stub
@@ -276,6 +288,12 @@ public class ModularControl extends PermissionHandler {
     Set<Group> getGroups(String world, Set<String> groupNames)
     {
         return null;
+    }
+
+    @Override
+    public void load(String world, Configuration config) {
+        // TODO Auto-generated method stub
+        
     }
 
 }
