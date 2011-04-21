@@ -78,6 +78,15 @@ public abstract class Entry {
         this.setPermission(permission, false);
     }
 
+    public void addParent(Group group)
+    {
+        data.addParent(world, name, group.world, group.name);
+    }
+    
+    public void removeParent(Group group)
+    {
+        if(this.inGroup(group.world, group.name)) data.removeParent(world, name, group.world, group.name);        
+    }
     public boolean hasPermission(String permission)
     {
         Set<String> permissions = this.getPermissions();
@@ -158,24 +167,25 @@ public abstract class Entry {
         return groupSet;
     }
 
-    protected boolean inGroup(String group, Set<Group> checked)
+    protected boolean inGroup(String world, String group, Set<Group> checked)
     {
-        Set<Group> parents = controller.stringToGroups(world, getParents());
+        Set<Group> parents = controller.stringToGroups(this.world, getParents());
         if(parents == null) return false;
         for(Group grp : parents)
         {
             if(checked.contains(grp)) continue;
             checked.add(grp);
-            if(grp.name.equalsIgnoreCase(group)) return true;
-            if(grp.inGroup(group, checked)) return true;
+            if(grp.world.equalsIgnoreCase(world) && grp.name.equalsIgnoreCase(group)) return true;
+            if(grp.inGroup(world, group, checked)) return true;
         }
         return false;
     }
     
-    public boolean inGroup(String group)
+    public boolean inGroup(String world, String group)
     {
+        if(this.getType()==EntryType.GROUP && this.world.equalsIgnoreCase(world) && this.name.equalsIgnoreCase(group)) return true;
         Set<Group> checked = new HashSet<Group>();
-        return this.inGroup(group, checked);
+        return this.inGroup(world, group, checked);
     }
     
     public Set<String> getGroups()
@@ -188,5 +198,7 @@ public abstract class Entry {
         }
         return nameSet;
     }
+    
+    public abstract EntryType getType();
 }
 

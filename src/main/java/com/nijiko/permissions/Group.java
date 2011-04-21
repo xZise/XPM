@@ -20,4 +20,9 @@ public class Group extends Entry {
         return data.isDefault(world, name);
     }
 
+    @Override
+    public EntryType getType() {
+        return Group.type;
+    }
+
 }

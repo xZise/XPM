@@ -1,22 +1,29 @@
 package com.nijiko.permissions;
+
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.LinkedList;
-import java.util.List;
+//import java.util.LinkedList;
+//import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import org.bukkit.entity.Player;
 import org.bukkit.util.config.Configuration;
 import com.nijiko.data.IStorage;
-import com.nijiko.data.YamlStorage;
+import com.nijiko.data.StorageFactory;
 public class ModularControl extends PermissionHandler {
     
-    private List<String> Worlds = new LinkedList<String>();
+//    private List<String> Worlds = new LinkedList<String>();
     private Map<String, IStorage> WorldStorage = new HashMap<String, IStorage>();
     private Map<String, Map<String, Group>> WorldGroups;
     private Map<String, Map<String, User>> WorldUsers;
-    private Map<String, Group> WorldBase;
+    private Map<String, Group> WorldBase = new HashMap<String, Group>();
     private Map<String, String> WorldInheritance = new HashMap<String, String>();
+    private final Configuration storageConfig;
+    
+    public ModularControl(Configuration storageConfig)
+    {
+        this.storageConfig = storageConfig;
+    }
     @Override
     public void setDefaultWorld(String world) {
         // TODO Auto-generated method stub
@@ -32,8 +39,7 @@ public class ModularControl extends PermissionHandler {
     }
     @Override
     public boolean checkWorld(String world) {
-        // TODO Auto-generated method stub
-        return false;
+        return WorldStorage.containsKey(world.toLowerCase());
     }
     @Override
     public void load() {
@@ -94,32 +100,62 @@ public class ModularControl extends PermissionHandler {
     @Override
     public String[] getGroups(String world, String name) {
         // TODO WorldInheritance check
-        return safeGetUser(world, name).getParents().toArray(new String[0]);
+        try {
+            return safeGetUser(world, name).getParents().toArray(new String[0]);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return new String[0];
+        }
     }
     @Override
     public boolean inGroup(String world, String name, String group) {
         // TODO WorldInheritance check
-        return safeGetUser(world, name).inGroup(group);
+        try {
+            return safeGetUser(world, name).inGroup(world, group);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
     }
     @Override
     public boolean inSingleGroup(String world, String name, String group) {
         // TODO WorldInheritance check
-        return safeGetUser(world, name).getParents().contains(group);
+        try {
+            return safeGetUser(world, name).getParents().contains(group);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
     }
     @Override
     public String getGroupPrefix(String world, String group) {
         // TODO WorldInheritance check
-        return safeGetGroup(world, group).getPrefix();
+        try {
+            return safeGetGroup(world, group).getPrefix();
+        } catch (Exception e) {
+            e.printStackTrace();
+            return "";
+        }
     }
     @Override
     public String getGroupSuffix(String world, String group) {
         // TODO WorldInheritance check
-        return safeGetGroup(world, group).getSuffix();
+        try {
+            return safeGetGroup(world, group).getSuffix();
+        } catch (Exception e) {
+            e.printStackTrace();
+            return "";
+        }
     }
     @Override
     public boolean canGroupBuild(String world, String group) {
         // TODO WorldInheritance check
-        return safeGetGroup(world, group).canBuild();
+        try {
+            return safeGetGroup(world, group).canBuild();
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
     }
     @Override
     public String getGroupPermissionString(String world, String group,
@@ -191,15 +227,24 @@ public class ModularControl extends PermissionHandler {
     }
     @Override
     public void addUserPermission(String world, String user, String node) {
-        safeGetUser(world, user).addPermission(node);
+        try {
+            safeGetUser(world, user).addPermission(node);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
     @Override
     public void removeUserPermission(String world, String user, String node) {
-        safeGetUser(world, user).removePermission(node);
+        try {
+            safeGetUser(world, user).removePermission(node);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
     @Override
     public void save(String world) {
-        // TODO Auto-generated method stub
+        IStorage store = this.WorldStorage.get(world.toLowerCase());
+        if(store != null) store.reload(true);
     }
     @Override
     public void saveAll() {
@@ -207,13 +252,13 @@ public class ModularControl extends PermissionHandler {
     }
     Set<Group> stringToGroups(String world, Set<String> groupNames)
     {
-        Map<String, Group> groups = this.WorldGroups.get(world);
+        Map<String, Group> groups = this.WorldGroups.get(world.toLowerCase());
         if(groups == null||groups.isEmpty()) return null;
         Set<Group> groupSet = new HashSet<Group>();
         for(String name : groupNames)
         {
             Group g = groups.get(name);
-            if(name != null) groupSet.add(g);
+            if(g != null) groupSet.add(g);
         }
         return groupSet;
     }
@@ -222,18 +267,33 @@ public class ModularControl extends PermissionHandler {
             Configuration groupConfig) {
         // TODO Auto-generated method stub
     }
-    private User safeGetUser(String world, String name)
+    private User safeGetUser(String world, String name) throws Exception
     {
-        if(this.WorldUsers.get(world) == null) this.WorldUsers.put(world, new HashMap<String, User>());
-        if(this.WorldStorage.get(world) == null) this.WorldStorage.put(world, new YamlStorage()); //TODO: Temp fix
-        if(this.WorldUsers.get(world).get(name) == null) this.WorldUsers.get(world).put(name, new User(this, WorldStorage.get(world), name, world));
-        return this.WorldUsers.get(world).get(name);
+        if(this.WorldUsers.get(world.toLowerCase()) == null) this.WorldUsers.put(world.toLowerCase(), new HashMap<String, User>());
+        if(this.WorldStorage.get(world.toLowerCase()) == null)
+            try {
+                this.WorldStorage.put(world.toLowerCase(), StorageFactory.createInstance(world, storageConfig));
+            } catch (Exception e) {
+                throw new Exception("Error creating user " + name + " in world " + world + " due to storage problems!", e);
+            }
+        if(this.WorldUsers.get(world.toLowerCase()).get(name.toLowerCase()) == null) this.WorldUsers.get(world.toLowerCase()).put(name.toLowerCase(), new User(this, WorldStorage.get(world), name, world));
+        return this.WorldUsers.get(world.toLowerCase()).get(name.toLowerCase());
     }
-    private Group safeGetGroup(String world, String name)
+    private Group safeGetGroup(String world, String name) throws Exception
     {
-        if(this.WorldGroups.get(world) == null) this.WorldGroups.put(world, new HashMap<String, Group>());
-        if(this.WorldStorage.get(world) == null) this.WorldStorage.put(world, new YamlStorage()); //TODO: Temp fix
-        if(this.WorldGroups.get(world).get(name) == null) this.WorldGroups.get(world).put(name, new Group(this, WorldStorage.get(world), name, world));
-        return this.WorldGroups.get(world).get(name);
+        if(this.WorldGroups.get(world.toLowerCase()) == null) this.WorldGroups.put(world, new HashMap<String, Group>());
+        if(this.WorldStorage.get(world.toLowerCase()) == null)
+            try {
+                this.WorldStorage.put(world.toLowerCase(), StorageFactory.createInstance(world, storageConfig));
+            } catch (Exception e) {
+                throw new Exception("Error creating group " + name + " in world " + world + " due to storage problems!", e);
+            }
+        if(this.WorldGroups.get(world.toLowerCase()).get(name.toLowerCase()) == null) this.WorldGroups.get(world.toLowerCase()).put(name.toLowerCase(), new Group(this, WorldStorage.get(world), name, world));
+        return this.WorldGroups.get(world.toLowerCase()).get(name.toLowerCase());
+    }
+    
+    Group getDefaultGroup(String world)
+    {
+        return this.WorldBase.get(world.toLowerCase());
     }
 }

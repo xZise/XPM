@@ -82,9 +82,25 @@ public class SqlStorage implements IStorage {
     }
 
     @Override
-    public void reload() {
-        // TODO Auto-generated method stub
+    public void reload(final boolean applyChanges) {
+        // TODO Flush Cache
 
+    }
+    @Override
+    public void save() {
+        return;
+    }
+    @Override
+    public void addParent(String world, String name, String groupWorld,
+            String groupName) {
+        // TODO Auto-generated method stub
+        
+    }
+    @Override
+    public void removeParent(String world, String name, String groupWorld,
+            String groupName) {
+        // TODO Auto-generated method stub
+        
     }
 
 }
