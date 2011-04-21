@@ -6,6 +6,7 @@ import java.util.LinkedList;
 import java.util.Queue;
 import java.util.Set;
 
+import com.nijiko.data.GroupWorld;
 import com.nijiko.data.IStorage;
 
 public abstract class Entry {
@@ -23,30 +24,11 @@ public abstract class Entry {
         this.world = world;
     }
    
-    public boolean canBuild() {
-        return data.canBuild(world, name, type);
-    }
-    public String getPrefix() {
-        return data.getPrefix(world, name, type);
-    }
-    public String getSuffix() {
-        return data.getSuffix(world, name, type);
-    }
     public Set<String> getPermissions() {
         return data.getPermissions(world, name, type);
     }
-    public Set<String> getParents() {
+    public Set<GroupWorld> getParents() {
         return data.getParents(world, name, type);
-    }
-
-    public void setBuild(final boolean build) {
-        data.setBuild(world, name, type, build);
-    }
-    public void setPrefix(final String prefix) {
-        data.setPrefix(world, name, type,prefix);
-    }
-    public void setSuffix(final String suffix) {
-        data.setSuffix(world, name, type, suffix);
     }
 
     
@@ -80,12 +62,12 @@ public abstract class Entry {
 
     public void addParent(Group group)
     {
-        data.addParent(world, name, group.world, group.name);
+        data.addParent(world, name, group.world, group.name, this.getType());
     }
     
     public void removeParent(Group group)
     {
-        if(this.inGroup(group.world, group.name)) data.removeParent(world, name, group.world, group.name);        
+        if(this.inGroup(group.world, group.name)) data.removeParent(world, name, group.world, group.name, this.getType());        
     }
     public boolean hasPermission(String permission)
     {
@@ -152,14 +134,14 @@ public abstract class Entry {
         Queue<Group> queue = new LinkedList<Group>();
 
         //Start with the direct ancestors
-        Set<Group> parents = controller.stringToGroups(this.world, this.getParents());
+        Set<Group> parents = controller.stringToGroups(this.getParents());
         if(parents!=null && parents.size() > 0) queue.addAll(parents);
 
         //Poll the queue
         while(queue.peek() != null) {
             Group grp = queue.poll();
             if(grp == null || groupSet.contains(grp)) continue;
-            parents = controller.stringToGroups(grp.world, grp.getParents());
+            parents = controller.stringToGroups(grp.getParents());
             if(parents!=null && parents.size() > 0) queue.addAll(parents);
             groupSet.add(grp);
         }
@@ -169,8 +151,8 @@ public abstract class Entry {
 
     protected boolean inGroup(String world, String group, Set<Group> checked)
     {
-        Set<Group> parents = controller.stringToGroups(this.world, getParents());
-        if(parents == null) return false;
+        Set<Group> parents = controller.stringToGroups(getParents());
+        if(parents == null||parents.isEmpty()) return false;
         for(Group grp : parents)
         {
             if(checked.contains(grp)) continue;
@@ -188,6 +170,29 @@ public abstract class Entry {
         return this.inGroup(world, group, checked);
     }
     
+    public boolean canBuild()
+    {
+        if(this instanceof Group)
+        {
+            Group g = (Group) this;
+            if(g.canSelfBuild()) return true;
+        }
+        Set<Group> checked = new HashSet<Group>();
+        return this.canBuild(checked);
+    }
+    
+    protected boolean canBuild(Set<Group> checked) {
+        Set<Group> parents = controller.stringToGroups(getParents());
+        if(parents == null||parents.isEmpty()) return false;
+        for(Group grp : parents)
+        {
+            if(checked.contains(grp)) continue;
+            checked.add(grp);
+            if(grp.canBuild(checked)) return true;
+        }
+        return false;
+    }
+
     public Set<String> getGroups()
     {
         Set<Group> groupSet = this.getAncestors();
@@ -200,5 +205,13 @@ public abstract class Entry {
     }
     
     public abstract EntryType getType();
+
+    public String getName() {
+        return name;
+    }
+
+    public String getWorld() {
+        return world;
+    }
 }
 

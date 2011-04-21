@@ -6,22 +6,22 @@ import com.nijiko.permissions.EntryType;
 
 public interface IStorage {
 
-    public boolean isDefault(String world, String name);
-    public boolean canBuild(String world, String name, EntryType type);
-    public String getPrefix(String world, String name, EntryType type);
-    public String getSuffix(String world, String name, EntryType type);
-    public Set<String> getPermissions(String world, String name, EntryType type);
-    public Set<String> getParents(String world, String name, EntryType type);
+    public boolean isDefault(String name);
+    public boolean canBuild(String name);
+    public String getPrefix(String name);
+    public String getSuffix(String name);
+    public Set<String> getPermissions(String name, EntryType type);
+    public Set<GroupWorld> getParents(String name, EntryType type);
 
-    public void setBuild(String world, String name, EntryType type, boolean build);
-    public void setPrefix(String world, String name, EntryType type, String prefix);
-    public void setSuffix(String world, String name, EntryType type, String suffix);
+    public void setBuild(String name, boolean build);
+    public void setPrefix(String name, String prefix);
+    public void setSuffix(String name, String suffix);
 
-    public void addPermission(String world, String name, EntryType type, String permission);
-    public void removePermission(String world, String name, EntryType type, String negated);
+    public void addPermission(String name, EntryType type, String permission);
+    public void removePermission(String name, EntryType type, String permissions);
 
     public void save();
     public void reload(final boolean applyChanges);
-    public void addParent(String world, String name, String groupWorld, String groupName);
-    public void removeParent(String world, String name, String groupWorld, String groupName);
+    public void addParent(String name, String groupWorld, String groupName, EntryType type);
+    public void removeParent(String name, String groupWorld, String groupName, EntryType type);
 }

@@ -12,9 +12,11 @@ public class YamlStorage implements IStorage {
     
     private final Configuration userConfig;
     private final Configuration groupConfig;
+    private final String world;
     private final ReentrantReadWriteLock rwl;
     
-    YamlStorage(Configuration userConfig, Configuration groupConfig) {
+    YamlStorage(Configuration userConfig, Configuration groupConfig, String world) {
+        this.world = world;
         this.userConfig = userConfig;
         this.groupConfig = groupConfig;
         this.rwl = new ReentrantReadWriteLock(false); //Give writer threads a higher priority than reader threads
@@ -37,7 +39,7 @@ public class YamlStorage implements IStorage {
     }
 
     @Override
-    public boolean isDefault(String world, String name) {
+    public boolean isDefault(String name) {
         rwl.readLock().lock();
         boolean isDefault = false;
         //TODO: Read
@@ -46,7 +48,7 @@ public class YamlStorage implements IStorage {
     }
 
     @Override
-    public boolean canBuild(String world, String name, EntryType type) {
+    public boolean canBuild(String name) {
         rwl.readLock().lock();
         boolean canBuild = false;
         //TODO: Read
@@ -55,7 +57,7 @@ public class YamlStorage implements IStorage {
     }
 
     @Override
-    public String getPrefix(String world, String name, EntryType type) {
+    public String getPrefix(String name) {
         rwl.readLock().lock();
         String prefix = "";
         //TODO: Read
@@ -64,7 +66,7 @@ public class YamlStorage implements IStorage {
     }
 
     @Override
-    public String getSuffix(String world, String name, EntryType type) {
+    public String getSuffix(String name) {
         rwl.readLock().lock();
         String suffix = "";
         //TODO: Read
@@ -73,7 +75,7 @@ public class YamlStorage implements IStorage {
     }
 
     @Override
-    public Set<String> getPermissions(String world, String name, EntryType type) {
+    public Set<String> getPermissions(String name, EntryType type) {
         rwl.readLock().lock();
         Set<String> permissions = new HashSet<String>();
         //TODO: Read
@@ -82,17 +84,16 @@ public class YamlStorage implements IStorage {
     }
 
     @Override
-    public Set<String> getParents(String world, String name, EntryType type) {
+    public Set<GroupWorld> getParents(String name, EntryType type) {
         rwl.readLock().lock();
-        Set<String> parents = new HashSet<String>();
+        Set<GroupWorld> parents = new HashSet<GroupWorld>();
         //TODO: Read
         rwl.readLock().unlock();
         return parents;
     }
 
     @Override
-    public void setBuild(String world, String name, EntryType type,
-            boolean build) {
+    public void setBuild(String name, boolean build) {
         rwl.writeLock().lock();
         //TODO: Write
         rwl.writeLock().unlock();
@@ -100,8 +101,7 @@ public class YamlStorage implements IStorage {
     }
 
     @Override
-    public void setPrefix(String world, String name, EntryType type,
-            String prefix) {
+    public void setPrefix(String name, String prefix) {
         rwl.writeLock().lock();
         //TODO: Write
         rwl.writeLock().unlock();
@@ -109,8 +109,7 @@ public class YamlStorage implements IStorage {
     }
 
     @Override
-    public void setSuffix(String world, String name, EntryType type,
-            String suffix) {
+    public void setSuffix(String name, String suffix) {
         rwl.writeLock().lock();
         //TODO: Write
         rwl.writeLock().unlock();
@@ -118,7 +117,7 @@ public class YamlStorage implements IStorage {
     }
 
     @Override
-    public void addPermission(String world, String name, EntryType type,
+    public void addPermission(String name, EntryType type,
             String permission) {
         rwl.writeLock().lock();
         //TODO: Write
@@ -127,7 +126,7 @@ public class YamlStorage implements IStorage {
     }
 
     @Override
-    public void removePermission(String world, String name, EntryType type,
+    public void removePermission(String name, EntryType type,
             String negated) {
         rwl.writeLock().lock();
         //TODO: Write
@@ -135,15 +134,19 @@ public class YamlStorage implements IStorage {
 
     }
     @Override
-    public void addParent(String world, String name, String groupWorld,
-            String groupName) {
-        // TODO Auto-generated method stub
+    public void addParent(String name, String groupWorld,
+            String groupName, EntryType type) {
+        rwl.writeLock().lock();
+        //TODO: Write
+        rwl.writeLock().unlock();
         
     }
     @Override
-    public void removeParent(String world, String name, String groupWorld,
-            String groupName) {
-        // TODO Auto-generated method stub
+    public void removeParent(String name, String groupWorld,
+            String groupName, EntryType type) {
+        rwl.writeLock().lock();
+        //TODO: Write
+        rwl.writeLock().unlock();
         
     }
 

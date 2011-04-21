@@ -2,16 +2,27 @@ package com.nijiko.data;
 
 import java.io.File;
 import java.io.IOException;
+import java.sql.SQLException;
 
 import org.bukkit.util.config.Configuration;
 
 import com.nijikokun.bukkit.Permissions.Permissions;
 
 public class StorageFactory {
+    private static Configuration config;
     public static final IStorage createInstance(String world, Configuration config) throws IOException
     {
+        StorageFactory.config = config;
+        return createInstance(world);
+    }
+
+    public static final IStorage createInstance(String world) throws IOException
+    {
+        world = world.toLowerCase();
         config.load();
         String typename = config.getString("permissions.storage.type",StorageType.YAML.toString());
+        String worldtype = config.getString("permissions.storage.worlds." + world);
+        if(typename==null||typename.isEmpty()) typename = worldtype;    
         StorageType type;
         try
         {
@@ -22,11 +33,23 @@ public class StorageFactory {
             System.err.println("Error occurred while selecting permissions config type. Reverting to YAML.");
             type = StorageType.YAML;
         }
-        
+
         switch(type)
         {
-        default:
-            System.err.println("Error occurred while creating instance of config. Reverting to YAML.");
+        case SQL:
+            String dbms = config.getString("permissions.storage.dbms");
+            String uri = config.getString("permissions.storage.uri"); //TODO: Think about uri for SQlite compatibility
+            String username = config.getString("permissions.storage.username");
+            String password = config.getString("permissions.storage.password");
+            int delay = config.getInt("permissions.storage.reload", 6000); //Default is 5 minutes
+            try {
+                SqlStorage.init(dbms,uri,username,password, delay);
+                return new SqlStorage(world);
+            } catch (Exception e) {
+                System.err.println("Error occured while connecting to SQL database. Reverting to YAML.");
+            }
+            //Will fall through only if an exception occurs  
+        default:     
         case YAML:
             String worldString = Permissions.instance.getDataFolder().getPath() + world;
             File userFile = new File(worldString + "users.yml");
@@ -39,16 +62,8 @@ public class StorageFactory {
             if(!groupFile.canRead()) throw new IOException("Group config for world "+ world +" cannot be read.");
             if(!groupFile.canWrite()) throw new IOException("Group config for world "+ world +" cannot be written to.");
             if(!groupFile.exists()) groupFile.createNewFile();
-            return new YamlStorage(new Configuration(userFile), new Configuration(groupFile));
-        case SQL:
-            String driver = config.getString("permissions.storage.driver");
-            String uri = config.getString("permissions.storage.uri");
-            String username = config.getString("permissions.storage.username");
-            String password = config.getString("permissions.storage.password");
-            return new SqlStorage(driver,uri,username,password);
-            
-        }        
+            return new YamlStorage(new Configuration(userFile), new Configuration(groupFile), world);
+        }
     }
-    
-    
+
 }
