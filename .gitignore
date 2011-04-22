@@ -1,8 +1,28 @@
-/.project
+# Eclipse stuff
 /.classpath
+/.project
 /.settings
-/target
+/.gitignore
+
+# netbeans
+/nbproject
+
+# we use maven!
 /build.xml
+
+# maven
+/target
+
+# vim
+.*.sw[a-p]
+
+# various other potential build files
 /build
 /bin
 /dist
+/manifest.mf
+
+/world
+
+# Mac filesystem dust
+/.DS_Store
