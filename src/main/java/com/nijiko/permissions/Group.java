@@ -42,4 +42,10 @@ public class Group extends Entry {
     protected boolean canSelfBuild() {
         return data.canBuild(name);
     }
+    
+    @Override
+    public String toString()
+    {
+        return "Group " + name + " in " + world;
+    }
 }

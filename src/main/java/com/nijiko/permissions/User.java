@@ -13,5 +13,9 @@ public class User extends Entry
     public EntryType getType() {
         return EntryType.USER;
     }
-    
+    @Override
+    public String toString()
+    {
+        return "User " + name + " in " + world;
+    }
 }

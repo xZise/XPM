@@ -193,17 +193,17 @@ public abstract class Entry {
     
     public boolean canBuild()
     {
-        if(this instanceof Group)
-        {
-            Group g = (Group) this;
-            if(g.canSelfBuild()) return true;
-        }
         Set<Group> checked = new HashSet<Group>();
         return this.canBuild(checked);
     }
     
     protected boolean canBuild(Set<Group> checked) {
         Set<Group> parents = controller.stringToGroups(getParents());
+        if(this instanceof Group)
+        {
+            Group g = (Group) this;
+            if(g.canSelfBuild()) return true;
+        }
         if(parents == null||parents.isEmpty()) return false;
         for(Group grp : parents)
         {
@@ -233,6 +233,12 @@ public abstract class Entry {
 
     public String getWorld() {
         return world;
+    }
+    
+    @Override
+    public String toString()
+    {
+        return "Entry " + name + " in " + world;
     }
 }
 

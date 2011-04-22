@@ -21,7 +21,11 @@ public class YamlStorage implements IStorage {
 //    private final int reloadDelay;
     private boolean saveOff = false;
 
-    
+    @Override
+    public String toString()
+    {
+        return "YamlStorage for " + world;
+    }
     YamlStorage(Configuration userConfig, Configuration groupConfig, String world, int reloadDelay, boolean autoSave) {
         this.saveOff = autoSave;
         this.world = world;
