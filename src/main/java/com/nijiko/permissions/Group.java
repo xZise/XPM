@@ -6,10 +6,7 @@ import com.nijiko.data.IStorage;
 
 public class Group extends Entry {
     
-    static
-    {
-        Group.type = EntryType.GROUP;
-    }
+
     
     Group(ModularControl controller, IStorage data, String name, String world) {
         super(controller, data, name, world);
@@ -17,32 +14,32 @@ public class Group extends Entry {
     
     public boolean isDefault()
     {
-        return data.isDefault(world, name);
+        return data.isDefault(name);
     }
 
     @Override
     public EntryType getType() {
-        return Group.type;
+        return EntryType.GROUP;
     }
 
     public String getPrefix() {
-        return data.getPrefix(world, name);
+        return data.getPrefix(name);
     }
     public String getSuffix() {
-        return data.getSuffix(world, name);
+        return data.getSuffix(name);
     }
 
     public void setBuild(final boolean build) {
-        data.setBuild(world, name, type, build);
+        data.setBuild(name, build);
     }
     public void setPrefix(final String prefix) {
-        data.setPrefix(world, name, type,prefix);
+        data.setPrefix(name, prefix);
     }
     public void setSuffix(final String suffix) {
-        data.setSuffix(world, name, type, suffix);
+        data.setSuffix(name, suffix);
     }
 
     protected boolean canSelfBuild() {
-        return data.canBuild(world, name);
+        return data.canBuild(name);
     }
 }

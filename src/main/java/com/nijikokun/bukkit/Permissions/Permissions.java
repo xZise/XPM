@@ -1,10 +1,7 @@
 package com.nijikokun.bukkit.Permissions;
 
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.nio.channels.FileChannel;
 import java.util.logging.Logger;
 
 import org.bukkit.ChatColor;
@@ -21,10 +18,8 @@ import org.bukkit.util.config.Configuration;
 
 import com.nijiko.Messaging;
 import com.nijiko.Misc;
-import com.nijiko.configuration.ConfigurationHandler;
-import com.nijiko.configuration.DefaultConfiguration;
 import com.nijiko.configuration.NotNullConfiguration;
-import com.nijiko.permissions.Control;
+import com.nijiko.permissions.ModularControl;
 import com.nijiko.permissions.PermissionHandler;
 
 /**
@@ -53,13 +48,12 @@ public class Permissions extends JavaPlugin {
     public static Plugin instance;
     public static Server Server = null;
     public File directory;
-    private DefaultConfiguration userConfig;
-    private DefaultConfiguration groupConfig;
+    private Configuration storageConfig;
     public static String name = "Permissions";
     public static String version = "3.0";
     public static String codename = "Yeti";
-    
-    
+
+
     public Listener l = new Listener(this);
 
     /**
@@ -75,40 +69,50 @@ public class Permissions extends JavaPlugin {
     private String DefaultWorld = "";
 
     public Permissions() {
-        new File("plugins" + File.separator + "Permissions" + File.separator).mkdirs();
+
 
         PropertyHandler server = new PropertyHandler("server.properties");
         DefaultWorld = server.getString("level-name");
 
-        Configuration userConfig = new NotNullConfiguration(new File("plugins" + File.separator + "Permissions" + File.separator + DefaultWorld, "users.yml"));
-        userConfig.load();
-        
-        Configuration groupConfig = new NotNullConfiguration(new File("plugins" + File.separator + "Permissions" + File.separator + DefaultWorld, "groups.yml"));
-        groupConfig.load();
-        
-        // Gogo
-        this.userConfig = new ConfigurationHandler(userConfig);
-        this.groupConfig = new ConfigurationHandler(groupConfig);
 
-        instance = this;
+        File storageOpt = new File("plugins" + File.separator + "Permissions" + File.separator , "storageconfig.yml");
+        if(!storageOpt.isFile()) System.err.println("[Permissions] storageconfig.yml is not a file.");
+        if(!storageOpt.canRead()) System.err.println("[Permissions] storageconfig.yml cannot be read.");
+        if(!storageOpt.exists())
+            try {
+                System.out.println("[Permissions] Creating storageconfig.yml.");
+                storageOpt.createNewFile();
+            } catch (IOException e) {
+                System.err.println("[Permissions] storageconfig.yml could not be created.");
+                e.printStackTrace();
+            }
+            Configuration storageConfig = new NotNullConfiguration(storageOpt);
+            storageConfig.load();
+            this.storageConfig = storageConfig;
 
-        // Enabled
-        log.info("[Permissions] (" + codename + ") was Initialized.");
+
+            instance = this;
+
+            // Enabled
+            log.info("[Permissions] (" + codename + ") was Initialized.");
     }
-    
+
+    @Override
     public void onLoad() {
         // Setup Permission
+        getDataFolder().mkdirs();
         setupPermissions();
     }
 
+    @Override
     public void onDisable() {
-    	//Addition by rcjrrjcr
-    	Security.saveAll();
-    	log.info("[Permissions] (" + codename + ") saved all data.");
-    	//End of addition by rcjrrjcr
-    	
-    	log.info("[Permissions] (" + codename + ") disabled successfully.");
-    	return;
+        //Addition by rcjrrjcr
+        Security.saveAll();
+        log.info("[Permissions] (" + codename + ") saved all data.");
+        //End of addition by rcjrrjcr
+
+        log.info("[Permissions] (" + codename + ") disabled successfully.");
+        return;
     }
 
     /**
@@ -125,122 +129,115 @@ public class Permissions extends JavaPlugin {
     }
 
     public void setupPermissions() {
-        Security = new Control(new NotNullConfiguration(new File("plugins" + File.separator + "Permissions", DefaultWorld + "users.yml")), new NotNullConfiguration(new File("plugins" + File.separator + "Permissions", DefaultWorld + "users.yml")));
+        Security = new ModularControl(storageConfig);
         Security.setDefaultWorld(DefaultWorld);
-        Security.load();
+        try {
+            Security.load();
+        } catch (Exception e) {
+            e.printStackTrace();
+            getServer().getPluginManager().disablePlugin(this);
+        }
     }
 
+    @Override
     public void onEnable() {
-    	Server = this.getServer();
-    	description = this.getDescription();
-    	directory = getDataFolder();
-    	
-    	
-        // Start Registration
-        getDataFolder().mkdirs();
+        Server = this.getServer();
+        description = this.getDescription();
+        directory = getDataFolder();
 
-        PropertyHandler server = new PropertyHandler("server.properties");
-        DefaultWorld = server.getString("level-name");
 
-        // Gogo
-        this.userConfig = new ConfigurationHandler(getConfiguration());
-        getConfiguration().load();
-        this.groupConfig = new ConfigurationHandler(getConfiguration());
-        getConfiguration().load();
-        
-        // Load Configuration Settings
-        this.userConfig.load();
-        this.groupConfig.load();
+
 
         // Enabled
         log.info("[" + description.getName() + "] version [" + description.getVersion() + "] (" + codename + ")  loaded");
-        
+
         this.getServer().getPluginManager().registerEvent(Event.Type.BLOCK_PLACE, l, Priority.High, this);
         this.getServer().getPluginManager().registerEvent(Event.Type.BLOCK_BREAK, l, Priority.High, this);
     }
-    
+
+    @Override
     public boolean onCommand(CommandSender sender, Command command, String commandLabel, String[] args) {
         Player player = null;
         String commandName = command.getName().toLowerCase();
         PluginDescriptionFile pdfFile = this.getDescription();
-        
-        if (sender instanceof Player) {
-        	player = (Player)sender;
 
-        	Messaging.save(player);
+        if (sender instanceof Player) {
+            player = (Player)sender;
+
+            Messaging.save(player);
         }
 
         if (commandName.compareToIgnoreCase("permissions") == 0) {
-        	if (args.length < 1) {
-        		if (player != null) {
-        			Messaging.send("&7-------[ &fPermissions&7 ]-------");
-        			Messaging.send("&7Currently running version: &f[" + pdfFile.getVersion() + "] (" + codename + ")");
+            if (args.length < 1) {
+                if (player != null) {
+                    Messaging.send("&7-------[ &fPermissions&7 ]-------");
+                    Messaging.send("&7Currently running version: &f[" + pdfFile.getVersion() + "] (" + codename + ")");
 
-        			if (Security.has(player, "permissions.reload")) {
-        				Messaging.send("&7Reload with: &f/permissions -reload [World]");
-        				Messaging.send("&fLeave [World] blank to reload default world.");
-        			}
+                    if (Security.has(player, "permissions.reload")) {
+                        Messaging.send("&7Reload with: &f/permissions -reload [World]");
+                        Messaging.send("&fLeave [World] blank to reload default world.");
+                    }
 
-        			Messaging.send("&7-------[ &fPermissions&7 ]-------");
-        			return true;
-        			}
-        		else {
-                	sender.sendMessage("[" + pdfFile.getName() + "] version [" + pdfFile.getVersion() + "] (" + codename + ")  loaded");
-        		}
+                    Messaging.send("&7-------[ &fPermissions&7 ]-------");
+                    return true;
+                }
+                else {
+                    sender.sendMessage("[" + pdfFile.getName() + "] version [" + pdfFile.getVersion() + "] (" + codename + ")  loaded");
+                }
             }
-                    
-        	if (args.length >= 1) {
-        		if (args[0].compareToIgnoreCase("-reload") == 0) {
-        			if (args.length == 2) {
-        				if (args[1].compareToIgnoreCase("all") == 0) {
-        					if (player != null) {
-        						if (Security.has(player, "permissions.reload")) {
-        							Security.reload();
-        							player.sendMessage(ChatColor.GRAY + "[Permissions] World Reloads completed.");
-        							return true;
-        						}
-        						else {
-        							player.sendMessage(ChatColor.RED + "[Permissions] You lack the necessary permissions to perform this action.");
-        							return true;
-        						}
-        					}
-        					else {
-        						Security.reload();
-        						sender.sendMessage("All world files reloaded.");
-        						return true;
-        					}
-        				}
-        				else {
-        					if (player != null) {
-        						if (Security.has(player, "permissions.reload")) {
-        							String world = args[1];
-        							if (Security.reload(world)) {
-        								player.sendMessage(ChatColor.GRAY + "[Permissions] " + args[1] + " World Reload completed.");
-        							}
-        							else {
-        								Messaging.send("&7[Permissions] " + world + " does not exist.");
-        							}
-        							return true;
-        						}
-        						else {
-        							player.sendMessage(ChatColor.RED + "[Permissions] You lack the necessary permissions to permform this action.");
-        							return true;
-        						}
-        					}
-        					else {
-        						String world = args[1];
-        						if (Security.reload(world)) {
-        							sender.sendMessage("[Permissions] Reload of World " + world + " completed.");
-        						}
-        						else {
-        							sender.sendMessage("[Permissions] World " + world + " does not exist.");
-        						}
-        						return true;
-        					}
-        				}
-        			}
-        		}
-        	}
+
+            if (args.length >= 1) {
+                if (args[0].compareToIgnoreCase("-reload") == 0) {
+                    if (args.length == 2) {
+                        if (args[1].compareToIgnoreCase("all") == 0) {
+                            if (player != null) {
+                                if (Security.has(player, "permissions.reload")) {
+                                    Security.reload();
+                                    player.sendMessage(ChatColor.GRAY + "[Permissions] World Reloads completed.");
+                                    return true;
+                                }
+                                else {
+                                    player.sendMessage(ChatColor.RED + "[Permissions] You lack the necessary permissions to perform this action.");
+                                    return true;
+                                }
+                            }
+                            else {
+                                Security.reload();
+                                sender.sendMessage("All world files reloaded.");
+                                return true;
+                            }
+                        }
+                        else {
+                            if (player != null) {
+                                if (Security.has(player, "permissions.reload")) {
+                                    String world = args[1];
+                                    if (Security.reload(world)) {
+                                        player.sendMessage(ChatColor.GRAY + "[Permissions] " + args[1] + " World Reload completed.");
+                                    }
+                                    else {
+                                        Messaging.send("&7[Permissions] " + world + " does not exist.");
+                                    }
+                                    return true;
+                                }
+                                else {
+                                    player.sendMessage(ChatColor.RED + "[Permissions] You lack the necessary permissions to permform this action.");
+                                    return true;
+                                }
+                            }
+                            else {
+                                String world = args[1];
+                                if (Security.reload(world)) {
+                                    sender.sendMessage("[Permissions] Reload of World " + world + " completed.");
+                                }
+                                else {
+                                    sender.sendMessage("[Permissions] World " + world + " does not exist.");
+                                }
+                                return true;
+                            }
+                        }
+                    }
+                }
+            }
         }
         return false;
     }

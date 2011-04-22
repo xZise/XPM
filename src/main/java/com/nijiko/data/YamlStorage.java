@@ -226,7 +226,7 @@ public class YamlStorage implements IStorage {
     @Override
     public Set<String> getGroups() {
         rwl.readLock().lock();
-        Set<String> groups = new HashSet<String>(userConfig.getKeys("groups"));
+        Set<String> groups = new HashSet<String>(groupConfig.getKeys("groups"));
         rwl.readLock().unlock();
         return groups;
     }

@@ -15,7 +15,6 @@ public abstract class Entry {
     protected IStorage data;
     protected String name;
     protected String world;
-    protected static EntryType type;
 
    Entry(ModularControl controller, IStorage data, String name, String world) {
         this.controller = controller;
@@ -25,10 +24,10 @@ public abstract class Entry {
     }
    
     public Set<String> getPermissions() {
-        return data.getPermissions(name, type);
+        return data.getPermissions(name, getType());
     }
     public Set<GroupWorld> getParents() {
-        return data.getParents( name, type);
+        return data.getParents( name, getType());
     }
 
     
@@ -39,14 +38,14 @@ public abstract class Entry {
         {
             if(permissions.contains(negated))
             {
-                data.removePermission(name, type, negated);
+                data.removePermission(name, getType(), negated);
             }
-            data.addPermission(name, type, permission);
+            data.addPermission(name, getType(), permission);
         }
         else
         {
-            data.removePermission(name, type, permission);
-            data.addPermission(name, type, negated);
+            data.removePermission(name, getType(), permission);
+            data.addPermission(name, getType(), negated);
         }
     }
 
@@ -76,10 +75,16 @@ public abstract class Entry {
         if( (permissions == null || permissions.isEmpty()) && (groupPermissions == null || groupPermissions.isEmpty()) ) return false;
 
         //Do it in +user -> -user -> +group -> -group order
-        if(permissions.contains(permission)) return true;
-        if(permissions.contains("-" + permission)) return false;
-        if(groupPermissions.contains(permission)) return true;
-        if(groupPermissions.contains("-" + permission)) return true;
+        if(permissions!=null&&!permissions.isEmpty())
+        {
+            if(permissions.contains(permission)) return true;
+            if(permissions.contains("-" + permission)) return false;
+        }
+        if(groupPermissions!=null&&!groupPermissions.isEmpty())
+        {
+            if(groupPermissions.contains(permission)) return true;
+            if(groupPermissions.contains("-" + permission)) return true;
+        }
 
 
 
@@ -88,31 +93,46 @@ public abstract class Entry {
         String nextNode = "";
         String wild = "";
         String negated = "";
-        String relevantNode = permissions.contains("-*") ? (permissions.contains("*") ? "*" : "-*") : "";
+        String relevantNode = "";
+        if(groupPermissions!=null&&!groupPermissions.isEmpty())
+        {
+            relevantNode = groupPermissions.contains("-*") ? (groupPermissions.contains("*") ? "*" : "-*") : relevantNode;
+        }
+        if(permissions!=null&&!permissions.isEmpty())
+        {
+            relevantNode = permissions.contains("-*") ? (permissions.contains("*") ? "*" : "-*") : relevantNode;
+        }
         for(String nextLevel : nodeHierachy)
         {
             nextNode += nextLevel + ".";
             wild = nextNode + "*";
             negated = "-" + wild;
-            if (permissions.contains(wild)) {
-                relevantNode = wild;
-                continue;
+
+            if(permissions!=null&&!permissions.isEmpty())
+            {
+                if (permissions.contains(wild)) {
+                    relevantNode = wild;
+                    continue;
+                }
+
+                if (permissions.contains(negated)) {
+                    relevantNode = negated;
+                    continue;
+                }
             }
 
-            if (permissions.contains(negated)) {
-                relevantNode = negated;
-                continue;
-            }
+            if(groupPermissions!=null&&!groupPermissions.isEmpty())
+            {
+                if (groupPermissions.contains(wild)) {
+                    relevantNode = wild;
+                    continue;
+                }
 
-            if (groupPermissions.contains(wild)) {
-                relevantNode = wild;
-                continue;
+                if (groupPermissions.contains(negated)) {
+                    relevantNode = negated;
+                    continue;
+                } 
             }
-
-            if (groupPermissions.contains(negated)) {
-                relevantNode = negated;
-                continue;
-            } 
         }
 
         return !relevantNode.startsWith("-");        
