@@ -1,8 +1,13 @@
 package com.nijiko.data;
 
 import java.sql.Connection;
+import java.sql.DatabaseMetaData;
 import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
+import java.sql.Statement;
+import java.sql.Types;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -10,19 +15,37 @@ import java.util.Set;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import com.nijiko.permissions.EntryType;
+import com.nijikokun.bukkit.Permissions.Permissions;
 
 
 public class SqlStorage implements IStorage {
 
     private static Connection dbConn;
-    private static int reloadDelay;
+//    private static int reloadDelay;
     private static Map<String, SqlStorage> instances;
     private static boolean init = false;
+//    private static final Map<String, Map<String, Integer>> tableData = new HashMap<String, Map<String, Integer>>();
+//    
+//    static
+//    {
+//        Map<String, Integer> userid = new HashMap<String, Integer>();
+//        userid.put("world", Types.VARCHAR);
+//        userid.put("name", Types.VARCHAR);
+//        userid.put("id", Types.INTEGER);
+//        tableData.put("userid", userid);
+//        userid = null;
+//        
+//        HashMap<String, Integer> groupid = new HashMap<String, Integer>();
+//        groupid.put("world", Types.VARCHAR);
+//        groupid.put("name", Types.VARCHAR);
+//        groupid.put("id", Types.INTEGER);
+//        tableData.put("groupid", groupid);
+//    }
     
     public static void init(String dbmsName, String uri, String username, String password, int reloadDelay) throws Exception
     {
         if(init) return;
-        SqlStorage.reloadDelay = reloadDelay;
+//        SqlStorage.reloadDelay = reloadDelay;
         Dbms dbms = null;
         try
         {
@@ -39,9 +62,15 @@ public class SqlStorage implements IStorage {
             throw new Exception("Unable to load SQL driver!", e);
         }
         dbConn = DriverManager.getConnection(uri, username, password);
-        //TODO: Prepare tables
-//        reload(false);
-        //TODO: Reload thread
+        verifyAndCreateTables();
+        Permissions.instance.getServer().getScheduler().scheduleAsyncRepeatingTask(Permissions.instance, new Runnable(){
+            @Override
+            public void run() {
+                refresh();                
+            }
+            
+        } , reloadDelay, reloadDelay);
+        
         init = true;
     }
     
@@ -166,7 +195,7 @@ public class SqlStorage implements IStorage {
     }
 
     @Override
-    public void reload(final boolean applyChanges) {
+    public void reload() {
         baseGroup = null;
         buildGroups.clear();
         groupPrefixes.clear();
@@ -212,14 +241,68 @@ public class SqlStorage implements IStorage {
 
     }
     
-    @SuppressWarnings("unused")
     private static void refresh() //Used for periodic cache flush
     {
         for(SqlStorage instance : instances.values())
         {
-            instance.reload(false);
+            instance.reload();
         }
     }
+    
+    private static void verifyAndCreateTables()
+    {        
+//        PreparedStatement ps;
+//        for(String table : tableNames)
+//        {
+//            ps = dbConn.prepareStatement("SELECT * FROM "+ table);
+//            ResultSetMetaData md = ps.getMetaData();
+//            int cols = md.getColumnCount();
+//            for(int i = 1; i <= cols; i++)
+//            {
+//                md.getColumnName(i);
+//                md.getColumnType(i);
+//            }
+//        }
+    }
+
+    @Override
+    public Set<String> getUsers() {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public Set<String> getGroups() {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public String getWorld() {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+
+    @Override
+    public void forceSave() {
+        // TODO Auto-generated method stub
+        
+    }
+
+    @Override
+    public boolean isAutoSave() {
+        // TODO Auto-generated method stub
+        return false;
+    }
+
+    @Override
+    public void setAutoSave(boolean autoSave) {
+        // TODO Auto-generated method stub
+        
+    }
+    
+
 }
 
 enum Dbms

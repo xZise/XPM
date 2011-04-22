@@ -22,7 +22,7 @@ public class StorageFactory {
         config.load();
         String typename = config.getString("permissions.storage.type",StorageType.YAML.toString());
         String worldtype = config.getString("permissions.storage.worlds." + world);
-        if(typename==null||typename.isEmpty()) typename = worldtype;    
+        if(worldtype!=null&&!worldtype.isEmpty()) typename = worldtype;
         StorageType type;
         try
         {
@@ -34,14 +34,14 @@ public class StorageFactory {
             type = StorageType.YAML;
         }
 
+        int delay = config.getInt("permissions.storage.reload", 6000); //Default is 5 minutes
         switch(type)
         {
         case SQL:
-            String dbms = config.getString("permissions.storage.dbms");
-            String uri = config.getString("permissions.storage.uri"); //TODO: Think about uri for SQlite compatibility
+            String dbms = config.getString("permissions.storage.dbms","SQLITE");
+            String uri = config.getString("permissions.storage.uri","jdbc:sqlite:"+Permissions.instance.getDataFolder()+File.separator+"permissions.db");
             String username = config.getString("permissions.storage.username");
             String password = config.getString("permissions.storage.password");
-            int delay = config.getInt("permissions.storage.reload", 6000); //Default is 5 minutes
             try {
                 SqlStorage.init(dbms,uri,username,password, delay);
                 return new SqlStorage(world);
@@ -51,6 +51,7 @@ public class StorageFactory {
             //Will fall through only if an exception occurs  
         default:     
         case YAML:
+            boolean autoSave = config.getBoolean("permissions.storage.autosave", true); //Default is 5 minutes
             String worldString = Permissions.instance.getDataFolder().getPath() + world;
             File userFile = new File(worldString + "users.yml");
             if(!userFile.isFile()) throw new IOException("User config for world "+ world +" is not a file.");
@@ -62,7 +63,7 @@ public class StorageFactory {
             if(!groupFile.canRead()) throw new IOException("Group config for world "+ world +" cannot be read.");
             if(!groupFile.canWrite()) throw new IOException("Group config for world "+ world +" cannot be written to.");
             if(!groupFile.exists()) groupFile.createNewFile();
-            return new YamlStorage(new Configuration(userFile), new Configuration(groupFile), world);
+            return new YamlStorage(new Configuration(userFile), new Configuration(groupFile), world, delay, autoSave);
         }
     }
 

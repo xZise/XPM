@@ -1,7 +1,6 @@
 package com.nijiko.permissions;
 
-import java.io.IOException;
-import java.util.Collection;
+
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -12,7 +11,8 @@ import org.bukkit.util.config.Configuration;
 import com.nijiko.data.GroupWorld;
 import com.nijiko.data.IStorage;
 import com.nijiko.data.StorageFactory;
-public class ModularControl extends PermissionHandler {
+public class ModularControl //extends PermissionHandler 
+{
 
     private Map<String, IStorage> WorldStorage = new HashMap<String, IStorage>();
     private Map<String, Map<String, Group>> WorldGroups;
@@ -21,84 +21,101 @@ public class ModularControl extends PermissionHandler {
     private Map<String, String> WorldInheritance = new HashMap<String, String>();
     private final Configuration storageConfig;
     private String defaultWorld = "";
+    
     public ModularControl(Configuration storageConfig)
     {
         this.storageConfig = storageConfig;
     }
-    @Override
+    //@Override
     public void setDefaultWorld(String world) {
         this.defaultWorld = world;
     }
-    @Override
+    //@Override
     public boolean loadWorld(String world) throws Exception {
-        if(WorldStorage.get(world.toLowerCase())==null) forceLoadWorld(world);
+        if(WorldStorage.get(world.toLowerCase())==null)
+        {
+            forceLoadWorld(world);
+            return true;
+        }
+        return false;
     }
-    @Override
+    //@Override
     public void forceLoadWorld(String world) throws Exception {
-        this.WorldStorage.put(world.toLowerCase(), StorageFactory.createInstance(world, storageConfig));
+        IStorage store = StorageFactory.createInstance(world, storageConfig);
+        this.WorldStorage.put(world.toLowerCase(), store);
+
+        // TODO WorldInheritance check
+        Map<String, User> users = new HashMap<String, User>();        
+        Set<String> userNames = store.getUsers();
+        for(String userName : userNames)
+        {
+            User user = new User(this,store,world,userName);
+            users.put(userName.toLowerCase(), user);
+        }
+        WorldUsers.put(world.toLowerCase(), users);
+
+        HashMap<String, Group> groups = new HashMap<String, Group>();        
+        Set<String> groupNames = store.getGroups();
+        for(String groupName : groupNames)
+        {
+            Group group = new Group(this,store,world,groupName);
+            groups.put(groupName.toLowerCase(), group);
+        }
+        WorldGroups.put(world.toLowerCase(), groups);
     }
-    @Override
+    //@Override
     public boolean checkWorld(String world) {
         return WorldStorage.containsKey(world.toLowerCase());
     }
-    @Override
+    //@Override
     public void load() throws Exception {
         this.loadWorld(defaultWorld);
     }
-    @Override
+    //@Override
     public void reload() {
         for(IStorage store : WorldStorage.values())
         {
-            store.reload(true);
+            store.reload();
         }
     }
-    @Override
+    //@Override
     public boolean reload(String world) {
         IStorage store = this.WorldStorage.get(world.toLowerCase());
         if(store==null) return false;
-        store.reload(true);
+        store.reload();
         return true;
     }
-    @Override
-    public void setCache(String world, Map<String, Boolean> Cache) {
-        throw new UnsupportedOperationException("No cache is implemented.");
+    
+    //@Override
+    public boolean has(String world, String name, String permission) {
+        return permission(world,name,permission);
     }
-    @Override
-    public void setCacheItem(String world, String player, String permission,
-            boolean data) {
-        throw new UnsupportedOperationException("No cache is implemented.");
-    }
-    @Override
-    public Map<String, Boolean> getCache(String world) {
-        throw new UnsupportedOperationException("No cache is implemented.");
-    }
-    @Override
-    public boolean getCacheItem(String world, String player, String permission) {
-        throw new UnsupportedOperationException("No cache is implemented.");
-    }
-    @Override
-    public void removeCachedItem(String world, String player, String permission) {
-        throw new UnsupportedOperationException("No cache is implemented.");
-    }
-    @Override
-    public void clearCache(String world) {
-        throw new UnsupportedOperationException("No cache is implemented.");
-    }
-    @Override
-    public void clearAllCache() {
-        throw new UnsupportedOperationException("No cache is implemented.");
-    }
-    @Override
     public boolean has(Player player, String permission) {
         return permission(player,permission);
     }
-    @Override
+    //@Override
     public boolean permission(Player player, String permission) {
-        // TODO Auto-generated method stub
-        return false;
+        String name = player.getName();
+        String worldName = player.getWorld().getName();
+        return permission(worldName,name,permission);
     }
-    @Override
-    public String getGroup(String world, String name) {
+
+    public boolean permission(String world, String name, String permission)
+    {
+        if(name==null||name.isEmpty()||world==null||world.isEmpty()) return true;
+        User user;
+        try {
+            user = this.safeGetUser(world, name);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }        
+        return user.hasPermission(permission);
+    }
+    
+    
+    //@Override
+    public String getGroupName(String world, String name) {
         // TODO WorldInheritance check
         Map<String,Group> groups = this.WorldGroups.get(world.toLowerCase());
         if(groups == null) return null;
@@ -106,8 +123,8 @@ public class ModularControl extends PermissionHandler {
         if(g == null) return null;
         return g.getName();
     }
-    @Override
-    public Set<Group> getGroups(String world, String name) {
+    //@Override
+    public Set<Group> getParentGroups(String world, String name) {
         // TODO WorldInheritance check
         try {
             return this.stringToGroups(safeGetUser(world, name).getParents());
@@ -116,27 +133,27 @@ public class ModularControl extends PermissionHandler {
             return new HashSet<Group>();
         }
     }
-    @Override
-    public boolean inGroup(String world, String name, String group) {
+    //@Override
+    public boolean inGroup(String world, String name, String groupWorld, String group) {
         // TODO WorldInheritance check
         try {
-            return safeGetUser(world, name).inGroup(world, group);
+            return safeGetUser(world, name).inGroup(groupWorld, group);
         } catch (Exception e) {
             e.printStackTrace();
             return false;
         }
     }
-    @Override
-    public boolean inSingleGroup(String world, String name, String group) {
+    //@Override
+    public boolean inSingleGroup(String world, String name,String groupWorld, String group) {
         // TODO WorldInheritance check
         try {
-            return safeGetUser(world, name).getParents().contains(new GroupWorld(world,group));
+            return safeGetUser(world, name).getParents().contains(new GroupWorld(groupWorld,group));
         } catch (Exception e) {
             e.printStackTrace();
             return false;
         }
     }
-    @Override
+    //@Override
     public String getGroupPrefix(String world, String group) {
         // TODO WorldInheritance check
         try {
@@ -146,7 +163,7 @@ public class ModularControl extends PermissionHandler {
             return "";
         }
     }
-    @Override
+    //@Override
     public String getGroupSuffix(String world, String group) {
         // TODO WorldInheritance check
         try {
@@ -156,7 +173,7 @@ public class ModularControl extends PermissionHandler {
             return "";
         }
     }
-    @Override
+    //@Override
     public boolean canGroupBuild(String world, String group) {
         // TODO WorldInheritance check
         try {
@@ -166,96 +183,17 @@ public class ModularControl extends PermissionHandler {
             return false;
         }
     }
-    @Override
-    public String getGroupPermissionString(String world, String group,
-            String permission) {
-        throw new UnsupportedOperationException("No data storage support is implemented.");
-    }
-    @Override
-    public int getGroupPermissionInteger(String world, String group,
-            String permission) {
-        throw new UnsupportedOperationException("No data storage support is implemented.");
-    }
-    @Override
-    public boolean getGroupPermissionBoolean(String world, String group,
-            String permission) {
-        throw new UnsupportedOperationException("No data storage support is implemented.");
-    }
-    @Override
-    public double getGroupPermissionDouble(String world, String group,
-            String permission) {
-        throw new UnsupportedOperationException("No data storage support is implemented.");
-    }
-    @Override
-    public String getUserPermissionString(String world, String name,
-            String permission) {
-        throw new UnsupportedOperationException("No data storage support is implemented.");
-    }
-    @Override
-    public int getUserPermissionInteger(String world, String name,
-            String permission) {
-        throw new UnsupportedOperationException("No data storage support is implemented.");
-    }
-    @Override
-    public boolean getUserPermissionBoolean(String world, String name,
-            String permission) {
-        throw new UnsupportedOperationException("No data storage support is implemented.");
-    }
-    @Override
-    public double getUserPermissionDouble(String world, String name,
-            String permission) {
-        throw new UnsupportedOperationException("No data storage support is implemented.");
-    }
-    @Override
-    public String getPermissionString(String world, String name,
-            String permission) {
-        throw new UnsupportedOperationException("No data storage support is implemented.");
-    }
-    @Override
-    public int getPermissionInteger(String world, String name, String permission) {
-        throw new UnsupportedOperationException("No data storage support is implemented.");
-    }
-    @Override
-    public boolean getPermissionBoolean(String world, String name,
-            String permission) {
-        throw new UnsupportedOperationException("No data storage support is implemented.");
-    }
-    @Override
-    public double getPermissionDouble(String world, String name,
-            String permission) {
-        throw new UnsupportedOperationException("No data storage support is implemented.");
-    }
-    @Override
-    public void addGroupInfo(String world, String group, String node,
-            Object data) {
-        throw new UnsupportedOperationException("No data storage support is implemented.");
-    }
-    @Override
-    public void removeGroupInfo(String world, String group, String node) {
-        throw new UnsupportedOperationException("No data storage support is implemented.");
-    }
-    @Override
-    public void addUserPermission(String world, String user, String node) {
-        try {
-            safeGetUser(world, user).addPermission(node);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
-    @Override
-    public void removeUserPermission(String world, String user, String node) {
-        try {
-            safeGetUser(world, user).removePermission(node);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
-    @Override
+    
+    
+    //@Override
     public void save(String world) {
         IStorage store = this.WorldStorage.get(world.toLowerCase());
-        if(store != null) store.reload(true);
+        if(store != null)
+        {
+            store.save();
+        }
     }
-    @Override
+    //@Override
     public void saveAll() {
         // TODO Auto-generated method stub
     }
@@ -273,12 +211,12 @@ public class ModularControl extends PermissionHandler {
         }
         return groupSet;
     }
-    @Override
+    //@Override
     public void load(String world, Configuration userConfig,
             Configuration groupConfig) {
         // TODO Auto-generated method stub
     }
-    private User safeGetUser(String world, String name) throws Exception
+    public User safeGetUser(String world, String name) throws Exception
     {
         try
         {
@@ -292,7 +230,7 @@ public class ModularControl extends PermissionHandler {
         if(this.WorldUsers.get(world.toLowerCase()).get(name.toLowerCase()) == null) this.WorldUsers.get(world.toLowerCase()).put(name.toLowerCase(), new User(this, WorldStorage.get(world), name, world));
         return this.WorldUsers.get(world.toLowerCase()).get(name.toLowerCase());
     }
-    private Group safeGetGroup(String world, String name) throws Exception
+    public Group safeGetGroup(String world, String name) throws Exception
     {
         try
         {
@@ -311,4 +249,5 @@ public class ModularControl extends PermissionHandler {
     {
         return this.WorldBase.get(world.toLowerCase());
     }
+
 }

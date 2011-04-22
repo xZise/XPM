@@ -20,8 +20,16 @@ public interface IStorage {
     public void addPermission(String name, EntryType type, String permission);
     public void removePermission(String name, EntryType type, String permissions);
 
-    public void save();
-    public void reload(final boolean applyChanges);
     public void addParent(String name, String groupWorld, String groupName, EntryType type);
     public void removeParent(String name, String groupWorld, String groupName, EntryType type);
+    
+    public Set<String> getUsers();
+    public Set<String> getGroups();
+    public String getWorld();
+    
+    public void forceSave();
+    public void save();
+    public void reload();
+    public boolean isAutoSave();
+    public void setAutoSave(boolean autoSave);
 }

@@ -25,10 +25,10 @@ public abstract class Entry {
     }
    
     public Set<String> getPermissions() {
-        return data.getPermissions(world, name, type);
+        return data.getPermissions(name, type);
     }
     public Set<GroupWorld> getParents() {
-        return data.getParents(world, name, type);
+        return data.getParents( name, type);
     }
 
     
@@ -39,14 +39,14 @@ public abstract class Entry {
         {
             if(permissions.contains(negated))
             {
-                data.removePermission(world, name, type, negated);
+                data.removePermission(name, type, negated);
             }
-            data.addPermission(world, name, type, permission);
+            data.addPermission(name, type, permission);
         }
         else
         {
-            data.removePermission(world, name, type, permission);
-            data.addPermission(world, name, type, negated);
+            data.removePermission(name, type, permission);
+            data.addPermission(name, type, negated);
         }
     }
 
@@ -62,12 +62,12 @@ public abstract class Entry {
 
     public void addParent(Group group)
     {
-        data.addParent(world, name, group.world, group.name, this.getType());
+        data.addParent(name, group.world, group.name, this.getType());
     }
     
     public void removeParent(Group group)
     {
-        if(this.inGroup(group.world, group.name)) data.removeParent(world, name, group.world, group.name, this.getType());        
+        if(this.inGroup(group.world, group.name)) data.removeParent(name, group.world, group.name, this.getType());        
     }
     public boolean hasPermission(String permission)
     {
@@ -133,10 +133,11 @@ public abstract class Entry {
         Set<Group> groupSet = new HashSet<Group>();
         Queue<Group> queue = new LinkedList<Group>();
 
-        //Start with the direct ancestors
+        //Start with the direct ancestors or the default group
         Set<Group> parents = controller.stringToGroups(this.getParents());
         if(parents!=null && parents.size() > 0) queue.addAll(parents);
-
+        else queue.add(controller.getDefaultGroup(world));
+        
         //Poll the queue
         while(queue.peek() != null) {
             Group grp = queue.poll();
