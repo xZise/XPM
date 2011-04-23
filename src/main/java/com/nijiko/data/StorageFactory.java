@@ -30,7 +30,7 @@ public class StorageFactory {
         {
             config.load(); 
             String typename = config.getString("permissions.storage.type",StorageType.YAML.toString());
-            String worldtype = config.getString("permissions.storage.worlds." + world);
+            String worldtype = config.getString("permissions.storage.worldtype." + world);
             if(worldtype!=null&&!worldtype.isEmpty()) typename = worldtype;
             try
             {

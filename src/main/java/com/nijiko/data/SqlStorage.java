@@ -14,13 +14,18 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
+import javax.sql.DataSource;
+
+import org.sqlite.SQLiteDataSource;
+
+import com.mysql.jdbc.jdbc2.optional.MysqlDataSource;
 import com.nijiko.permissions.EntryType;
 import com.nijikokun.bukkit.Permissions.Permissions;
 
 
 public class SqlStorage implements IStorage {
 
-    private static Connection dbConn;
+    private static DataSource dbSource;
 //    private static int reloadDelay;
     private static Map<String, SqlStorage> instances;
     private static boolean init = false;
@@ -61,8 +66,9 @@ public class SqlStorage implements IStorage {
         } catch (ClassNotFoundException e) {
             throw new Exception("Unable to load SQL driver!", e);
         }
-        dbConn = DriverManager.getConnection(uri, username, password);
-        verifyAndCreateTables();
+        dbSource = dbms.getSource(username, password, uri);
+        Connection dbConn = dbSource.getConnection();
+        verifyAndCreateTables(dbConn);
         Permissions.instance.getServer().getScheduler().scheduleAsyncRepeatingTask(Permissions.instance, new Runnable(){
             @Override
             public void run() {
@@ -71,7 +77,7 @@ public class SqlStorage implements IStorage {
             
         } , reloadDelay, reloadDelay);
         
-        init = true;
+        init = true;    
     }
     
     private String world;
@@ -88,7 +94,7 @@ public class SqlStorage implements IStorage {
     SqlStorage(String world)
     {
         this.world = world;
-        SqlStorage.instances.put(world, this);
+        SqlStorage.instances.put(world.toLowerCase(), this);
     }
     
     @Override
@@ -228,18 +234,6 @@ public class SqlStorage implements IStorage {
         perms.remove(new GroupWorld(groupWorld, groupName));
         //TODO SQL Updates
     }
-
-    @Override
-    public void finalize()
-    {
-        try {
-            dbConn.close();
-        } catch (SQLException e) {
-            System.err.println("Disconnecting from database failed.");
-            e.printStackTrace();
-        }
-
-    }
     
     private static void refresh() //Used for periodic cache flush
     {
@@ -249,20 +243,72 @@ public class SqlStorage implements IStorage {
         }
     }
     
-    private static void verifyAndCreateTables()
+    private static void verifyAndCreateTables(Connection dbConn) throws SQLException
     {        
-//        PreparedStatement ps;
-//        for(String table : tableNames)
-//        {
-//            ps = dbConn.prepareStatement("SELECT * FROM "+ table);
-//            ResultSetMetaData md = ps.getMetaData();
-//            int cols = md.getColumnCount();
-//            for(int i = 1; i <= cols; i++)
-//            {
-//                md.getColumnName(i);
-//                md.getColumnType(i);
-//            }
-//        }
+        Statement s = dbConn.createStatement();
+        //Verify stuff
+
+        s.executeUpdate(
+                "CREATE TABLE IF NOT EXISTS Worlds {" +
+                " worldid INT NOT NULL PRIMARY KEY," +
+                " parentid INT NOT NULL FOREIGN KEY REFERENCES Worlds(worldid)," +
+                " worldname VARCHAR(32) NOT NULL," +
+                " CONSTRAINT WorldNoSelfInherit CHECK (worldid IS NOT = parentid)" +
+                "};");
+        
+        s.executeUpdate(
+                "CREATE TABLE IF NOT EXISTS Users {" +
+                " uid INT NOT NULL PRIMARY KEY," +
+        		" username VARCHAR(32) NOT NULL," +
+        		" worldid INT NOT NULLm FORIEGN KEY REFERENCES Worlds(worldid)," +
+        		"CONSTRAINT UserNameWorld UNIQUE (username, World)"+
+        		"};");
+
+        s.executeUpdate(
+                "CREATE TABLE IF NOT EXISTS Groups {" +
+                " gid INT NOT NULL PRIMARY KEY," +
+                " groupname VARCHAR(32) NOT NULL," +
+                " worldid  VARCHAR(32) NOT NULL FORIEGN KEY REFERENCES Worlds(worldid)," +
+                " prefix VARCHAR(32) NOT NULL," +
+                " suffix VARCHAR(32) NOT NULL, " +
+                " build BIT(1) NOT NULL" +
+                "CONSTRAINT GroupNameWorld UNIQUE (groupname, World)"+
+                "};");
+        
+        s.executeUpdate(
+                "CREATE TABLE IF NOT EXISTS UserPermission {" +
+                " upermid INT NOT NULL PRIMARY KEY," +
+                " permstring VARCHAR(64) NOT NULL," +
+                " uid int NOT NULL FOREIGN KEY REFERENCES Users(uid)" +
+                "};");
+
+        s.executeUpdate(
+                "CREATE TABLE IF NOT EXISTS GroupPermission {" +
+                " gpermid INT NOT NULL PRIMARY KEY," +
+                " permstring VARCHAR(64) NOT NULL," +
+                " gid int NOT NULL FOREIGN KEY REFERENCES Groups(gid)" +
+                "};");
+
+        s.executeUpdate(
+                "CREATE TABLE IF NOT EXISTS UserInheritance {" +
+                " uinheritid INT NOT NULL PRIMARY KEY," +
+                " childid INT NOT NULL FOREIGN KEY REFERENCES Users(uid)," +
+                " parentid int NOT NULL FOREIGN KEY REFERENCES Groups(gid)" +
+                "};");
+
+        s.executeUpdate(
+                "CREATE TABLE IF NOT EXISTS GroupInheritance {" +
+                " ginheritid INT NOT NULL PRIMARY KEY," +
+                " childid INT NOT NULL FOREIGN KEY REFERENCES Groups(gid)," +
+                " parentid int NOT NULL FOREIGN KEY REFERENCES Groups(gid)," +
+                " CONSTRAINT GroupNoSelfInherit CHECK (childid IS NOT = parentid)" +
+                "};");
+
+        s.executeUpdate(
+                "CREATE TABLE IF NOT EXISTS WorldBase {" +
+                " worldid INT NOT NULL FOREIGN KEY REFERENCES Worlds(worldid)," +
+                " defaultid INT NOT NULL FOREIGN KEY REFERENCES Groups(gid)," +
+                "};");
     }
 
     @Override
@@ -311,15 +357,35 @@ enum Dbms
     MYSQL("com.mysql.jdbc.driver");
 
     private final String driver;
+//    private final String dataSource;
 
     Dbms(String driverClass)
     {
         this.driver = driverClass;
+//        this.dataSource = sourceClass;
     }
 
     public String getDriver()
     {
         return driver;
+    }
+    
+    public DataSource getSource(String username, String password, String url)
+    {
+        switch(this)
+        {
+        case MYSQL:
+            MysqlDataSource mds = new MysqlDataSource();
+            mds.setUser(username);
+            mds.setPassword(password);
+            mds.setUrl(url);
+            return mds;
+        default:
+        case SQLITE:
+            SQLiteDataSource sds = new SQLiteDataSource();
+            sds.setUrl(url);
+            return sds;
+        }
     }
 }
 
