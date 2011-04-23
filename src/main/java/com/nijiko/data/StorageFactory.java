@@ -22,6 +22,7 @@ public class StorageFactory {
 
     public static final IStorage createInstance(String world) throws IOException
     {
+        if(world==null)return null;
         world = world.toLowerCase();
         StorageType type = StorageType.YAML;
         int delay = 6000;
@@ -29,8 +30,12 @@ public class StorageFactory {
         if(config!=null)
         {
             config.load();
-            String parent = config.getString("permissions.storage.worldtype." + world);
+            String parent = config.getString("permissions.storage.worldcopy." + world);
             if(parent!=null) world = parent;
+            String userWorld = config.getString("permissions.storage.worldusercopy." + world);
+            if(userWorld==null) userWorld = world;
+            String parentWorld = config.getString("permissions.storage.worldparentcopy." + world);
+            if(parentWorld==null) userWorld = world;
             parent = null;
             String typename = config.getString("permissions.storage.type",StorageType.YAML.toString());
             String worldtype = config.getString("permissions.storage.worldtype." + world);

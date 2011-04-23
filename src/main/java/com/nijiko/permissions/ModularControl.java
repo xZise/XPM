@@ -360,6 +360,7 @@ public class ModularControl extends PermissionHandler
     
     private void load(String world, IStorage store)
     {
+        if(store==null) return;
         this.WorldStorage.put(world.toLowerCase(), store);
 
         Map<String, User> users = new HashMap<String, User>();        
