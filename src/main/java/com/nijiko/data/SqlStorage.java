@@ -1,18 +1,12 @@
 package com.nijiko.data;
 
 import java.sql.Connection;
-import java.sql.DatabaseMetaData;
-import java.sql.DriverManager;
-import java.sql.PreparedStatement;
-import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.sql.Types;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import javax.sql.DataSource;
 
@@ -26,26 +20,9 @@ import com.nijikokun.bukkit.Permissions.Permissions;
 public class SqlStorage implements IStorage {
 
     private static DataSource dbSource;
-//    private static int reloadDelay;
+    private static int reloadDelay;
     private static Map<String, SqlStorage> instances;
     private static boolean init = false;
-//    private static final Map<String, Map<String, Integer>> tableData = new HashMap<String, Map<String, Integer>>();
-//    
-//    static
-//    {
-//        Map<String, Integer> userid = new HashMap<String, Integer>();
-//        userid.put("world", Types.VARCHAR);
-//        userid.put("name", Types.VARCHAR);
-//        userid.put("id", Types.INTEGER);
-//        tableData.put("userid", userid);
-//        userid = null;
-//        
-//        HashMap<String, Integer> groupid = new HashMap<String, Integer>();
-//        groupid.put("world", Types.VARCHAR);
-//        groupid.put("name", Types.VARCHAR);
-//        groupid.put("id", Types.INTEGER);
-//        tableData.put("groupid", groupid);
-//    }
     
     public static void init(String dbmsName, String uri, String username, String password, int reloadDelay) throws Exception
     {
@@ -251,7 +228,6 @@ public class SqlStorage implements IStorage {
         s.executeUpdate(
                 "CREATE TABLE IF NOT EXISTS Worlds {" +
                 " worldid INT NOT NULL PRIMARY KEY," +
-                " parentid INT NOT NULL FOREIGN KEY REFERENCES Worlds(worldid)," +
                 " worldname VARCHAR(32) NOT NULL," +
                 " CONSTRAINT WorldNoSelfInherit CHECK (worldid IS NOT = parentid)" +
                 "};");
@@ -357,12 +333,10 @@ enum Dbms
     MYSQL("com.mysql.jdbc.driver");
 
     private final String driver;
-//    private final String dataSource;
 
     Dbms(String driverClass)
     {
         this.driver = driverClass;
-//        this.dataSource = sourceClass;
     }
 
     public String getDriver()

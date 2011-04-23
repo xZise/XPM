@@ -1,7 +1,6 @@
 package com.nijiko.permissions;
 
 import java.util.Collection;
-import java.util.Map;
 import org.bukkit.entity.Player;
 import org.bukkit.util.config.Configuration;
 
@@ -44,13 +43,13 @@ public abstract class PermissionHandler {
     public abstract boolean reload(String world);
 
     // Cache
-    public abstract void setCache(String world, Map<String, Boolean> Cache);
-    public abstract void setCacheItem(String world, String player, String permission, boolean data);
-    public abstract Map<String, Boolean> getCache(String world);
-    public abstract boolean getCacheItem(String world, String player, String permission);
-    public abstract void removeCachedItem(String world, String player, String permission);
-    public abstract void clearCache(String world);
-    public abstract void clearAllCache();
+//    public abstract void setCache(String world, Map<String, Boolean> Cache);
+//    public abstract void setCacheItem(String world, String player, String permission, boolean data);
+//    public abstract Map<String, Boolean> getCache(String world);
+//    public abstract boolean getCacheItem(String world, String player, String permission);
+//    public abstract void removeCachedItem(String world, String player, String permission);
+//    public abstract void clearCache(String world);
+//    public abstract void clearAllCache();
 
 
     /**

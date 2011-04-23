@@ -33,6 +33,7 @@ public class ConfigurationHandler extends DefaultConfiguration {
         this.config = config;
     }
 
+    @Override
     public void load() {
         this.permissionSystem = this.config.getString("plugin.permissions.system", this.permissionSystem);
     }

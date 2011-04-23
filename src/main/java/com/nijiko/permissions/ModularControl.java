@@ -21,7 +21,6 @@ public class ModularControl extends PermissionHandler
     private Map<String, Map<String, Group>> WorldGroups = new HashMap<String, Map<String, Group>>();
     private Map<String, Map<String, User>> WorldUsers = new HashMap<String, Map<String, User>>();
     private Map<String, Group> WorldBase = new HashMap<String, Group>();
-    private Map<String, String> WorldInheritance = new HashMap<String, String>();
     private Configuration storageConfig;
     private String defaultWorld = "";
     
@@ -119,7 +118,6 @@ public class ModularControl extends PermissionHandler
     //@Override
     
     public String getGroupName(String world, String name) {
-        // TODO WorldInheritance check
         Map<String,Group> groups = this.WorldGroups.get(world.toLowerCase());
         if(groups == null) return null;
         Group g = groups.get(name.toLowerCase());
@@ -129,7 +127,6 @@ public class ModularControl extends PermissionHandler
     //@Override
     
     public Set<Group> getParentGroups(String world, String name) {
-        // TODO WorldInheritance check
         try {
             return this.stringToGroups(safeGetUser(world, name).getParents());
         } catch (Exception e) {
@@ -140,7 +137,6 @@ public class ModularControl extends PermissionHandler
     //@Override
     
     public boolean inGroup(String world, String name, String groupWorld, String group) {
-        // TODO WorldInheritance check
         try {
             return safeGetUser(world, name).inGroup(groupWorld, group);
         } catch (Exception e) {
@@ -151,7 +147,6 @@ public class ModularControl extends PermissionHandler
     //@Override
     
     public boolean inSingleGroup(String world, String name,String groupWorld, String group) {
-        // TODO WorldInheritance check
         try {
             return safeGetUser(world, name).getParents().contains(new GroupWorld(groupWorld,group));
         } catch (Exception e) {
@@ -163,7 +158,6 @@ public class ModularControl extends PermissionHandler
     
     @Override
     public String getGroupPrefix(String world, String group) {
-        // TODO WorldInheritance check
         try {
             return safeGetGroup(world, group).getPrefix();
         } catch (Exception e) {
@@ -175,7 +169,6 @@ public class ModularControl extends PermissionHandler
     
     @Override
     public String getGroupSuffix(String world, String group) {
-        // TODO WorldInheritance check
         try {
             return safeGetGroup(world, group).getSuffix();
         } catch (Exception e) {
@@ -187,7 +180,6 @@ public class ModularControl extends PermissionHandler
     
     @Override
     public boolean canGroupBuild(String world, String group) {
-        // TODO WorldInheritance check
         try {
             return safeGetGroup(world, group).canBuild();
         } catch (Exception e) {
@@ -211,7 +203,11 @@ public class ModularControl extends PermissionHandler
     
     @Override
     public void saveAll() {
-        // TODO Auto-generated method stub
+        Collection<IStorage> stores = this.WorldStorage.values();
+        for(IStorage store : stores)
+        {
+            store.save();
+        }
     }
     Set<Group> stringToGroups(Set<GroupWorld> raws)
     {        
@@ -332,7 +328,7 @@ public class ModularControl extends PermissionHandler
     
     
     @Override
-    @Deprecated
+//    @Deprecated
     public void addUserPermission(String world, String user, String node) {
         try {
             safeGetUser(world,user).addPermission(node);
@@ -343,7 +339,7 @@ public class ModularControl extends PermissionHandler
     
     
     @Override
-    @Deprecated
+//    @Deprecated
     public void removeUserPermission(String world, String user, String node) {
         try {
             safeGetUser(world,user).removePermission(node);
@@ -366,7 +362,6 @@ public class ModularControl extends PermissionHandler
     {
         this.WorldStorage.put(world.toLowerCase(), store);
 
-        // TODO WorldInheritance check
         Map<String, User> users = new HashMap<String, User>();        
         Set<String> userNames = store.getUsers();
         for(String userName : userNames)
@@ -389,151 +384,6 @@ public class ModularControl extends PermissionHandler
     
     
     
-    
-    @Override
-    @Deprecated
-    public void setCache(String world, Map<String, Boolean> Cache) {
-        throw new UnsupportedOperationException("Permissions' cache is no longer implemented.");
-    }
-    
-    
-    @Override
-    @Deprecated
-    public void setCacheItem(String world, String player, String permission,
-            boolean data) {
-        throw new UnsupportedOperationException("Permissions' cache is no longer implemented.");        
-    }
-    
-    
-    @Override
-    @Deprecated
-    public Map<String, Boolean> getCache(String world) {
-        throw new UnsupportedOperationException("Permissions' cache is no longer implemented.");
-    }
-    
-    
-    @Override
-    @Deprecated
-    public boolean getCacheItem(String world, String player, String permission) {
-        throw new UnsupportedOperationException("Permissions' cache is no longer implemented.");
-    }
-    
-    
-    @Override
-    @Deprecated
-    public void removeCachedItem(String world, String player, String permission) {
-        throw new UnsupportedOperationException("Permissions' cache is no longer implemented.");
-    }
-    
-    
-    @Override
-    @Deprecated
-    public void clearCache(String world) {
-        throw new UnsupportedOperationException("Permissions' cache is no longer implemented.");        
-    }
-    
-    
-    @Override
-    @Deprecated
-    public void clearAllCache() {
-        throw new UnsupportedOperationException("Permissions' cache is no longer implemented.");        
-    }
-    
-    
-    @Deprecated
-    public String getGroupPermissionString(String world, String group,
-            String permission) {
-        throw new UnsupportedOperationException("Permissions' storage is no longer implemented. Nag the author to use Bukkit's Persistence API.");
-    }
-    
-    
-    @Deprecated
-    public int getGroupPermissionInteger(String world, String group,
-            String permission) {
-        throw new UnsupportedOperationException("Permissions' storage is no longer implemented. Nag the author to use Bukkit's Persistence API.");
-    }
-    
-    
-    @Deprecated
-    public boolean getGroupPermissionBoolean(String world, String group,
-            String permission) {
-        throw new UnsupportedOperationException("Permissions' storage is no longer implemented. Nag the author to use Bukkit's Persistence API.");
-    }
-    
-    
-    @Deprecated
-    public double getGroupPermissionDouble(String world, String group,
-            String permission) {
-        throw new UnsupportedOperationException("Permissions' storage is no longer implemented. Nag the author to use Bukkit's Persistence API.");
-    }
-    
-    
-    @Deprecated
-    public String getUserPermissionString(String world, String name,
-            String permission) {
-        throw new UnsupportedOperationException("Permissions' storage is no longer implemented. Nag the author to use Bukkit's Persistence API.");
-    }
-    
-    
-    @Deprecated
-    public int getUserPermissionInteger(String world, String name,
-            String permission) {
-        throw new UnsupportedOperationException("Permissions' storage is no longer implemented. Nag the author to use Bukkit's Persistence API.");
-    }
-    
-    
-    @Deprecated
-    public boolean getUserPermissionBoolean(String world, String name,
-            String permission) {
-        throw new UnsupportedOperationException("Permissions' storage is no longer implemented. Nag the author to use Bukkit's Persistence API.");
-    }
-    
-    
-    @Deprecated
-    public double getUserPermissionDouble(String world, String name,
-            String permission) {
-        throw new UnsupportedOperationException("Permissions' storage is no longer implemented. Nag the author to use Bukkit's Persistence API.");
-    }
-    
-    
-    @Deprecated
-    public String getPermissionString(String world, String name,
-            String permission) {
-        throw new UnsupportedOperationException("Permissions' storage is no longer implemented. Nag the author to use Bukkit's Persistence API.");
-    }
-    
-    
-    @Deprecated
-    public int getPermissionInteger(String world, String name, String permission) {
-        throw new UnsupportedOperationException("Permissions' storage is no longer implemented. Nag the author to use Bukkit's Persistence API.");
-    }
-    
-    
-    @Deprecated
-    public boolean getPermissionBoolean(String world, String name,
-            String permission) {
-        throw new UnsupportedOperationException("Permissions' storage is no longer implemented. Nag the author to use Bukkit's Persistence API.");
-    }
-    
-    
-    @Deprecated
-    public double getPermissionDouble(String world, String name,
-            String permission) {
-        throw new UnsupportedOperationException("Permissions' storage is no longer implemented. Nag the author to use Bukkit's Persistence API.");
-    }
-    
-    
-    @Deprecated
-    public void addGroupInfo(String world, String group, String node,
-            Object data) {
-        throw new UnsupportedOperationException("Permissions' storage is no longer implemented. Nag the author to use Bukkit's Persistence API.");
-    }
-    
-    
-    @Deprecated
-    public void removeGroupInfo(String world, String group, String node) {
-        throw new UnsupportedOperationException("Permissions' storage is no longer implemented. Nag the author to use Bukkit's Persistence API.");
-    }
     
 
 }

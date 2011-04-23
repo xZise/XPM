@@ -28,7 +28,10 @@ public class StorageFactory {
         boolean autoSave = true;
         if(config!=null)
         {
-            config.load(); 
+            config.load();
+            String parent = config.getString("permissions.storage.worldtype." + world);
+            if(parent!=null) world = parent;
+            parent = null;
             String typename = config.getString("permissions.storage.type",StorageType.YAML.toString());
             String worldtype = config.getString("permissions.storage.worldtype." + world);
             if(worldtype!=null&&!worldtype.isEmpty()) typename = worldtype;

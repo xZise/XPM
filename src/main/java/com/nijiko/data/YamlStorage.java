@@ -120,7 +120,10 @@ public class YamlStorage implements IStorage {
     public Set<GroupWorld> getParents(String name, EntryType type) {
         Configuration config = (type == EntryType.GROUP ? groupConfig : userConfig);
         rwl.readLock().lock();
-        Set<String> rawParents = new HashSet<String>(config.getStringList(type.toString().toLowerCase()+"s."+name+".inheritance", null));
+        String path = type.toString().toLowerCase()+"s."+name+".";
+        if(type==EntryType.GROUP) path = path + "inheritance";
+        else path = path + "groups";
+        Set<String> rawParents = new HashSet<String>(config.getStringList(path , null));
         rwl.readLock().unlock();
         Set<GroupWorld> parents = new HashSet<GroupWorld>(rawParents.size());
         for(String raw : rawParents)
