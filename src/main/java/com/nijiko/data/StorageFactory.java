@@ -11,9 +11,9 @@ import com.nijikokun.bukkit.Permissions.Permissions;
 public class StorageFactory {
     private static Configuration config;
     
-    public static final void setConfig(Configuration config)
+    public static final void setConfig(Configuration storageConfig)
     {
-        StorageFactory.config = config;
+        StorageFactory.config = storageConfig;
     }
     
     public final static UserStorage getUserStorage(String world) throws IOException

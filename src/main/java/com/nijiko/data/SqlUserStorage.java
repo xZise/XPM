@@ -1,9 +1,15 @@
 package com.nijiko.data;
 
+import java.sql.Connection;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+
+import javax.sql.DataSource;
 
 import com.nijiko.permissions.EntryType;
 
@@ -13,7 +19,9 @@ public class SqlUserStorage implements UserStorage {
     private String userWorld;
     private Map<String, Set<String>> userPermissions = new HashMap<String, Set<String>>();
     private Map<String, Set<GroupWorld>> userParents = new HashMap<String, Set<GroupWorld>>();
-        
+
+    private static final String permGetStmt = "";
+    private static final String parentGetStmt = "";
     public SqlUserStorage(String userWorld) {
         // TODO Auto-generated constructor stub
     }
@@ -23,8 +31,37 @@ public class SqlUserStorage implements UserStorage {
         if(name == null) return new HashSet<String>();
         Set<String> permissions = userPermissions.get(name.toLowerCase());
         if(permissions != null) return permissions;
-        //TODO SQL Query
-        return null;
+        permissions = new HashSet<String>();
+        
+        DataSource ds = SqlStorage.getSource();
+        Connection dbConn;
+        try {
+            dbConn = ds.getConnection();
+        } catch (SQLException e1) {
+            e1.printStackTrace();
+            return new HashSet<String>();
+        }
+        
+        try {
+            Statement s = dbConn.createStatement();
+            s.execute(permGetStmt);
+            ResultSet rs = s.getResultSet();
+            while (rs.next()) {
+                permissions.add(rs.getString(1));
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return new HashSet<String>();
+        } finally {
+            try {
+                dbConn.close();
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        }
+        
+        userPermissions.put(name.toLowerCase(), permissions);
+        return permissions;
     }
 
     @Override
@@ -32,7 +69,35 @@ public class SqlUserStorage implements UserStorage {
         if(name == null) return new HashSet<GroupWorld>();
         Set<GroupWorld> parents = userParents.get(name.toLowerCase());
         if(parents != null) return parents;
-        //TODO SQL Query
+        parents = new HashSet<GroupWorld>();
+        DataSource ds = SqlStorage.getSource();        
+        Connection dbConn;
+        try {
+            dbConn = ds.getConnection();
+        } catch (SQLException e1) {
+            e1.printStackTrace();
+            return new HashSet<GroupWorld>();
+        }
+        
+        try {
+            Statement s = dbConn.createStatement();
+            s.execute(parentGetStmt);
+            ResultSet rs = s.getResultSet();
+            while (rs.next()) {
+                GroupWorld gw = new GroupWorld(rs.getString(1),rs.getString(2));
+                parents.add(gw);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return new HashSet<GroupWorld>();
+        } finally {
+            try {
+                dbConn.close();
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        }
+        userParents.put(name.toLowerCase(), parents);
         return null;
     }
 

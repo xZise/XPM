@@ -9,6 +9,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 //import org.bukkit.util.config.Configuration;
+import org.bukkit.util.config.Configuration;
 import org.bukkit.util.config.ConfigurationException;
 import org.yaml.snakeyaml.DumperOptions;
 import org.yaml.snakeyaml.Yaml;
@@ -32,12 +33,12 @@ import org.yaml.snakeyaml.representer.Representer;
  * @author rcjrrjcr
  * 
  */
-public class NotNullConfiguration extends EscapedConfigurationNode {
+public class NotNullConfiguration extends Configuration {
     private Yaml yaml;
     private File file;
 
     public NotNullConfiguration(File file) {
-        super(new HashMap<String, Object>());
+        super(file);
 
         DumperOptions options = new DumperOptions();
         options.setIndent(4);
@@ -49,6 +50,7 @@ public class NotNullConfiguration extends EscapedConfigurationNode {
         this.file = file;
     }
 
+    @Override
     public void load() {
         FileInputStream stream = null;
 
@@ -69,6 +71,7 @@ public class NotNullConfiguration extends EscapedConfigurationNode {
         }
     }
 
+    @Override
     public boolean save() {
         FileOutputStream stream = null;
 
