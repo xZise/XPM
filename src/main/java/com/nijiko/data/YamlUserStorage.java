@@ -2,6 +2,7 @@ package com.nijiko.data;
 
 import java.util.HashSet;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.Set;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
@@ -36,6 +37,7 @@ public class YamlUserStorage implements UserStorage{
 
     @Override
     public Set<String> getPermissions(String name) {
+        name = name.replace('.', ','); //Fix for legacy usernames with periods
         rwl.readLock().lock();
         Set<String> permissions = new HashSet<String>(userConfig.getStringList("users."+name+".permissions", null));
         rwl.readLock().unlock();
@@ -44,6 +46,7 @@ public class YamlUserStorage implements UserStorage{
 
     @Override
     public Set<GroupWorld> getParents(String name) {
+        name = name.replace('.', ','); //Fix for legacy usernames with periods
         rwl.readLock().lock();
         Set<String> rawParents = new HashSet<String>(userConfig.getStringList("users."+name+".groups" , null));
         rwl.readLock().unlock();
@@ -60,6 +63,7 @@ public class YamlUserStorage implements UserStorage{
 
     @Override
     public void addPermission(String name, String permission) {
+        name = name.replace('.', ','); //Fix for legacy usernames with periods
         rwl.writeLock().lock();
         Set<String> permissions = new HashSet<String>(userConfig.getStringList("users."+name+".permissions", null));
         permissions.add(permission);
@@ -71,6 +75,7 @@ public class YamlUserStorage implements UserStorage{
 
     @Override
     public void removePermission(String name, String permission) {
+        name = name.replace('.', ','); //Fix for legacy usernames with periods
         rwl.writeLock().lock();
         Set<String> permissions = new HashSet<String>(userConfig.getStringList("users."+name+".permissions", null));
         permissions.add(permission);
@@ -82,6 +87,7 @@ public class YamlUserStorage implements UserStorage{
 
     @Override
     public void addParent(String name, String groupWorld, String groupName) {
+        name = name.replace('.', ','); //Fix for legacy usernames with periods
         rwl.writeLock().lock();
         Set<String> permissions = new HashSet<String>(userConfig.getStringList("users."+name+".groups", null));
         if(groupWorld==null||this.world.equalsIgnoreCase(groupWorld)) permissions.add(groupName);
@@ -95,6 +101,7 @@ public class YamlUserStorage implements UserStorage{
 
     @Override
     public void removeParent(String name, String groupWorld, String groupName) {
+        name = name.replace('.', ','); //Fix for legacy usernames with periods
         rwl.writeLock().lock();
         Set<String> permissions = new HashSet<String>(userConfig.getStringList("users."+name+".groups", null));
         if(groupWorld==null||this.world.equalsIgnoreCase(groupWorld)) permissions.remove(groupName);
@@ -109,8 +116,14 @@ public class YamlUserStorage implements UserStorage{
     @Override
     public Set<String> getUsers() {
         rwl.readLock().lock();
-        Set<String> users = new HashSet<String>(userConfig.getKeys("users"));
+        List<String> rawUsers = userConfig.getKeys("users");
         rwl.readLock().unlock();
+        Set<String> users = new HashSet<String>();
+        for(String username : rawUsers)
+        {
+            if(username==null)continue;
+            users.add(username.replace(',', '.'));
+        }
         return users;
     }
 
