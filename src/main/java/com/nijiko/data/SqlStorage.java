@@ -3,8 +3,10 @@ package com.nijiko.data;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -17,12 +19,63 @@ import com.nijiko.permissions.EntryType;
 import com.nijikokun.bukkit.Permissions.Permissions;
 
 
-public class SqlStorage implements IStorage {
+public class SqlStorage {
 
     private static DataSource dbSource;
     private static int reloadDelay;
-    private static Map<String, SqlStorage> instances;
+//    private static Map<String, SqlStorage> instances;
     private static boolean init = false;
+    private static List<String> create = new ArrayList<String>(8);
+    static
+    {
+        create.add(
+                "CREATE TABLE IF NOT EXISTS Worlds (" +
+                " worldid INT NOT NULL PRIMARY KEY," +
+                " worldname VARCHAR(32) NOT NULL," +
+                " CONSTRAINT WorldNoSelfInherit CHECK (worldid IS NOT = parentid)," +
+                ")");        
+        create.add("CREATE TABLE IF NOT EXISTS Users (" +
+                " uid INT NOT NULL PRIMARY KEY," +
+                " username VARCHAR(32) NOT NULL," +
+                " worldid INT NOT NULL FORIEGN KEY REFERENCES Worlds(worldid)," +
+                " CONSTRAINT UserNameWorld UNIQUE (username, World)," +
+                " INDEX(username)"+
+                ")");
+        create.add("CREATE TABLE IF NOT EXISTS Groups (" +
+                " gid INT NOT NULL PRIMARY KEY," +
+                " groupname VARCHAR(32) NOT NULL," +
+                " worldid  INT NOT NULL FORIEGN KEY REFERENCES Worlds(worldid)," +
+                " prefix VARCHAR(32) NOT NULL," +
+                " suffix VARCHAR(32) NOT NULL, " +
+                " build TINYINT NOT NULL DEFAULT 0" +
+                " CONSTRAINT GroupNameWorld UNIQUE (groupname, World)," +
+                ")");        
+        create.add("CREATE TABLE IF NOT EXISTS UserPermission (" +
+                " upermid INT NOT NULL PRIMARY KEY," +
+                " permstring VARCHAR(64) NOT NULL," +
+                " uid int NOT NULL FOREIGN KEY REFERENCES Users(uid)" +
+                ")");
+        create.add("CREATE TABLE IF NOT EXISTS GroupPermission (" +
+                " gpermid INT NOT NULL PRIMARY KEY," +
+                " permstring VARCHAR(64) NOT NULL," +
+                " gid int NOT NULL FOREIGN KEY REFERENCES Groups(gid)" +
+                ")");
+        create.add("CREATE TABLE IF NOT EXISTS UserInheritance (" +
+                " uinheritid INT NOT NULL PRIMARY KEY," +
+                " childid INT NOT NULL FOREIGN KEY REFERENCES Users(uid)," +
+                " parentid int NOT NULL FOREIGN KEY REFERENCES Groups(gid)" +
+                ");");
+        create.add("CREATE TABLE IF NOT EXISTS GroupInheritance (" +
+                " ginheritid INT NOT NULL PRIMARY KEY," +
+                " childid INT NOT NULL FOREIGN KEY REFERENCES Groups(gid)," +
+                " parentid int NOT NULL FOREIGN KEY REFERENCES Groups(gid)," +
+                " CONSTRAINT GroupNoSelfInherit CHECK (childid IS NOT = parentid)" +
+                ")");
+        create.add("CREATE TABLE IF NOT EXISTS WorldBase (" +
+                " worldid INT NOT NULL FOREIGN KEY REFERENCES Worlds(worldid)," +
+                " defaultid INT NOT NULL FOREIGN KEY REFERENCES Groups(gid)," +
+                ")");
+    }
     
     public static void init(String dbmsName, String uri, String username, String password, int reloadDelay) throws Exception
     {
@@ -45,7 +98,7 @@ public class SqlStorage implements IStorage {
         }
         dbSource = dbms.getSource(username, password, uri);
         Connection dbConn = dbSource.getConnection();
-        verifyAndCreateTables(dbConn);
+        verifyAndCreateTables(dbms);
         Permissions.instance.getServer().getScheduler().scheduleAsyncRepeatingTask(Permissions.instance, new Runnable(){
             @Override
             public void run() {
@@ -57,7 +110,8 @@ public class SqlStorage implements IStorage {
         init = true;    
     }
     
-    private String world;
+    private String userWorld;
+    private String groupWorld;
     private String baseGroup = null;
     private Set<String> buildGroups = new HashSet<String>();
     private Map<String, String> groupPrefixes = new HashMap<String, String>();
@@ -68,10 +122,11 @@ public class SqlStorage implements IStorage {
     private Map<String, Set<GroupWorld>> userParents = new HashMap<String, Set<GroupWorld>>();
     
 
-    SqlStorage(String world)
+    SqlStorage(String userWorld, String groupWorld)
     {
-        this.world = world;
-        SqlStorage.instances.put(world.toLowerCase(), this);
+        this.userWorld = userWorld;
+        this.groupWorld = groupWorld;
+//        SqlStorage.instances.put(world.toLowerCase(), this);
     }
     
     @Override
@@ -220,71 +275,17 @@ public class SqlStorage implements IStorage {
         }
     }
     
-    private static void verifyAndCreateTables(Connection dbConn) throws SQLException
+    private static void verifyAndCreateTables(Dbms dbms) throws SQLException
     {        
+        Connection dbConn = SqlStorage.dbSource.getConnection();
         Statement s = dbConn.createStatement();
         //Verify stuff
 
-        s.executeUpdate(
-                "CREATE TABLE IF NOT EXISTS Worlds {" +
-                " worldid INT NOT NULL PRIMARY KEY," +
-                " worldname VARCHAR(32) NOT NULL," +
-                " CONSTRAINT WorldNoSelfInherit CHECK (worldid IS NOT = parentid)" +
-                "};");
-        
-        s.executeUpdate(
-                "CREATE TABLE IF NOT EXISTS Users {" +
-                " uid INT NOT NULL PRIMARY KEY," +
-        		" username VARCHAR(32) NOT NULL," +
-        		" worldid INT NOT NULLm FORIEGN KEY REFERENCES Worlds(worldid)," +
-        		"CONSTRAINT UserNameWorld UNIQUE (username, World)"+
-        		"};");
-
-        s.executeUpdate(
-                "CREATE TABLE IF NOT EXISTS Groups {" +
-                " gid INT NOT NULL PRIMARY KEY," +
-                " groupname VARCHAR(32) NOT NULL," +
-                " worldid  VARCHAR(32) NOT NULL FORIEGN KEY REFERENCES Worlds(worldid)," +
-                " prefix VARCHAR(32) NOT NULL," +
-                " suffix VARCHAR(32) NOT NULL, " +
-                " build BIT(1) NOT NULL" +
-                "CONSTRAINT GroupNameWorld UNIQUE (groupname, World)"+
-                "};");
-        
-        s.executeUpdate(
-                "CREATE TABLE IF NOT EXISTS UserPermission {" +
-                " upermid INT NOT NULL PRIMARY KEY," +
-                " permstring VARCHAR(64) NOT NULL," +
-                " uid int NOT NULL FOREIGN KEY REFERENCES Users(uid)" +
-                "};");
-
-        s.executeUpdate(
-                "CREATE TABLE IF NOT EXISTS GroupPermission {" +
-                " gpermid INT NOT NULL PRIMARY KEY," +
-                " permstring VARCHAR(64) NOT NULL," +
-                " gid int NOT NULL FOREIGN KEY REFERENCES Groups(gid)" +
-                "};");
-
-        s.executeUpdate(
-                "CREATE TABLE IF NOT EXISTS UserInheritance {" +
-                " uinheritid INT NOT NULL PRIMARY KEY," +
-                " childid INT NOT NULL FOREIGN KEY REFERENCES Users(uid)," +
-                " parentid int NOT NULL FOREIGN KEY REFERENCES Groups(gid)" +
-                "};");
-
-        s.executeUpdate(
-                "CREATE TABLE IF NOT EXISTS GroupInheritance {" +
-                " ginheritid INT NOT NULL PRIMARY KEY," +
-                " childid INT NOT NULL FOREIGN KEY REFERENCES Groups(gid)," +
-                " parentid int NOT NULL FOREIGN KEY REFERENCES Groups(gid)," +
-                " CONSTRAINT GroupNoSelfInherit CHECK (childid IS NOT = parentid)" +
-                "};");
-
-        s.executeUpdate(
-                "CREATE TABLE IF NOT EXISTS WorldBase {" +
-                " worldid INT NOT NULL FOREIGN KEY REFERENCES Worlds(worldid)," +
-                " defaultid INT NOT NULL FOREIGN KEY REFERENCES Groups(gid)," +
-                "};");
+        String engine = dbms.equals(Dbms.MYSQL) ? " ENGINE = InnoDB;" : ";";
+        for(String state : create)
+        {
+            s.executeUpdate(state + engine);
+        }
     }
 
     @Override

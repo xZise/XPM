@@ -7,47 +7,24 @@ import java.util.Queue;
 import java.util.Set;
 
 import com.nijiko.data.GroupWorld;
-import com.nijiko.data.IStorage;
 
 public abstract class Entry {
 
     protected ModularControl controller;
-    protected IStorage data;
     protected String name;
     protected String world;
 
-   Entry(ModularControl controller, IStorage data, String name, String world) {
+   Entry(ModularControl controller, String name, String world) {
         this.controller = controller;
-        this.data = data;
         this.name = name;
         this.world = world;
     }
    
-    public Set<String> getPermissions() {
-        return data.getPermissions(name, getType());
-    }
-    public Set<GroupWorld> getParents() {
-        return data.getParents( name, getType());
-    }
+    public abstract Set<String> getPermissions();
+    public abstract Set<GroupWorld> getParents();
 
     
-    public void setPermission(final String permission, final boolean add) {
-        Set<String> permissions = this.getPermissions();
-        String negated = permission.startsWith("-") ? permission.substring(1) : "-" + permission;
-        if(add)
-        {
-            if(permissions.contains(negated))
-            {
-                data.removePermission(name, getType(), negated);
-            }
-            data.addPermission(name, getType(), permission);
-        }
-        else
-        {
-            data.removePermission(name, getType(), permission);
-            data.addPermission(name, getType(), negated);
-        }
-    }
+    public abstract void setPermission(final String permission, final boolean add);
 
     public void addPermission(final String permission)
     {
@@ -59,15 +36,10 @@ public abstract class Entry {
         this.setPermission(permission, false);
     }
 
-    public void addParent(Group group)
-    {
-        data.addParent(name, group.world, group.name, this.getType());
-    }
+    public abstract void addParent(Group group);
     
-    public void removeParent(Group group)
-    {
-        if(this.inGroup(group.world, group.name)) data.removeParent(name, group.world, group.name, this.getType());        
-    }
+    public abstract void removeParent(Group group);
+    
     public boolean hasPermission(String permission)
     {
         Set<String> permissions = this.getPermissions();

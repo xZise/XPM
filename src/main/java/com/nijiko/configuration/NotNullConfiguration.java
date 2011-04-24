@@ -8,7 +8,7 @@ import java.io.OutputStreamWriter;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.bukkit.util.config.Configuration;
+//import org.bukkit.util.config.Configuration;
 import org.bukkit.util.config.ConfigurationException;
 import org.yaml.snakeyaml.DumperOptions;
 import org.yaml.snakeyaml.Yaml;
@@ -25,32 +25,31 @@ import org.yaml.snakeyaml.representer.Represent;
 import org.yaml.snakeyaml.representer.Representer;
 
 /**
- * Temorary fix for the nulls popping up in YAML world files.
- * Original code from Bukkit. Code was copied due to inheritance access problems.<br/>
+ * Temporary fix for the nulls popping up in YAML world files. Original code
+ * from Bukkit. Code was copied due to inheritance access problems.<br/>
  * Representer from SnakeYAML docs<br/>
+ * 
  * @author rcjrrjcr
- *
+ * 
  */
-public class NotNullConfiguration extends Configuration {
+public class NotNullConfiguration extends EscapedConfigurationNode {
     private Yaml yaml;
     private File file;
-    
+
     public NotNullConfiguration(File file) {
-        super(file);
+        super(new HashMap<String, Object>());
 
         DumperOptions options = new DumperOptions();
         options.setIndent(4);
         options.setDefaultFlowStyle(DumperOptions.FlowStyle.BLOCK);
 
-        yaml = new Yaml(new SafeConstructor(), new NotNullRepresenter(), options);
+        yaml = new Yaml(new SafeConstructor(), new NotNullRepresenter(),
+                options);
 
         this.file = file;
     }
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void load() {        
+
+    public void load() {
         FileInputStream stream = null;
 
         try {
@@ -69,10 +68,7 @@ public class NotNullConfiguration extends Configuration {
             }
         }
     }
-    /**
-     * {@inheritDoc}
-     */
-    @Override
+
     public boolean save() {
         FileOutputStream stream = null;
 
@@ -97,25 +93,26 @@ public class NotNullConfiguration extends Configuration {
 
         return false;
     }
-    
+
     @SuppressWarnings("unchecked")
     private void nullRead(Object input) throws ConfigurationException {
         try {
-            if ( null == input ) {
+            if (null == input) {
                 root = new HashMap<String, Object>();
             } else {
-                root = (Map<String, Object>)input;
+                root = (Map<String, Object>) input;
             }
         } catch (ClassCastException e) {
-            throw new ConfigurationException("Root document must be an key-value structure");
+            throw new ConfigurationException(
+                    "Root document must be an key-value structure");
         }
     }
-    
+
 }
+
 class NotNullRepresenter extends Representer {
 
-    public NotNullRepresenter()
-    {
+    public NotNullRepresenter() {
         super();
         this.nullRepresenter = new EmptyRepresentNull();
     }
@@ -123,20 +120,21 @@ class NotNullRepresenter extends Representer {
     protected class EmptyRepresentNull implements Represent {
         @Override
         public Node representData(Object data) {
-            return representScalar(Tag.NULL, ""); //Changed "null" to "" so as to avoid writing nulls
+            return representScalar(Tag.NULL, ""); // Changed "null" to "" so as
+                                                  // to avoid writing nulls
         }
     }
 
-
-    //Code borrowed from snakeyaml (http://code.google.com/p/snakeyaml/source/browse/src/test/java/org/yaml/snakeyaml/issues/issue60/SkipBeanTest.java)
+    // Code borrowed from snakeyaml
+    // (http://code.google.com/p/snakeyaml/source/browse/src/test/java/org/yaml/snakeyaml/issues/issue60/SkipBeanTest.java)
     @Override
-    protected NodeTuple representJavaBeanProperty(Object javaBean, Property property,
-            Object propertyValue, Tag customTag) {
-        NodeTuple tuple = super.representJavaBeanProperty(javaBean, property, propertyValue,
-                customTag);
+    protected NodeTuple representJavaBeanProperty(Object javaBean,
+            Property property, Object propertyValue, Tag customTag) {
+        NodeTuple tuple = super.representJavaBeanProperty(javaBean, property,
+                propertyValue, customTag);
         Node valueNode = tuple.getValueNode();
         if (valueNode instanceof CollectionNode) {
-            //Removed null check
+            // Removed null check
             if (Tag.SEQ.equals(valueNode.getTag())) {
                 SequenceNode seq = (SequenceNode) valueNode;
                 if (seq.getValue().isEmpty()) {
@@ -152,5 +150,5 @@ class NotNullRepresenter extends Representer {
         }
         return tuple;
     }
-    //End of borrowed code
+    // End of borrowed code
 }

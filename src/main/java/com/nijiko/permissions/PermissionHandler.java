@@ -2,7 +2,6 @@ package com.nijiko.permissions;
 
 import java.util.Collection;
 import org.bukkit.entity.Player;
-import org.bukkit.util.config.Configuration;
 
 /**
  * Permissions 2.x
@@ -38,7 +37,6 @@ public abstract class PermissionHandler {
     public abstract boolean checkWorld(String world);
 
     public abstract void load() throws Exception;
-    public abstract void load(String world, Configuration userConfig, Configuration groupConfig);
     public abstract void reload();
     public abstract boolean reload(String world);
 
@@ -155,7 +153,151 @@ public abstract class PermissionHandler {
      * @return String
      */
     public abstract boolean canGroupBuild(String world, String group);
+    /**
+     * Get permission nodes from a group that contain values.
+     * <br /><br />
+     * Grab Group Permission String values.
+     *
+     * @param world
+     * @param group
+     * @param permission
+     * @return String. If no string found return "".
+     */
+    public abstract String getGroupPermissionString(String world, String group, String permission);
+   
+    /**
+     * Get permission nodes from a group that contain values.
+     * <br /><br />
+     * Grab Group Permission Integer values.
+     *
+     * @param world
+     * @param group
+     * @param permission
+     * @return Integer. No integer found return -1.
+     */
+    public abstract int getGroupPermissionInteger(String world, String group, String permission);
     
+    /**
+     * Get permission nodes from a group that contain values.
+     * <br /><br />
+     * Grab Group Permission String values.
+     * 
+     * @param group
+     * @param permission
+     * @return Boolean. No boolean found return false.
+     */
+    public abstract boolean getGroupPermissionBoolean(String world, String group, String permission);
+    
+    /**
+     * Get permission nodes from a group that contain values.
+     * <br /><br />
+     * Grab Group Permission Double values.
+     *
+     * @param world
+     * @param group
+     * @param permission
+     * @return Double. No value found return -1.0
+     */
+    public abstract double getGroupPermissionDouble(String world, String group, String permission);
+
+    /**
+     * Get permission nodes from a specific user that contain values.
+     * <br /><br />
+     * Grab User Permission String values.
+     *
+     * @param world
+     * @param group
+     * @param permission
+     * @return String. If no string found return "".
+     */
+    public abstract String getUserPermissionString(String world, String name, String permission);
+    
+    /**
+     * Get permission nodes from a specific user that contain values.
+     * <br /><br />
+     * Grab User Permission Integer values.
+     *
+     * @param world
+     * @param group
+     * @param permission
+     * @return Integer. No integer found return -1.
+     */
+    public abstract int getUserPermissionInteger(String world, String name, String permission);
+   
+    /**
+     * Get permission nodes from a specific user that contain values.
+     * <br /><br />
+     * Grab User Permission Boolean values.
+     *
+     * @param world
+     * @param group
+     * @param permission
+     * @return Boolean. No boolean found return false.
+     */
+    public abstract boolean getUserPermissionBoolean(String world, String name, String permission);
+
+    /**
+     * Get permission nodes from a specific user that contain values.
+     * <br /><br />
+     * Grab User Permission Double values.
+     *
+     * @param world
+     * @param group
+     * @param permission
+     * @return Double. No value found return -1.0
+     */
+    public abstract double getUserPermissionDouble(String world, String name, String permission);
+
+    /**
+     * Get permission nodes from a user / group that contain values.
+     * <br /><br />
+     * Grab User Permission String values.
+     *
+     * @param world
+     * @param group
+     * @param permission
+     * @return String. If no string found return "".
+     */
+    public abstract String getPermissionString(String world, String name, String permission);
+
+    /**
+     * Get permission nodes from a user / group that contain values.
+     * <br /><br />
+     * Grab User Permission Integer values.
+     *
+     * @param world
+     * @param group
+     * @param permission
+     * @return Integer. No integer found return -1.
+     */
+    public abstract int getPermissionInteger(String world, String name, String permission);
+
+    /**
+     * Get permission nodes from a user / group that contain values.
+     * <br /><br />
+     * Grab User Permission Boolean values.
+     *
+     * @param world
+     * @param group
+     * @param permission
+     * @return Boolean. No boolean found return false.
+     */
+    public abstract boolean getPermissionBoolean(String world, String name, String permission);
+
+    /**
+     * Get permission nodes from a user / group that contain values.
+     * <br /><br />
+     * Grab User Permission Double values.
+     *
+     * @param world
+     * @param group
+     * @param permission
+     * @return Double. No value found return -1.0
+     */
+    public abstract double getPermissionDouble(String world, String name, String permission);
+
+    public abstract void addGroupInfo(String world, String group, String node, Object data);
+    public abstract void removeGroupInfo(String world, String group, String node);
     public abstract void addUserPermission(String world, String user, String node);
     public abstract void removeUserPermission(String world, String user, String node);
 
