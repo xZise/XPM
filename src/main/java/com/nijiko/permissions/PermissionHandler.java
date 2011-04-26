@@ -1,8 +1,7 @@
 package com.nijiko.permissions;
 
-import java.util.Map;
+import java.util.Collection;
 import org.bukkit.entity.Player;
-import org.bukkit.util.config.Configuration;
 
 /**
  * Permissions 2.x
@@ -33,23 +32,22 @@ public abstract class PermissionHandler {
     public abstract void setDefaultWorld(String world);
 
 
-    public abstract boolean loadWorld(String world);
-    public abstract void forceLoadWorld(String world);
+    public abstract boolean loadWorld(String world) throws Exception;
+    public abstract void forceLoadWorld(String world) throws Exception;
     public abstract boolean checkWorld(String world);
 
-    public abstract void load();
-    public abstract void load(String world, Configuration userConfig, Configuration groupConfig);
+    public abstract void load() throws Exception;
     public abstract void reload();
     public abstract boolean reload(String world);
 
     // Cache
-    public abstract void setCache(String world, Map<String, Boolean> Cache);
-    public abstract void setCacheItem(String world, String player, String permission, boolean data);
-    public abstract Map<String, Boolean> getCache(String world);
-    public abstract boolean getCacheItem(String world, String player, String permission);
-    public abstract void removeCachedItem(String world, String player, String permission);
-    public abstract void clearCache(String world);
-    public abstract void clearAllCache();
+//    public abstract void setCache(String world, Map<String, Boolean> Cache);
+//    public abstract void setCacheItem(String world, String player, String permission, boolean data);
+//    public abstract Map<String, Boolean> getCache(String world);
+//    public abstract boolean getCacheItem(String world, String player, String permission);
+//    public abstract void removeCachedItem(String world, String player, String permission);
+//    public abstract void clearCache(String world);
+//    public abstract void clearAllCache();
 
 
     /**
@@ -155,7 +153,6 @@ public abstract class PermissionHandler {
      * @return String
      */
     public abstract boolean canGroupBuild(String world, String group);
-
     /**
      * Get permission nodes from a group that contain values.
      * <br /><br />
@@ -301,7 +298,6 @@ public abstract class PermissionHandler {
 
     public abstract void addGroupInfo(String world, String group, String node, Object data);
     public abstract void removeGroupInfo(String world, String group, String node);
-    
     public abstract void addUserPermission(String world, String user, String node);
     public abstract void removeUserPermission(String world, String user, String node);
 
@@ -310,4 +306,10 @@ public abstract class PermissionHandler {
     public abstract void saveAll();
 	//End of addition by rcjrrjcr
     
+    public abstract User safeGetUser(String world, String name) throws Exception;
+    public abstract Group safeGetGroup(String world, String name) throws Exception;
+    public abstract Collection<User> getUsers(String world);
+    public abstract Collection<Group> getGroups(String world);
+    public abstract User getUserObject(String world, String name);
+    public abstract Group getGroupObject(String world, String name);
 }
