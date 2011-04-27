@@ -9,7 +9,7 @@ public class GroupWorld {
         this.world = world;
         this.group = group;
     }
-    
+
     @Override
     public int hashCode() {
         int hashWorld = world != null ? world.hashCode() : 0;
@@ -21,23 +21,20 @@ public class GroupWorld {
     @Override
     public boolean equals(Object other) {
         if (other instanceof GroupWorld) {
-                GroupWorld otherPair = (GroupWorld) other;
-                return 
-                ((  this.world == otherPair.world ||
-                        ( this.world != null && otherPair.world != null &&
-                          this.world.equalsIgnoreCase(otherPair.world))) &&
-                 (      this.group == otherPair.group ||
-                        ( this.group != null && otherPair.group != null &&
-                          this.group.equalsIgnoreCase(otherPair.group))) );
+            GroupWorld otherPair = (GroupWorld) other;
+            return ((this.world == otherPair.world || (this.world != null
+                    && otherPair.world != null && this.world
+                    .equalsIgnoreCase(otherPair.world))) && (this.group == otherPair.group || (this.group != null
+                    && otherPair.group != null && this.group
+                    .equalsIgnoreCase(otherPair.group))));
         }
 
         return false;
     }
 
     @Override
-    public String toString()
-    { 
-           return "(" + world + ", " + group + ")"; 
+    public String toString() {
+        return "(" + world + ", " + group + ")";
     }
 
     public String getWorld() {

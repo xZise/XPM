@@ -34,7 +34,7 @@ import java.util.logging.Logger;
  */
 
 /**
- *
+ * 
  * @author Nijiko
  */
 public final class FileManager {
@@ -114,8 +114,8 @@ public final class FileManager {
     }
 
     public void existsCreate(String directory, String file) {
-        if(!((new File(directory).exists()))) {
-            if(!((new File(directory, file)).exists())) {
+        if (!((new File(directory).exists()))) {
+            if (!((new File(directory, file)).exists())) {
                 this.create(directory, file);
             } else {
                 this.createDirectory(directory);
@@ -154,7 +154,7 @@ public final class FileManager {
     }
 
     public boolean append(String data) {
-        return this.append(this.directory, this.file, new String[]{data});
+        return this.append(this.directory, this.file, new String[] { data });
     }
 
     public boolean append(String[] lines) {
@@ -162,7 +162,7 @@ public final class FileManager {
     }
 
     public boolean append(String file, String data) {
-        return this.append(this.directory, file, new String[]{data});
+        return this.append(this.directory, file, new String[] { data });
     }
 
     public boolean append(String file, String[] lines) {
@@ -170,7 +170,7 @@ public final class FileManager {
     }
 
     public boolean append(String directory, String file, String data) {
-        return this.append(directory, file, new String[]{data});
+        return this.append(directory, file, new String[] { data });
     }
 
     public boolean append(String directory, String file, String[] lines) {
@@ -179,7 +179,8 @@ public final class FileManager {
         this.existsCreate(directory, file);
 
         try {
-            output = new BufferedWriter(new FileWriter(new File(directory, file)));
+            output = new BufferedWriter(new FileWriter(
+                    new File(directory, file)));
 
             try {
                 for (String line : lines) {
@@ -216,12 +217,13 @@ public final class FileManager {
         String line;
 
         try {
-            input = new BufferedReader(new FileReader(new File(directory, file)));
+            input = new BufferedReader(
+                    new FileReader(new File(directory, file)));
 
             try {
                 this.source = input.readLine();
 
-                while ((line = input.readLine()) != null){
+                while ((line = input.readLine()) != null) {
                     this.lines.add(line);
                 }
             } catch (IOException ex) {
@@ -239,7 +241,7 @@ public final class FileManager {
     }
 
     public boolean write(String data) {
-        return this.write(this.directory, this.file, new String[]{data});
+        return this.write(this.directory, this.file, new String[] { data });
     }
 
     public boolean write(String[] lines) {
@@ -247,7 +249,7 @@ public final class FileManager {
     }
 
     public boolean write(String file, String data) {
-        return this.write(this.directory, file, new String[]{data});
+        return this.write(this.directory, file, new String[] { data });
     }
 
     public boolean write(String file, String[] lines) {
@@ -255,7 +257,7 @@ public final class FileManager {
     }
 
     public boolean write(String directory, String file, String data) {
-        return this.write(directory, file, new String[]{data});
+        return this.write(directory, file, new String[] { data });
     }
 
     public boolean write(String directory, String file, String[] lines) {
@@ -264,7 +266,8 @@ public final class FileManager {
         this.existsCreate(directory, file);
 
         try {
-            output = new BufferedWriter(new FileWriter(new File(directory, file)));
+            output = new BufferedWriter(new FileWriter(
+                    new File(directory, file)));
 
             try {
                 for (String line : lines) {
@@ -283,7 +286,7 @@ public final class FileManager {
         } catch (IOException ex) {
             this.log(Level.SEVERE, ex);
         }
-        
+
         return false;
     }
 }

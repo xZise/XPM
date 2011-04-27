@@ -127,9 +127,8 @@ public class SqlStorage {
             s.executeUpdate(state + engine);
         }
     }
-    
-    static DataSource getSource()
-    {
+
+    static DataSource getSource() {
         return dbSource;
     }
 }

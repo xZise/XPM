@@ -13,7 +13,6 @@ import javax.sql.DataSource;
 
 import com.nijiko.permissions.EntryType;
 
-
 public class SqlUserStorage implements UserStorage {
 
     private String userWorld;
@@ -22,17 +21,20 @@ public class SqlUserStorage implements UserStorage {
 
     private static final String permGetStmt = "";
     private static final String parentGetStmt = "";
+
     public SqlUserStorage(String userWorld) {
         // TODO Auto-generated constructor stub
     }
 
     @Override
     public Set<String> getPermissions(String name) {
-        if(name == null) return new HashSet<String>();
+        if (name == null)
+            return new HashSet<String>();
         Set<String> permissions = userPermissions.get(name.toLowerCase());
-        if(permissions != null) return permissions;
+        if (permissions != null)
+            return permissions;
         permissions = new HashSet<String>();
-        
+
         DataSource ds = SqlStorage.getSource();
         Connection dbConn;
         try {
@@ -41,7 +43,7 @@ public class SqlUserStorage implements UserStorage {
             e1.printStackTrace();
             return new HashSet<String>();
         }
-        
+
         try {
             Statement s = dbConn.createStatement();
             s.execute(permGetStmt);
@@ -59,18 +61,20 @@ public class SqlUserStorage implements UserStorage {
                 e.printStackTrace();
             }
         }
-        
+
         userPermissions.put(name.toLowerCase(), permissions);
         return permissions;
     }
 
     @Override
     public Set<GroupWorld> getParents(String name) {
-        if(name == null) return new HashSet<GroupWorld>();
+        if (name == null)
+            return new HashSet<GroupWorld>();
         Set<GroupWorld> parents = userParents.get(name.toLowerCase());
-        if(parents != null) return parents;
+        if (parents != null)
+            return parents;
         parents = new HashSet<GroupWorld>();
-        DataSource ds = SqlStorage.getSource();        
+        DataSource ds = SqlStorage.getSource();
         Connection dbConn;
         try {
             dbConn = ds.getConnection();
@@ -78,13 +82,13 @@ public class SqlUserStorage implements UserStorage {
             e1.printStackTrace();
             return new HashSet<GroupWorld>();
         }
-        
+
         try {
             Statement s = dbConn.createStatement();
             s.execute(parentGetStmt);
             ResultSet rs = s.getResultSet();
             while (rs.next()) {
-                GroupWorld gw = new GroupWorld(rs.getString(1),rs.getString(2));
+                GroupWorld gw = new GroupWorld(rs.getString(1), rs.getString(2));
                 parents.add(gw);
             }
         } catch (SQLException e) {
@@ -103,29 +107,35 @@ public class SqlUserStorage implements UserStorage {
 
     @Override
     public void addPermission(String name, String permission) {
-        if(userPermissions.get(name.toLowerCase()) == null) userPermissions.put(name.toLowerCase(), new HashSet<String>());
+        if (userPermissions.get(name.toLowerCase()) == null)
+            userPermissions.put(name.toLowerCase(), new HashSet<String>());
         Set<String> perms = userPermissions.get(name.toLowerCase());
-        if(perms.contains(permission)) return;
+        if (perms.contains(permission))
+            return;
         perms.add(permission);
-        //TODO SQL Update
+        // TODO SQL Update
     }
 
     @Override
     public void removePermission(String name, String permission) {
-        if(userPermissions.get(name.toLowerCase()) == null) userPermissions.put(name.toLowerCase(), new HashSet<String>());
+        if (userPermissions.get(name.toLowerCase()) == null)
+            userPermissions.put(name.toLowerCase(), new HashSet<String>());
         Set<String> perms = userPermissions.get(name.toLowerCase());
-        if(!perms.contains(permission)) return;
+        if (!perms.contains(permission))
+            return;
         perms.remove(permission);
-        //TODO SQL Update
+        // TODO SQL Update
     }
 
     @Override
     public void addParent(String name, String groupWorld, String groupName) {
-        if(userParents.get(name.toLowerCase()) == null) userParents.put(name.toLowerCase(), new HashSet<GroupWorld>());
+        if (userParents.get(name.toLowerCase()) == null)
+            userParents.put(name.toLowerCase(), new HashSet<GroupWorld>());
         Set<GroupWorld> parents = userParents.get(name.toLowerCase());
-        if(parents.contains(groupWorld)) return;
+        if (parents.contains(groupWorld))
+            return;
         parents.add(new GroupWorld(groupWorld, groupName));
-        //TODO SQL Updates
+        // TODO SQL Updates
 
     }
 

@@ -1,9 +1,7 @@
 package com.nijiko;
 
-
 import java.io.File;
 import java.io.IOException;
-
 
 import org.bukkit.entity.Player;
 
@@ -29,10 +27,11 @@ import com.nijikokun.bukkit.Permissions.Permissions;
  */
 
 /**
- * Misc.java
- * <br /><br />
- * Miscellaneous functions / variables, and other things that really don't go anywhere else.
- *
+ * Misc.java <br />
+ * <br />
+ * Miscellaneous functions / variables, and other things that really don't go
+ * anywhere else.
+ * 
  * @author Nijikokun <nijikokun@gmail.com>
  */
 public class Misc {
@@ -41,17 +40,22 @@ public class Misc {
     }
 
     /**
-     * Checks the length of an array against the amount plus one,
-     * Allowing us to know the true amount of numbers.
-     * <br /><br />
-     * Example:
-     * <blockquote><pre>
+     * Checks the length of an array against the amount plus one, Allowing us to
+     * know the true amount of numbers. <br />
+     * <br />
+     * Example: <blockquote>
+     * 
+     * <pre>
      * arguments({0,1,2}, 2); // < 4 length = [0,1,2] = true. It does end at 2.
-     * </pre></blockquote>
-     *
-     * @param array The array we are checking the length of
-     * @param amount The amount necessary to continue onwards.
-     *
+     * </pre>
+     * 
+     * </blockquote>
+     * 
+     * @param array
+     *            The array we are checking the length of
+     * @param amount
+     *            The amount necessary to continue onwards.
+     * 
      * @return <code>Boolean</code> - True or false based on length.
      */
     public static Boolean arguments(String[] array, int amount) {
@@ -60,10 +64,12 @@ public class Misc {
 
     /**
      * Checks text against one variables.
-     *
-     * @param text The text that we were provided with.
-     * @param against The first variable that needs to be checked against
-     *
+     * 
+     * @param text
+     *            The text that we were provided with.
+     * @param against
+     *            The first variable that needs to be checked against
+     * 
      * @return <code>Boolean</code> - True or false based on text.
      */
     public static Boolean is(String text, String against) {
@@ -71,24 +77,31 @@ public class Misc {
     }
 
     /**
-     * Checks text against two variables, if it equals at least one returns true.
-     *
-     * @param text The text that we were provided with.
-     * @param against The first variable that needs to be checked against
-     * @param or The second variable that it could possibly be.
-     *
+     * Checks text against two variables, if it equals at least one returns
+     * true.
+     * 
+     * @param text
+     *            The text that we were provided with.
+     * @param against
+     *            The first variable that needs to be checked against
+     * @param or
+     *            The second variable that it could possibly be.
+     * 
      * @return <code>Boolean</code> - True or false based on text.
      */
     public static Boolean isEither(String text, String against, String or) {
-        return (text.equalsIgnoreCase(against) || text.equalsIgnoreCase(or)) ? true : false;
+        return (text.equalsIgnoreCase(against) || text.equalsIgnoreCase(or)) ? true
+                : false;
     }
 
     /**
      * Basic formatting on Currency
-     *
-     * @param Balance The player balance or amount being payed.
-     * @param currency The iConomy currency name
-     *
+     * 
+     * @param Balance
+     *            The player balance or amount being payed.
+     * @param currency
+     *            The iConomy currency name
+     * 
      * @return <code>String</code> - Formatted with commas & currency
      */
     public static String formatCurrency(int Balance, String currency) {
@@ -97,9 +110,10 @@ public class Misc {
 
     /**
      * Basic formatting for commas.
-     *
-     * @param str The string we are attempting to format
-     *
+     * 
+     * @param str
+     *            The string we are attempting to format
+     * 
      * @return <code>String</code> - Formatted with commas
      */
     public static String insertCommas(String str) {
@@ -107,12 +121,13 @@ public class Misc {
             return str;
         }
 
-        return insertCommas(str.substring(0, str.length() - 3)) + "," + str.substring(str.length() - 3, str.length());
+        return insertCommas(str.substring(0, str.length() - 3)) + ","
+                + str.substring(str.length() - 3, str.length());
     }
 
     /**
      * Convert int to string
-     *
+     * 
      * @return <code>String</code>
      */
     public static String stringify(int i) {
@@ -125,16 +140,17 @@ public class Misc {
     public static class string {
 
         /**
-         * String function.
-         * <br /><br />
+         * String function. <br />
+         * <br />
          * Combines a split string at a specific index.
-         *
+         * 
          * @param startIndex
          * @param string
          * @param seperator
          * @return
          */
-        public static String combine(int startIndex, String[] string, String seperator) {
+        public static String combine(int startIndex, String[] string,
+                String seperator) {
             StringBuilder builder = new StringBuilder();
 
             for (int i = startIndex; i < string.length; i++) {
@@ -149,7 +165,7 @@ public class Misc {
 
     /**
      * Validate an alphanumeric string with ._- as well.
-     *
+     * 
      * @param name
      * @return boolean
      */
@@ -159,7 +175,7 @@ public class Misc {
 
     /**
      * Repeat c (i) amount of times.
-     *
+     * 
      * @param c
      * @param i
      * @return
@@ -173,10 +189,10 @@ public class Misc {
     }
 
     /**
-     * Retrieve player from server if they exist.
-     * <br><br>
+     * Retrieve player from server if they exist. <br>
+     * <br>
      * Based on name.
-     *
+     * 
      * @param name
      * @return
      */
@@ -203,7 +219,7 @@ public class Misc {
 
     /**
      * Match players based on name. Include Display name as well.
-     *
+     * 
      * @param name
      * @return
      */
@@ -233,7 +249,8 @@ public class Misc {
                 }
 
                 lastPlayer = player;
-            } else if (playerDisplayName.toLowerCase().indexOf(name.toLowerCase()) != -1) {
+            } else if (playerDisplayName.toLowerCase().indexOf(
+                    name.toLowerCase()) != -1) {
                 if (lastPlayer != null) {
                     return null;
                 }
@@ -246,8 +263,9 @@ public class Misc {
     }
 
     /**
-     * Create file quick and easy without having to initilize a file other than directory.
-     *
+     * Create file quick and easy without having to initilize a file other than
+     * directory.
+     * 
      * @param directory
      * @param name
      */
@@ -260,7 +278,7 @@ public class Misc {
 
     /**
      * Create a file through string rather than directory / filename method.
-     *
+     * 
      * @param name
      */
     public static void touch(String name) {
@@ -269,30 +287,34 @@ public class Misc {
         } catch (IOException ex) {
         }
     }
-    
+
     /**
-     * Delete a file or folder quick and easy.  Will catch errors.
+     * Delete a file or folder quick and easy. Will catch errors.
      * 
      * @param name
      */
     public void delete(String name) {
-    	File f = new File(name);
-    	
-    	if (!f.exists())
-    		throw new IllegalArgumentException("[Permissions] Delete: No such file/directory: " + name);
-    	
-    	if (!f.canWrite())
-    		throw new IllegalArgumentException("[Permissions] Delete: Write protected file: " + name);
-    	
-    	if (f.isDirectory()) {
-    		String[] files = f.list();
-    		if (files.length > 0)
-    			throw new IllegalArgumentException("[Permissions] Delete: Directory not empty: " + name);
-    	}
-    	
-    	boolean success = f.delete();
-    	
-    	if (!success)
-    		throw new IllegalArgumentException("[Permissions] Delete: Unable to delete file: " + name);
+        File f = new File(name);
+
+        if (!f.exists())
+            throw new IllegalArgumentException(
+                    "[Permissions] Delete: No such file/directory: " + name);
+
+        if (!f.canWrite())
+            throw new IllegalArgumentException(
+                    "[Permissions] Delete: Write protected file: " + name);
+
+        if (f.isDirectory()) {
+            String[] files = f.list();
+            if (files.length > 0)
+                throw new IllegalArgumentException(
+                        "[Permissions] Delete: Directory not empty: " + name);
+        }
+
+        boolean success = f.delete();
+
+        if (!success)
+            throw new IllegalArgumentException(
+                    "[Permissions] Delete: Unable to delete file: " + name);
     }
 }
