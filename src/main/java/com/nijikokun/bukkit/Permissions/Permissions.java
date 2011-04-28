@@ -259,6 +259,7 @@ public class Permissions extends JavaPlugin {
         }
 
         if (arg.equalsIgnoreCase("all")) {
+            Security.reload();
             sender.sendMessage(ChatColor.GRAY
                     + "[Permissions] All worlds reloaded.");
             return true;

@@ -43,10 +43,10 @@ public class YamlGroupStorage implements GroupStorage {
     @Override
     public Set<String> getPermissions(String name) {
         rwl.readLock().lock();
-        Set<String> permissions = new HashSet<String>(
-                groupConfig.getStringList("groups." + name + ".permissions",
-                        null));
+        List<String> rawPerms = groupConfig.getStringList("groups."+name+".permissions", null);
         rwl.readLock().unlock();
+        Set<String> permissions = new HashSet<String>();
+        if(rawPerms!=null&&!rawPerms.isEmpty()) permissions.addAll(rawPerms);
         return permissions;
     }
 
@@ -181,6 +181,7 @@ public class YamlGroupStorage implements GroupStorage {
     @Override
     public void reload() {
         rwl.writeLock().lock();
+//        System.out.println("Reloading group config for world \""+world+"\".");
         groupConfig.load();
         modified = false;
         rwl.writeLock().unlock();

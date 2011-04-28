@@ -187,6 +187,7 @@ public class YamlUserStorage implements UserStorage {
     @Override
     public void reload() {
         rwl.writeLock().lock();
+//        System.out.println("Reloading user config for world \""+world+"\".");
         userConfig.load();
         modified = false;
         rwl.writeLock().unlock();
