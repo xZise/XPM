@@ -29,4 +29,6 @@ public interface UserStorage {
     public boolean isAutoSave();
 
     public void setAutoSave(boolean autoSave);
+    
+    public boolean createUser(String name);
 }

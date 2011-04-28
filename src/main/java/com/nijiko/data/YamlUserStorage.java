@@ -1,8 +1,10 @@
 package com.nijiko.data;
 
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
@@ -204,4 +206,22 @@ public class YamlUserStorage implements UserStorage {
         saveOff = autoSave;
         rwl.writeLock().unlock();
     }
+
+    @Override
+    public boolean createUser(String name) {
+        rwl.writeLock().lock();
+        if(userConfig.getProperty("users."+name)!=null)
+        {
+            rwl.writeLock().unlock();
+            return false;
+        }
+        Map<String, Object> template = new HashMap<String,Object>();
+        template.put("groups", null);
+        template.put("permissions", null);
+        userConfig.setProperty("users."+name, template);
+        userConfig.save();
+        rwl.writeLock().unlock();
+        return true;
+    }
+    
 }

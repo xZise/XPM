@@ -42,4 +42,6 @@ public interface GroupStorage {
     public boolean isAutoSave();
 
     public void setAutoSave(boolean autoSave);
+
+    public boolean createGroup(String name);
 }

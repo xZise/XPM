@@ -10,9 +10,10 @@ public class Group extends Entry {
     private GroupStorage data;
 
     Group(ModularControl controller, GroupStorage data, String name,
-            String world) {
+            String world, boolean create) {
         super(controller, name, world);
         this.data = data;
+        if(create)data.createGroup(name);
     }
 
     public boolean isDefault() {

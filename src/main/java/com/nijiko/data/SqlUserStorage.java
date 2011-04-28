@@ -188,4 +188,10 @@ public class SqlUserStorage implements UserStorage {
 
     }
 
+    @Override
+    public boolean createUser(String name) {
+        // TODO Auto-generated method stub
+        return false;
+    }
+
 }

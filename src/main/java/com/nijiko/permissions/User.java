@@ -8,12 +8,13 @@ import com.nijiko.data.UserStorage;
 public class User extends Entry {
     private UserStorage data;
 
-    User(ModularControl controller, UserStorage data, String name, String world) {
+    User(ModularControl controller, UserStorage data, String name, String world, boolean create) {
         super(controller, name, world);
         this.data = data;
         Group defaultGroup = controller.getDefaultGroup(world);
         if (defaultGroup != null)
             this.addParent(defaultGroup);
+        if(create)data.createUser(name);
     }
 
     @Override

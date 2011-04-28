@@ -1,9 +1,11 @@
 package com.nijiko.data;
 
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
@@ -260,5 +262,22 @@ public class YamlGroupStorage implements GroupStorage {
         modified = true;
         save();
         rwl.writeLock().unlock();
+    }
+
+    @Override
+    public boolean createGroup(String name) {
+        rwl.writeLock().lock();
+        if(groupConfig.getProperty("groups."+name)!=null)
+        {
+            rwl.writeLock().unlock();
+            return false;
+        }
+        Map<String, Object> template = new HashMap<String,Object>();
+        template.put("inheritance", null);
+        template.put("permissions", null);
+        groupConfig.setProperty("groups."+name, template);
+        groupConfig.save();
+        rwl.writeLock().unlock();
+        return true;
     }
 }

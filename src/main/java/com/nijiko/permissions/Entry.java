@@ -5,6 +5,7 @@ import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.Queue;
 import java.util.Set;
+import java.util.logging.Logger;
 
 import com.nijiko.data.GroupWorld;
 
@@ -44,20 +45,36 @@ public abstract class Entry {
         Set<String> groupPermissions = this.getInheritancePermissions();
         if ((permissions == null || permissions.isEmpty())
                 && (groupPermissions == null || groupPermissions.isEmpty()))
+        {
+//            System.out.println("Entry \""+name+"\"'s permissions are empty.");
             return false;
+        }
 
         // Do it in +user -> -user -> +group -> -group order
         if (permissions != null && !permissions.isEmpty()) {
             if (permissions.contains(permission))
+            {
+//                System.out.println("Found direct match for \""+permission+"\" in \""+name+"\".");/
                 return true;
+            }
             if (permissions.contains("-" + permission))
+            {
+//                System.out.println("Found direct negated match for \""+permission+"\" in \""+name+"\".");
                 return false;
+            }
         }
         if (groupPermissions != null && !groupPermissions.isEmpty()) {
             if (groupPermissions.contains(permission))
+            {
+
+//                System.out.println("Found direct match for \""+permission+"\" in \""+name+"\" from inherited permissions.");
                 return true;
+            }
             if (groupPermissions.contains("-" + permission))
+            {
+//                System.out.println("Found direct match for \""+permission+"\" in \""+name+"\" from inherited permissions.");
                 return true;
+            }
         }
 
         String[] nodeHierachy = permission.split("\\.");
@@ -68,13 +85,29 @@ public abstract class Entry {
         String negated = "";
         String relevantNode = "";
         if (groupPermissions != null && !groupPermissions.isEmpty()) {
-            relevantNode = groupPermissions.contains("-*") ? (groupPermissions
-                    .contains("*") ? "*" : "-*") : relevantNode;
+            if(groupPermissions.contains("-*"))
+            {
+                relevantNode = "-*";
+            }
+            if(groupPermissions.contains("*"))
+            {
+                relevantNode = "*";
+            }
         }
+//        System.out.println("Relevant node: " +relevantNode);
         if (permissions != null && !permissions.isEmpty()) {
-            relevantNode = permissions.contains("-*") ? (permissions
-                    .contains("*") ? "*" : "-*") : relevantNode;
+            if(permissions.contains("-*"))
+            {
+                relevantNode = "-*";
+            }
+            if(permissions.contains("*"))
+            {
+                relevantNode = "*";
+            }
         }
+        
+//        System.out.println("Relevant node: " +relevantNode);
+        
         for (String nextLevel : nodeHierachy) {
             nextNode += nextLevel + ".";
             wild = nextNode + "*";
@@ -83,11 +116,13 @@ public abstract class Entry {
             if (permissions != null && !permissions.isEmpty()) {
                 if (permissions.contains(wild)) {
                     relevantNode = wild;
+//                    System.out.println("Relevant node: " +relevantNode);
                     continue;
                 }
 
                 if (permissions.contains(negated)) {
                     relevantNode = negated;
+//                    System.out.println("Relevant node: " +relevantNode);
                     continue;
                 }
             }
@@ -95,17 +130,19 @@ public abstract class Entry {
             if (groupPermissions != null && !groupPermissions.isEmpty()) {
                 if (groupPermissions.contains(wild)) {
                     relevantNode = wild;
+//                    System.out.println("Relevant node: " +relevantNode);
                     continue;
                 }
 
                 if (groupPermissions.contains(negated)) {
                     relevantNode = negated;
+//                    System.out.println("Relevant node: " +relevantNode);
                     continue;
                 }
             }
         }
 
-        return !relevantNode.startsWith("-");
+        return !relevantNode.isEmpty()&&!relevantNode.startsWith("-");
     }
 
     public Set<String> getInheritancePermissions() {

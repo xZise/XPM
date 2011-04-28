@@ -19,10 +19,10 @@ import org.bukkit.util.config.Configuration;
 import com.nijiko.Messaging;
 import com.nijiko.Misc;
 import com.nijiko.configuration.NotNullConfiguration;
-import com.nijiko.permissions.Group;
+//import com.nijiko.permissions.Group;
 import com.nijiko.permissions.ModularControl;
 import com.nijiko.permissions.PermissionHandler;
-import com.nijiko.permissions.User;
+//import com.nijiko.permissions.User;
 
 /**
  * Permissions 2.x Copyright (C) 2011 Matt 'The Yeti' Burnett
@@ -204,6 +204,14 @@ public class Permissions extends JavaPlugin {
             if (args[0].equalsIgnoreCase("-reload") && args.length >= 2) {
                 return reload(sender, args[1]);
             }
+            else if(args[0].equalsIgnoreCase("has") && args.length == 4)
+            {
+                String world = args[1];
+                String user = args[2];
+                String node = args[3];
+                sender.sendMessage(String.valueOf(Security.permission(world, user, node)));
+                return true;
+            }
 //            else if(args[0].equals("user") && args.length > 3)
 //            {
 //                User user = null;
@@ -264,6 +272,12 @@ public class Permissions extends JavaPlugin {
                     + " does not exist.");
         return true;
 
+    }
+    
+    @Override
+    public String toString()
+    {
+        return name + " version " + version + " (" + codename + ")";
     }
     
     
