@@ -57,10 +57,10 @@ public class ModularControl extends PermissionHandler {
 
     @Override
     public boolean checkWorld(String world) {
-        return ((WorldUserStorage.get(world.toLowerCase()) == null) && (WorldUserStorageCopy
-                .get(world.toLowerCase()) == null))
-                || (((WorldGroupStorage.get(world.toLowerCase()) == null) && (WorldGroupStorageCopy
-                        .get(world.toLowerCase()) == null)));
+        return ((WorldUserStorage.get(world) == null) && (WorldUserStorageCopy
+                .get(world) == null))
+                || (((WorldGroupStorage.get(world) == null) && (WorldGroupStorageCopy
+                        .get(world) == null)));
     }
 
     @Override
@@ -90,13 +90,13 @@ public class ModularControl extends PermissionHandler {
     private UserStorage getUserStorage(String world) {
         if (world == null)
             return null;
-        return this.WorldUserStorage.get(getParentWorldUser(world).toLowerCase());
+        return this.WorldUserStorage.get(getParentWorldUser(world));
     }
 
     private GroupStorage getGroupStorage(String world) {
         if (world == null)
             return null;
-        return this.WorldGroupStorage.get(getParentWorldGroup(world).toLowerCase());
+        return this.WorldGroupStorage.get(getParentWorldGroup(world));
     }
 
     @Override
@@ -146,7 +146,7 @@ public class ModularControl extends PermissionHandler {
     @Override
     public String getGroupName(String world, String name) {
         world = getParentWorldGroup(world);
-        Map<String, Group> groups = this.WorldGroups.get(world.toLowerCase());
+        Map<String, Group> groups = this.WorldGroups.get(world);
         if (groups == null)
             return null;
         Group g = groups.get(name.toLowerCase());
@@ -260,8 +260,7 @@ public class ModularControl extends PermissionHandler {
         Set<Group> groupSet = new HashSet<Group>();
         for (GroupWorld raw : raws) {
             String world = getParentWorldGroup(raw.getWorld());
-            Map<String, Group> gMap = this.WorldGroups.get(world
-                    .toLowerCase());
+            Map<String, Group> gMap = this.WorldGroups.get(world);
             if (gMap != null) {
                 Group g = gMap.get(raw.getName().toLowerCase());
                 if (g != null)
@@ -280,13 +279,13 @@ public class ModularControl extends PermissionHandler {
                     + world + " due to storage problems!", e);
         }
         world = getParentWorldUser(world);
-        if (this.WorldUsers.get(world.toLowerCase()) == null)
-            this.WorldUsers.put(world.toLowerCase(),
+        if (this.WorldUsers.get(world) == null)
+            this.WorldUsers.put(world,
                     new HashMap<String, User>());
-        if (this.WorldUsers.get(world.toLowerCase()).get(name.toLowerCase()) == null)
-            this.WorldUsers.get(world.toLowerCase()).put(name.toLowerCase(),
+        if (this.WorldUsers.get(world).get(name.toLowerCase()) == null)
+            this.WorldUsers.get(world).put(name.toLowerCase(),
                     new User(this, getUserStorage(world), name, world, true));
-        return this.WorldUsers.get(world.toLowerCase()).get(name.toLowerCase());
+        return this.WorldUsers.get(world).get(name.toLowerCase());
     }
 
     @Override
@@ -298,28 +297,28 @@ public class ModularControl extends PermissionHandler {
                     + world + " due to storage problems!", e);
         }
         world = getParentWorldGroup(world);
-        if(WorldGroupStorageCopy.get(world.toLowerCase())!=null)world = WorldGroupStorageCopy.get(world.toLowerCase());
-        if (this.WorldGroups.get(world.toLowerCase()) == null)
+        if(WorldGroupStorageCopy.get(world)!=null)world = WorldGroupStorageCopy.get(world);
+        if (this.WorldGroups.get(world) == null)
             this.WorldGroups.put(world, new HashMap<String, Group>());
-        if (this.WorldGroups.get(world.toLowerCase()).get(name.toLowerCase()) == null)
-            this.WorldGroups.get(world.toLowerCase()).put(name.toLowerCase(),
+        if (this.WorldGroups.get(world).get(name.toLowerCase()) == null)
+            this.WorldGroups.get(world).put(name.toLowerCase(),
                     new Group(this, getGroupStorage(world), name, world, true));
-        return this.WorldGroups.get(world.toLowerCase())
+        return this.WorldGroups.get(world)
                 .get(name.toLowerCase());
     }
     
     @Override
     public Group getDefaultGroup(String world) {
         world = getParentWorldGroup(world);
-        return this.WorldBase.get(world.toLowerCase());
+        return this.WorldBase.get(world);
     }
 
     @Override
     public Collection<User> getUsers(String world) {
         world = getParentWorldUser(world);
-        if (WorldUsers.get(world.toLowerCase()) == null)
+        if (WorldUsers.get(world) == null)
             return new HashSet<User>();
-        return WorldUsers.get(world.toLowerCase()).values();
+        return WorldUsers.get(world).values();
     }
 
     @Override
@@ -327,23 +326,23 @@ public class ModularControl extends PermissionHandler {
         world = getParentWorldGroup(world);
         if (WorldGroups.get(world.toLowerCase()) == null)
             return new HashSet<Group>();
-        return WorldGroups.get(world.toLowerCase()).values();
+        return WorldGroups.get(world).values();
     }
 
     @Override
     public User getUserObject(String world, String name) {
         world = getParentWorldUser(world);
-        if (WorldUsers.get(world.toLowerCase()) == null)
+        if (WorldUsers.get(world) == null)
             return null;
-        return WorldUsers.get(world.toLowerCase()).get(name.toLowerCase());
+        return WorldUsers.get(world).get(name.toLowerCase());
     }
 
     @Override
     public Group getGroupObject(String world, String name) {
         world = getParentWorldGroup(world);
-        if (WorldGroups.get(world.toLowerCase()) == null)
+        if (WorldGroups.get(world) == null)
             return null;
-        return WorldGroups.get(world.toLowerCase()).get(name.toLowerCase());
+        return WorldGroups.get(world).get(name.toLowerCase());
     }
 
     @Override
@@ -404,13 +403,13 @@ public class ModularControl extends PermissionHandler {
             return;
         String userWorld = userStore.getWorld();
         if (!world.equalsIgnoreCase(userWorld))
-            this.WorldUserStorageCopy.put(world.toLowerCase(), userWorld);
+            this.WorldUserStorageCopy.put(world, userWorld);
         String groupWorld = groupStore.getWorld();
         if (!world.equalsIgnoreCase(groupWorld))
-            this.WorldGroupStorageCopy.put(world.toLowerCase(), groupWorld);
+            this.WorldGroupStorageCopy.put(world, groupWorld);
         this.WorldUserStorage
-                .put(userStore.getWorld().toLowerCase(), userStore);
-        this.WorldGroupStorage.put(groupStore.getWorld().toLowerCase(),
+                .put(userStore.getWorld(), userStore);
+        this.WorldGroupStorage.put(groupStore.getWorld(),
                 groupStore);
 
         Map<String, User> users = new HashMap<String, User>();
@@ -419,14 +418,14 @@ public class ModularControl extends PermissionHandler {
             User user = new User(this, userStore, userName, userWorld, false);
             users.put(userName.toLowerCase(), user);
         }
-        WorldUsers.put(world.toLowerCase(), users);
+        WorldUsers.put(world, users);
 
         HashMap<String, Group> groups = new HashMap<String, Group>();
         Set<String> groupNames = groupStore.getGroups();
         for (String groupName : groupNames) {
             Group group = new Group(this, groupStore, groupName, groupWorld, false);
             groups.put(groupName.toLowerCase(), group);
-            if(group.isDefault()&&WorldBase.get(world.toLowerCase())==null) WorldBase.put(groupWorld.toLowerCase(), group);
+            if(group.isDefault()&&WorldBase.get(world)==null) WorldBase.put(groupWorld, group);
         }
         WorldGroups.put(world.toLowerCase(), groups);
     }
@@ -529,14 +528,14 @@ public class ModularControl extends PermissionHandler {
     
     public String getParentWorldGroup(String world)
     {
-        if(WorldGroupStorageCopy.get(world.toLowerCase())!=null)return WorldGroupStorageCopy.get(world.toLowerCase());
+        if(WorldGroupStorageCopy.get(world)!=null)return WorldGroupStorageCopy.get(world);
         return world;
     }
     
     public String getParentWorldUser(String world)
     {
 
-        if(WorldUserStorageCopy.get(world.toLowerCase())!=null)world = WorldUserStorageCopy.get(world.toLowerCase());
+        if(WorldUserStorageCopy.get(world)!=null)world = WorldUserStorageCopy.get(world);
         return world;
     }
 
@@ -551,17 +550,17 @@ public class ModularControl extends PermissionHandler {
     @Override
     public boolean userExists(String world, String name) {
         world = getParentWorldUser(world);
-        if (WorldUsers.get(world.toLowerCase()) == null)
+        if (WorldUsers.get(world) == null)
             return false;
-        return WorldUsers.get(world.toLowerCase()).get(name.toLowerCase()) != null;
+        return WorldUsers.get(world).get(name.toLowerCase()) != null;
     }
 
     @Override
     public boolean groupExists(String world, String name) {
         world = getParentWorldUser(world);
-        if (WorldGroups.get(world.toLowerCase()) == null)
+        if (WorldGroups.get(world) == null)
             return false;
-        return WorldGroups.get(world.toLowerCase()).get(name.toLowerCase()) != null;
+        return WorldGroups.get(world).get(name.toLowerCase()) != null;
     }
 
 }
