@@ -427,7 +427,7 @@ public class ModularControl extends PermissionHandler {
             groups.put(groupName.toLowerCase(), group);
             if(group.isDefault()&&WorldBase.get(world)==null) WorldBase.put(groupWorld, group);
         }
-        WorldGroups.put(world.toLowerCase(), groups);
+        WorldGroups.put(world, groups);
     }
 
     @Override
