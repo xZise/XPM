@@ -184,7 +184,7 @@ public class Permissions extends JavaPlugin {
                     Messaging.send("&7Currently running version: &f["
                             + pdfFile.getVersion() + "] (" + codename + ")");
 
-                    if (Security.has(player, "permissions.reload")) {
+                    if (Security.has(player.getWorld().getName(), player.getName(), "permissions.reload")) {
                         Messaging
                                 .send("&7Reload with: &f/permissions -reload [World]");
                         Messaging
@@ -244,7 +244,7 @@ public class Permissions extends JavaPlugin {
     private boolean reload(CommandSender sender, String arg) {
         if (sender instanceof Player) {
             Player p = (Player) sender;
-            if (Security.has(p, "permissions.reload")) {
+            if (Security.has(p.getWorld().getName(), p.getName(), "permissions.reload")) {
                 p.sendMessage(ChatColor.RED
                         + "[Permissions] You lack the necessary permissions to perform this action.");
                 return true;
