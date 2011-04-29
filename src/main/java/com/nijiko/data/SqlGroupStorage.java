@@ -143,4 +143,10 @@ public class SqlGroupStorage implements GroupStorage {
 
     }
 
+    @Override
+    public boolean createGroup(String name) {
+        // TODO Auto-generated method stub
+        return false;
+    }
+
 }

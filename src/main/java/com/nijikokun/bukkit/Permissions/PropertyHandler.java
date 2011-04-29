@@ -33,9 +33,9 @@ import java.util.logging.Logger;
 
 /**
  * PropertyHandler
- *
+ * 
  * Reads & Writes properties files.
- *
+ * 
  * @author Nijiko
  */
 public final class PropertyHandler {
@@ -66,7 +66,8 @@ public final class PropertyHandler {
 
     public void save() {
         try {
-            this.properties.store(new FileOutputStream(this.fileName), "Minecraft Properties File");
+            this.properties.store(new FileOutputStream(this.fileName),
+                    "Minecraft Properties File");
         } catch (IOException ex) {
             log.log(Level.SEVERE, "Unable to save " + this.fileName, ex);
         }
@@ -74,7 +75,8 @@ public final class PropertyHandler {
 
     public Map<String, String> returnMap() throws Exception {
         Map<String, String> map = new HashMap<String, String>();
-        BufferedReader reader = new BufferedReader(new FileReader(this.fileName));
+        BufferedReader reader = new BufferedReader(
+                new FileReader(this.fileName));
         String line;
         while ((line = reader.readLine()) != null) {
             if (line.trim().length() == 0) {

@@ -25,7 +25,7 @@ package com.nijiko.configuration;
  * @author Nijiko
  */
 public abstract class DefaultConfiguration {
-  public String permissionSystem = "default";
+    public String permissionSystem = "default";
 
-  public abstract void load();
+    public abstract void load();
 }
