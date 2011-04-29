@@ -103,7 +103,6 @@ public class StorageFactory {
             return null;
         if (config == null)
             return null;
-        world = world.toLowerCase();
         int delay = 6000;
         boolean autosave = true;
         config.load();
