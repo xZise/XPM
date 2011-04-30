@@ -6,6 +6,7 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
 
@@ -17,7 +18,7 @@ public class SqlUserStorage implements UserStorage {
 
     private String userWorld;
     private Map<String, Set<String>> userPermissions = new HashMap<String, Set<String>>();
-    private Map<String, Set<GroupWorld>> userParents = new HashMap<String, Set<GroupWorld>>();
+    private Map<String, LinkedHashSet<GroupWorld>> userParents = new HashMap<String, LinkedHashSet<GroupWorld>>();
 
     private static final String permGetStmt = "";
     private static final String parentGetStmt = "";
@@ -67,20 +68,20 @@ public class SqlUserStorage implements UserStorage {
     }
 
     @Override
-    public Set<GroupWorld> getParents(String name) {
+    public LinkedHashSet<GroupWorld> getParents(String name) {
         if (name == null)
-            return new HashSet<GroupWorld>();
-        Set<GroupWorld> parents = userParents.get(name.toLowerCase());
+            return new LinkedHashSet<GroupWorld>();
+        LinkedHashSet<GroupWorld> parents = userParents.get(name.toLowerCase());
         if (parents != null)
             return parents;
-        parents = new HashSet<GroupWorld>();
+        parents = new LinkedHashSet<GroupWorld>();
         DataSource ds = SqlStorage.getSource();
         Connection dbConn;
         try {
             dbConn = ds.getConnection();
         } catch (SQLException e1) {
             e1.printStackTrace();
-            return new HashSet<GroupWorld>();
+            return new LinkedHashSet<GroupWorld>();
         }
 
         try {
@@ -93,7 +94,7 @@ public class SqlUserStorage implements UserStorage {
             }
         } catch (SQLException e) {
             e.printStackTrace();
-            return new HashSet<GroupWorld>();
+            return new LinkedHashSet<GroupWorld>();
         } finally {
             try {
                 dbConn.close();
@@ -119,7 +120,7 @@ public class SqlUserStorage implements UserStorage {
     @Override
     public void removePermission(String name, String permission) {
         if (userPermissions.get(name.toLowerCase()) == null)
-            userPermissions.put(name.toLowerCase(), new HashSet<String>());
+            userPermissions.put(name.toLowerCase(), new LinkedHashSet<String>());
         Set<String> perms = userPermissions.get(name.toLowerCase());
         if (!perms.contains(permission))
             return;
@@ -130,7 +131,7 @@ public class SqlUserStorage implements UserStorage {
     @Override
     public void addParent(String name, String groupWorld, String groupName) {
         if (userParents.get(name.toLowerCase()) == null)
-            userParents.put(name.toLowerCase(), new HashSet<GroupWorld>());
+            userParents.put(name.toLowerCase(), new LinkedHashSet<GroupWorld>());
         Set<GroupWorld> parents = userParents.get(name.toLowerCase());
         if (parents.contains(groupWorld))
             return;

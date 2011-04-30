@@ -1,24 +1,9 @@
 package com.nijiko.data;
 
-import java.util.HashMap;
-import java.util.HashSet;
 import java.util.LinkedHashSet;
-import java.util.Map;
 import java.util.Set;
 
-public class SqlGroupStorage implements GroupStorage {
-
-    private String groupWorld;
-    private String baseGroup = null;
-    private Set<String> buildGroups = new HashSet<String>();
-    private Map<String, String> groupPrefixes = new HashMap<String, String>();
-    private Map<String, String> groupSuffixes = new HashMap<String, String>();
-    private Map<String, Set<String>> groupPermissions = new HashMap<String, Set<String>>();
-    private Map<String, Set<GroupWorld>> groupParents = new HashMap<String, Set<GroupWorld>>();
-
-    public SqlGroupStorage(String groupWorld) {
-        // TODO Auto-generated constructor stub
-    }
+public class HarcGroupStorage implements GroupStorage {
 
     @Override
     public boolean isDefault(String name) {
@@ -124,12 +109,8 @@ public class SqlGroupStorage implements GroupStorage {
 
     @Override
     public void reload() {
-        baseGroup = null;
-        buildGroups.clear();
-        groupPrefixes.clear();
-        groupSuffixes.clear();
-        groupPermissions.clear();
-        groupParents.clear();
+        // TODO Auto-generated method stub
+
     }
 
     @Override

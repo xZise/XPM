@@ -1,5 +1,6 @@
 package com.nijiko.data;
 
+import java.util.LinkedHashSet;
 import java.util.Set;
 
 public interface GroupStorage {
@@ -13,7 +14,7 @@ public interface GroupStorage {
 
     public Set<String> getPermissions(String name);
 
-    public Set<GroupWorld> getParents(String name);
+    public LinkedHashSet<GroupWorld> getParents(String name);
 
     public void setBuild(String name, boolean build);
 

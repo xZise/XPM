@@ -51,12 +51,12 @@ public class YamlGroupStorage implements GroupStorage {
     }
 
     @Override
-    public Set<GroupWorld> getParents(String name) {
+    public LinkedHashSet<GroupWorld> getParents(String name) {
         rwl.readLock().lock();
-        Set<String> rawParents = new HashSet<String>(groupConfig.getStringList(
-                "groups." + name + ".inheritance", null));
+        List<String> rawParents = groupConfig.getStringList(
+                "groups." + name + ".inheritance", null);
         rwl.readLock().unlock();
-        Set<GroupWorld> parents = new HashSet<GroupWorld>(rawParents.size());
+        LinkedHashSet<GroupWorld> parents = new LinkedHashSet<GroupWorld>(rawParents.size());
         for (String raw : rawParents) {
             String[] split = raw.split(",", 2); // Split into at most 2 parts
                                                 // ("world,blah" -> "world",

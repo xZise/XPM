@@ -2,6 +2,7 @@ package com.nijiko.data;
 
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -50,13 +51,13 @@ public class YamlUserStorage implements UserStorage {
     }
 
     @Override
-    public Set<GroupWorld> getParents(String name) {
+    public LinkedHashSet<GroupWorld> getParents(String name) {
         name = name.replace('.', ','); // Fix for legacy usernames with periods
         rwl.readLock().lock();
-        Set<String> rawParents = new HashSet<String>(userConfig.getStringList(
-                "users." + name + ".groups", null));
+        List<String> rawParents = userConfig.getStringList(
+                "users." + name + ".groups", null);
         rwl.readLock().unlock();
-        Set<GroupWorld> parents = new HashSet<GroupWorld>(rawParents.size());
+        LinkedHashSet<GroupWorld> parents = new LinkedHashSet<GroupWorld>(rawParents.size());
         for (String raw : rawParents) {
             String[] split = raw.split(",", 2); // Split into at most 2 parts
                                                 // ("world,blah" -> "world",

@@ -1,12 +1,13 @@
 package com.nijiko.data;
 
+import java.util.LinkedHashSet;
 import java.util.Set;
 
 public interface UserStorage {
 
     public Set<String> getPermissions(String name);
 
-    public Set<GroupWorld> getParents(String name);
+    public LinkedHashSet<GroupWorld> getParents(String name);
 
     public void addPermission(String name, String permission);
 

@@ -1,5 +1,6 @@
 package com.nijiko.permissions;
 
+import java.util.LinkedHashSet;
 import java.util.Set;
 
 import com.nijiko.data.GroupWorld;
@@ -33,7 +34,7 @@ public class User extends Entry {
     }
 
     @Override
-    public Set<GroupWorld> getParents() {
+    public LinkedHashSet<GroupWorld> getParents() {
         return data.getParents(name);
     }
 

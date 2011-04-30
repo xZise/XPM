@@ -2,6 +2,8 @@ package com.nijiko.permissions;
 
 //import java.util.Arrays;
 import java.util.HashSet;
+import java.util.Iterator;
+import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.Queue;
 import java.util.Set;
@@ -22,7 +24,7 @@ public abstract class Entry {
 
     public abstract Set<String> getPermissions();
 
-    public abstract Set<GroupWorld> getParents();
+    public abstract LinkedHashSet<GroupWorld> getParents();
 
     public abstract void setPermission(final String permission,
             final boolean add);
@@ -40,39 +42,21 @@ public abstract class Entry {
     public abstract void removeParent(Group group);
 
     public boolean hasPermission(String permission) {
-        Set<String> permissions = this.getPermissions();
-        Set<String> groupPermissions = this.getInheritancePermissions();
-        if ((permissions == null || permissions.isEmpty())
-                && (groupPermissions == null || groupPermissions.isEmpty()))
-        {
-//            System.out.println("Entry \""+name+"\"'s permissions are empty.");
+        Set<String> permissions = this.getAllPermissions();
+        if (permissions == null || permissions.isEmpty()) {
+            // System.out.println("Entry \""+name+"\"'s permissions are empty.");
             return false;
         }
 
         // Do it in +user -> -user -> +group -> -group order
-        if (permissions != null && !permissions.isEmpty()) {
-            if (permissions.contains(permission))
-            {
-//                System.out.println("Found direct match for \""+permission+"\" in \""+name+"\".");/
+        if (!permissions.isEmpty()) {
+            if (permissions.contains(permission)) {
+                // System.out.println("Found direct match for \""+permission+"\" in \""+name+"\".");/
                 return true;
             }
-            if (permissions.contains("-" + permission))
-            {
-//                System.out.println("Found direct negated match for \""+permission+"\" in \""+name+"\".");
+            if (permissions.contains("-" + permission)) {
+                // System.out.println("Found direct negated match for \""+permission+"\" in \""+name+"\".");
                 return false;
-            }
-        }
-        if (groupPermissions != null && !groupPermissions.isEmpty()) {
-            if (groupPermissions.contains(permission))
-            {
-
-//                System.out.println("Found direct match for \""+permission+"\" in \""+name+"\" from inherited permissions.");
-                return true;
-            }
-            if (groupPermissions.contains("-" + permission))
-            {
-//                System.out.println("Found direct match for \""+permission+"\" in \""+name+"\" from inherited permissions.");
-                return true;
             }
         }
 
@@ -83,74 +67,95 @@ public abstract class Entry {
         String wild = "";
         String negated = "";
         String relevantNode = "";
-        if (groupPermissions != null && !groupPermissions.isEmpty()) {
-            if(groupPermissions.contains("-*"))
-            {
+        if (!permissions.isEmpty()) {
+            if (permissions.contains("-*")) {
                 relevantNode = "-*";
             }
-            if(groupPermissions.contains("*"))
-            {
+            if (permissions.contains("*")) {
                 relevantNode = "*";
             }
         }
-//        System.out.println("Relevant node: " +relevantNode);
-        if (permissions != null && !permissions.isEmpty()) {
-            if(permissions.contains("-*"))
-            {
-                relevantNode = "-*";
-            }
-            if(permissions.contains("*"))
-            {
-                relevantNode = "*";
-            }
-        }
-        
-//        System.out.println("Relevant node: " +relevantNode);
-        
+
+        // System.out.println("Relevant node: " +relevantNode);
+
         for (String nextLevel : nodeHierachy) {
             nextNode += nextLevel + ".";
             wild = nextNode + "*";
             negated = "-" + wild;
 
-            if (permissions != null && !permissions.isEmpty()) {
+            if (!permissions.isEmpty()) {
                 if (permissions.contains(wild)) {
                     relevantNode = wild;
-//                    System.out.println("Relevant node: " +relevantNode);
+                    // System.out.println("Relevant node: " +relevantNode);
                     continue;
                 }
 
                 if (permissions.contains(negated)) {
                     relevantNode = negated;
-//                    System.out.println("Relevant node: " +relevantNode);
-                    continue;
-                }
-            }
-
-            if (groupPermissions != null && !groupPermissions.isEmpty()) {
-                if (groupPermissions.contains(wild)) {
-                    relevantNode = wild;
-//                    System.out.println("Relevant node: " +relevantNode);
-                    continue;
-                }
-
-                if (groupPermissions.contains(negated)) {
-                    relevantNode = negated;
-//                    System.out.println("Relevant node: " +relevantNode);
+                    // System.out.println("Relevant node: " +relevantNode);
                     continue;
                 }
             }
         }
 
-        return !relevantNode.isEmpty()&&!relevantNode.startsWith("-");
+        return !relevantNode.isEmpty() && !relevantNode.startsWith("-");
     }
 
-    public Set<String> getInheritancePermissions() {
-        Set<String> permSet = new HashSet<String>();
-        Set<Group> groupSet = this.getAncestors();
-        for (Group grp : groupSet) {
-            permSet.addAll(grp.getPermissions());
+    public Set<String> getAllPermissions() {
+        return getAllPermissions(new LinkedHashSet<Group>());
+    }
+
+    protected Set<String> getAllPermissions(LinkedHashSet<Group> chain) {
+        Set<String> perms = new HashSet<String>();
+        if (chain == null)
+            return perms;
+        if (this instanceof Group)
+            if (chain.contains(this))
+                return perms;
+            else
+                chain.add((Group) this);
+        LinkedHashSet<Group> rawParents = getParentGroups();
+        LinkedHashSet<Group> parents = new LinkedHashSet<Group>();
+        for (Group g : rawParents)
+            if (!chain.contains(g))
+                parents.add(g);
+        rawParents = null;
+
+        for (Group g : parents) {
+            perms = resolvePerms(perms, g.getAllPermissions(chain));
         }
-        return permSet;
+        if (this instanceof Group && chain.contains(this))
+            chain.remove(this);
+        return perms;
+    }
+
+    protected static Set<String> resolvePerms(Set<String> perms,
+            Set<String> rawPerms) {
+        Set<String> newPerms = new HashSet<String>();
+        for (String perm : rawPerms) {
+            if (perm.isEmpty())
+                continue;
+            if (perm.endsWith("*")) // Wildcards
+            {
+                String wild = perm.substring(0, perm.length() - 1);
+                String oppWild = perm.startsWith("-") ? wild.substring(1) : "-"
+                        + wild;
+                wild = null;
+                for (Iterator<String> itr = perms.iterator(); itr.hasNext();) {
+                    String candidate = itr.next();
+                    if (candidate.startsWith(oppWild))
+                        itr.remove();
+                }
+            }
+
+            newPerms.add(perm);
+        }
+        perms.addAll(newPerms);
+        return perms;
+    }
+
+    protected LinkedHashSet<Group> getParentGroups() {
+        return controller.stringToGroups(getParents());
     }
 
     protected Set<Group> getAncestors() {
@@ -158,7 +163,7 @@ public abstract class Entry {
         Queue<Group> queue = new LinkedList<Group>();
 
         // Start with the direct ancestors or the default group
-        Set<Group> parents = controller.stringToGroups(this.getParents());
+        Set<Group> parents = getParentGroups();
         if (parents != null && parents.size() > 0)
             queue.addAll(parents);
         else
@@ -169,7 +174,7 @@ public abstract class Entry {
             Group grp = queue.poll();
             if (grp == null || groupSet.contains(grp))
                 continue;
-            parents = controller.stringToGroups(grp.getParents());
+            parents = grp.getParentGroups();
             if (parents != null && parents.size() > 0)
                 queue.addAll(parents);
             groupSet.add(grp);
@@ -179,7 +184,7 @@ public abstract class Entry {
     }
 
     protected boolean inGroup(String world, String group, Set<Group> checked) {
-        Set<Group> parents = controller.stringToGroups(getParents());
+        Set<Group> parents = getParentGroups();
         if (parents == null || parents.isEmpty())
             return false;
         for (Group grp : parents) {
@@ -210,7 +215,7 @@ public abstract class Entry {
     }
 
     protected boolean canBuild(Set<Group> checked) {
-        Set<Group> parents = controller.stringToGroups(getParents());
+        Set<Group> parents = getParentGroups();
         if (this instanceof Group) {
             Group g = (Group) this;
             if (g.canSelfBuild())

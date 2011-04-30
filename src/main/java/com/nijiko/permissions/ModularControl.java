@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -256,8 +257,8 @@ public class ModularControl extends PermissionHandler {
         }
     }
 
-    Set<Group> stringToGroups(Set<GroupWorld> raws) {
-        Set<Group> groupSet = new HashSet<Group>();
+    LinkedHashSet<Group> stringToGroups(LinkedHashSet<GroupWorld> raws) {
+        LinkedHashSet<Group> groupSet = new LinkedHashSet<Group>();
         for (GroupWorld raw : raws) {
             String world = getParentWorldGroup(raw.getWorld());
             Map<String, Group> gMap = this.WorldGroups.get(world);
