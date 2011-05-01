@@ -26,8 +26,7 @@ public abstract class Entry {
 
     public abstract LinkedHashSet<GroupWorld> getParents();
 
-    public abstract void setPermission(final String permission,
-            final boolean add);
+    public abstract void setPermission(final String permission, final boolean add);
 
     public void addPermission(final String permission) {
         this.setPermission(permission, true);
@@ -126,11 +125,11 @@ public abstract class Entry {
         }
         if (this instanceof Group && chain.contains(this))
             chain.remove(this);
+        resolvePerms(perms, this.getPermissions());
         return perms;
     }
 
-    protected static Set<String> resolvePerms(Set<String> perms,
-            Set<String> rawPerms) {
+    protected static Set<String> resolvePerms(Set<String> perms, Set<String> rawPerms) {
         Set<String> newPerms = new HashSet<String>();
         for (String perm : rawPerms) {
             if (perm.isEmpty())
@@ -138,8 +137,7 @@ public abstract class Entry {
             if (perm.endsWith("*")) // Wildcards
             {
                 String wild = perm.substring(0, perm.length() - 1);
-                String oppWild = perm.startsWith("-") ? wild.substring(1) : "-"
-                        + wild;
+                String oppWild = perm.startsWith("-") ? wild.substring(1) : "-" + wild;
                 wild = null;
                 for (Iterator<String> itr = perms.iterator(); itr.hasNext();) {
                     String candidate = itr.next();
@@ -191,8 +189,7 @@ public abstract class Entry {
             if (checked.contains(grp))
                 continue;
             checked.add(grp);
-            if (grp.world.equalsIgnoreCase(world)
-                    && grp.name.equalsIgnoreCase(group))
+            if (grp.world.equalsIgnoreCase(world) && grp.name.equalsIgnoreCase(group))
                 return true;
             if (grp.inGroup(world, group, checked))
                 return true;
@@ -201,9 +198,7 @@ public abstract class Entry {
     }
 
     public boolean inGroup(String world, String group) {
-        if (this.getType() == EntryType.GROUP
-                && this.world.equalsIgnoreCase(world)
-                && this.name.equalsIgnoreCase(group))
+        if (this.getType() == EntryType.GROUP && this.world.equalsIgnoreCase(world) && this.name.equalsIgnoreCase(group))
             return true;
         Set<Group> checked = new HashSet<Group>();
         return this.inGroup(world, group, checked);
