@@ -32,4 +32,8 @@ public interface UserStorage {
     public void setAutoSave(boolean autoSave);
     
     public boolean createUser(String name);
+
+    public String getData(String name, String path);
+    
+    public void setData(String name, String path, String data);
 }

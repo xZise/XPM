@@ -225,5 +225,21 @@ public class YamlUserStorage implements UserStorage {
         rwl.writeLock().unlock();
         return true;
     }
+
+    @Override
+    public String getData(String name, String path) {
+        rwl.readLock().lock();
+        String data = userConfig.getString("users."+name+".info."+path);
+        rwl.readLock().unlock();
+        return data;
+    }
+
+    @Override
+    public void setData(String name, String path, String data) {
+        rwl.writeLock().lock();
+        userConfig.setProperty("users."+name+".info."+path, data);
+        rwl.writeLock().unlock();
+        return;        
+    }
     
 }

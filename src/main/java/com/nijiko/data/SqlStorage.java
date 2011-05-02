@@ -43,6 +43,10 @@ public class SqlStorage {
                 + " prefix VARCHAR(32) NOT NULL,"
                 + " suffix VARCHAR(32) NOT NULL, "
                 + " build TINYINT NOT NULL DEFAULT 0"
+                + " weight INT NOT NULL DEFAULT 0"
+                + " previd INT NOT NULL FOREIGN KEY REFERENCES Groups(gid)"
+                + " nextid INT NOT NULL FOREIGN KEY REFERENCES Groups(gid)"
+                + " build TINYINT NOT NULL DEFAULT 0"
                 + " CONSTRAINT GroupNameWorld UNIQUE (groupname, World)," + ")");
         create.add("CREATE TABLE IF NOT EXISTS UserPermission ("
                 + " upermid INT NOT NULL PRIMARY KEY,"
@@ -66,6 +70,16 @@ public class SqlStorage {
         create.add("CREATE TABLE IF NOT EXISTS WorldBase ("
                 + " worldid INT NOT NULL FOREIGN KEY REFERENCES Worlds(worldid),"
                 + " defaultid INT NOT NULL FOREIGN KEY REFERENCES Groups(gid),"
+                + ")");
+        create.add("CREATE TABLE IF NOT EXISTS UserData ("
+                + " uid INT NOT NULL FOREIGN KEY REFERENCES Users(uid),"
+                + " path VARCHAR(64) NOT NULL,"
+                + " data VARCHAR(64) NOT NULL,"                
+                + ")");
+        create.add("CREATE TABLE IF NOT EXISTS GroupData ("
+                + " gid INT NOT NULL FOREIGN KEY REFERENCES Groups(uid),"
+                + " path VARCHAR(64) NOT NULL,"
+                + " data VARCHAR(64) NOT NULL,"                
                 + ")");
     }
 

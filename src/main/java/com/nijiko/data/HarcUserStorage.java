@@ -89,4 +89,16 @@ public class HarcUserStorage implements UserStorage {
         return false;
     }
 
+    @Override
+    public String getData(String name, String path) {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public void setData(String name, String path, String data) {
+        // TODO Auto-generated method stub
+        
+    }
+
 }

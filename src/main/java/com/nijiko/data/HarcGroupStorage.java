@@ -131,4 +131,34 @@ public class HarcGroupStorage implements GroupStorage {
         return false;
     }
 
+    @Override
+    public GroupWorld getPrevRank(String name) {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public GroupWorld getNextRank(String name) {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public int getWeight(String name) {
+        // TODO Auto-generated method stub
+        return 0;
+    }
+
+    @Override
+    public String getData(String name, String path) {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public void setData(String name, String path, String data) {
+        // TODO Auto-generated method stub
+        
+    }
+
 }

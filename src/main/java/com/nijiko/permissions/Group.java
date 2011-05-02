@@ -91,4 +91,29 @@ public class Group extends Entry {
         if (this.inGroup(group.world, group.name))
             data.removeParent(name, group.world, group.name);
     }
+    
+    public GroupWorld getPrevRank()
+    {
+        return data.getPrevRank(name);
+    }
+    
+    public GroupWorld getNextRank()
+    {
+        return data.getNextRank(name);
+    }
+    
+    public int getRawWeight()
+    {
+        return data.getWeight(name);
+    }
+
+    @Override
+    public void setData(String path, String newdata) {
+        data.setData(name,path,newdata);
+    }
+
+    @Override
+    public String getData(String path) {
+        return data.getData(name,path);
+    }
 }

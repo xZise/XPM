@@ -563,5 +563,23 @@ public class ModularControl extends PermissionHandler {
             return false;
         return WorldGroups.get(world).get(name.toLowerCase()) != null;
     }
-
+    @Override
+    public int compareWeights(String world, String first, String second)
+    {
+        return compareWeights(world,first,world,second);
+    }
+    
+    @Override
+    public int compareWeights(String firstWorld, String first, String secondWorld,  String second)
+    {
+        User firstUser = this.getUserObject(firstWorld, first);
+        User secondUser = this.getUserObject(secondWorld, second);
+        if(firstUser==null)
+        {
+            if(secondUser==null)return 0;
+            else return -1;
+        }
+        if(secondUser==null) return 1;
+        return Integer.signum(((Integer)firstUser.getWeight()).compareTo(secondUser.getWeight()));
+    }
 }

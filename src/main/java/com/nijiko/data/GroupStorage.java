@@ -45,4 +45,14 @@ public interface GroupStorage {
     public void setAutoSave(boolean autoSave);
 
     public boolean createGroup(String name);
+
+    public GroupWorld getPrevRank(String name);
+
+    public GroupWorld getNextRank(String name);
+    
+    public int getWeight(String name);
+
+    public String getData(String name, String path);
+    
+    public void setData(String name, String path, String data);
 }

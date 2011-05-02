@@ -64,4 +64,40 @@ public class User extends Entry {
         if (this.inGroup(group.world, group.name))
             data.removeParent(name, group.world, group.name);
     }
+    
+    
+    public void demote(Group group) {
+        if(group==null) return;
+        if(!this.getParentGroups().contains(group)) return;
+        GroupWorld prevRank = group.getPrevRank();
+        if(prevRank == null) return;
+        
+        this.removeParent(group);
+        if(this.getParents().contains(prevRank)) return;
+        Group prev = controller.getGroupObject(prevRank.getWorld(), prevRank.getName());
+        if(prev==null) return;
+        this.addParent(prev);
+    }
+    
+    public void promote(Group group) {
+        if(group==null) return;
+        if(!this.getParentGroups().contains(group)) return;
+        GroupWorld nextRank = group.getNextRank();
+        if(nextRank==null)return;
+        this.removeParent(group);
+        if(this.getParents().contains(nextRank)) return;
+        Group prev = controller.getGroupObject(nextRank.getWorld(), nextRank.getName());
+        if (prev == null)
+            return;
+        this.addParent(prev);
+    }
+    @Override
+    public void setData(String path, String newdata) {
+        data.setData(name,path,newdata);
+    }
+
+    @Override
+    public String getData(String path) {
+        return data.getData(name,path);
+    }
 }

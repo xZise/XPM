@@ -509,6 +509,17 @@ public abstract class PermissionHandler {
 
     public abstract void removeUserPermission(String world, String user,
             String node);
+    /**
+     * Compares the weights of two different users
+     * @param firstWorld World of first user
+     * @param first Name of first user
+     * @param secondWorld World of second user
+     * @param second Name of second user
+     * @return -1 if the second user's weight is higher than the first, 1 if vice versa, 0 if equal.
+     */
+    public abstract int compareWeights(String firstWorld, String first, String secondWorld, String second);
+
+    public abstract int compareWeights(String world, String first, String second);
 
 
 

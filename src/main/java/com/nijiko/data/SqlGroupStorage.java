@@ -11,6 +11,7 @@ public class SqlGroupStorage implements GroupStorage {
     private String groupWorld;
     private String baseGroup = null;
     private Set<String> buildGroups = new HashSet<String>();
+    private Map<String, Integer> groupWeights = new HashMap<String, Integer>();
     private Map<String, String> groupPrefixes = new HashMap<String, String>();
     private Map<String, String> groupSuffixes = new HashMap<String, String>();
     private Map<String, Set<String>> groupPermissions = new HashMap<String, Set<String>>();
@@ -124,6 +125,7 @@ public class SqlGroupStorage implements GroupStorage {
 
     @Override
     public void reload() {
+        groupWeights.clear();
         baseGroup = null;
         buildGroups.clear();
         groupPrefixes.clear();
@@ -148,6 +150,36 @@ public class SqlGroupStorage implements GroupStorage {
     public boolean createGroup(String name) {
         // TODO Auto-generated method stub
         return false;
+    }
+
+    @Override
+    public GroupWorld getPrevRank(String name) {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public GroupWorld getNextRank(String name) {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public int getWeight(String name) {
+        // TODO Auto-generated method stub
+        return 0;
+    }
+
+    @Override
+    public String getData(String name, String path) {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public void setData(String name, String path, String data) {
+        // TODO Auto-generated method stub
+        
     }
 
 }

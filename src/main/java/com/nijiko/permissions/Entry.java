@@ -156,6 +156,18 @@ public abstract class Entry {
         return controller.stringToGroups(getParents());
     }
 
+    public int getWeight()
+    {
+        Set<Group> groups = this.getAncestors();
+        if(this instanceof Group) groups.add((Group) this);
+        int maxWeight = 0;
+        for(Group group : groups)
+        {
+            maxWeight = maxWeight < group.getRawWeight() ? group.getRawWeight() : maxWeight;
+        }
+        return maxWeight;
+    }
+    
     protected Set<Group> getAncestors() {
         Set<Group> groupSet = new HashSet<Group>();
         Queue<Group> queue = new LinkedList<Group>();
@@ -252,4 +264,8 @@ public abstract class Entry {
     public String toString() {
         return "Entry " + name + " in " + world;
     }
+    
+    public abstract void setData(String path, String data);
+    
+    public abstract String getData(String path);
 }
