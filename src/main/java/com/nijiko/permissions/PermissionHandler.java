@@ -100,7 +100,7 @@ public abstract class PermissionHandler {
      * @param permission
      * @return boolean
      */
-    @Deprecated
+//    @Deprecated
     public abstract boolean has(Player player, String permission);
     /**
      * Redirects to permission(String,String,String)
@@ -108,7 +108,7 @@ public abstract class PermissionHandler {
      * @param permission
      * @return
      */
-    @Deprecated
+//    @Deprecated
     public abstract boolean permission(Player player, String permission);
 
     /**
