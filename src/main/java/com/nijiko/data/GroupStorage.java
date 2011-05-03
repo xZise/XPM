@@ -1,6 +1,7 @@
 package com.nijiko.data;
 
 import java.util.LinkedHashSet;
+import java.util.LinkedList;
 import java.util.Set;
 
 public interface GroupStorage {
@@ -24,7 +25,7 @@ public interface GroupStorage {
 
     public void addPermission(String name, String permission);
 
-    public void removePermission(String name, String permissions);
+    public void removePermission(String name, String permission);
 
     public void addParent(String name, String groupWorld, String groupName);
 
@@ -46,9 +47,8 @@ public interface GroupStorage {
 
     public boolean createGroup(String name);
 
-    public GroupWorld getPrevRank(String name);
-
-    public GroupWorld getNextRank(String name);
+    public Set<String> getTracks();
+    public LinkedList<GroupWorld> getTrack(String track);
     
     public int getWeight(String name);
 

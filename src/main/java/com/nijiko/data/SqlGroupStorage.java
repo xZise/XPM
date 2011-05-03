@@ -3,6 +3,7 @@ package com.nijiko.data;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
+import java.util.LinkedList;
 import java.util.Map;
 import java.util.Set;
 
@@ -153,18 +154,6 @@ public class SqlGroupStorage implements GroupStorage {
     }
 
     @Override
-    public GroupWorld getPrevRank(String name) {
-        // TODO Auto-generated method stub
-        return null;
-    }
-
-    @Override
-    public GroupWorld getNextRank(String name) {
-        // TODO Auto-generated method stub
-        return null;
-    }
-
-    @Override
     public int getWeight(String name) {
         // TODO Auto-generated method stub
         return 0;
@@ -180,6 +169,18 @@ public class SqlGroupStorage implements GroupStorage {
     public void setData(String name, String path, String data) {
         // TODO Auto-generated method stub
         
+    }
+
+    @Override
+    public Set<String> getTracks() {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public LinkedList<GroupWorld> getTrack(String track) {
+        // TODO Auto-generated method stub
+        return null;
     }
 
 }

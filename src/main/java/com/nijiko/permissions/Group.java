@@ -1,6 +1,8 @@
 package com.nijiko.permissions;
 
 import java.util.LinkedHashSet;
+import java.util.LinkedList;
+import java.util.ListIterator;
 import java.util.Set;
 
 import com.nijiko.data.GroupStorage;
@@ -67,18 +69,20 @@ public class Group extends Entry {
 
     @Override
     public void setPermission(final String permission, final boolean add) {
-        Set<String> permissions = this.getPermissions();
-        String negated = permission.startsWith("-") ? permission.substring(1)
-                : "-" + permission;
-        if (add) {
-            if (permissions.contains(negated)) {
-                data.removePermission(name, negated);
-            }
-            data.addPermission(name, permission);
-        } else {
-            data.removePermission(name, permission);
-            data.addPermission(name, negated);
-        }
+//        Set<String> permissions = this.getPermissions();
+//        String negated = permission.startsWith("-") ? permission.substring(1)
+//                : "-" + permission;
+//        if (add) {
+//            if (permissions.contains(negated)) {
+//                data.removePermission(name, negated);
+//            }
+//            data.addPermission(name, permission);
+//        } else {
+//            data.removePermission(name, permission);
+//            data.addPermission(name, negated);
+//        }
+        if(add) data.addPermission(name, permission);
+        else data.removePermission(name, permission);
     }
 
     @Override
@@ -92,14 +96,38 @@ public class Group extends Entry {
             data.removeParent(name, group.world, group.name);
     }
     
-    public GroupWorld getPrevRank()
+    public Set<String> getTracks()
     {
-        return data.getPrevRank(name);
+        return data.getTracks();
+    }
+    public GroupWorld getPrevRank(String trackName)
+    {
+        LinkedList<GroupWorld> track = data.getTrack(trackName);
+        if(track != null)
+            for(ListIterator<GroupWorld> iter = track.listIterator(); iter.hasNext();)
+            {
+                GroupWorld gw = iter.next();
+                if(gw.getWorld().equals(world)&&gw.getName().equalsIgnoreCase(name))
+                {
+                    return iter.previous();
+                }
+            }
+        return null;
     }
     
-    public GroupWorld getNextRank()
+    public GroupWorld getNextRank(String trackName)
     {
-        return data.getNextRank(name);
+        LinkedList<GroupWorld> track = data.getTrack(trackName);
+        if(track != null)
+            for(ListIterator<GroupWorld> iter = track.listIterator(); iter.hasNext();)
+            {
+                GroupWorld gw = iter.next();
+                if(gw.getWorld().equals(world)&&gw.getName().equalsIgnoreCase(name))
+                {
+                    if(iter.hasNext()) return iter.next();                    
+                }
+            }
+        return null;
     }
     
     public int getRawWeight()

@@ -260,44 +260,7 @@ public class YamlGroupStorage implements GroupStorage {
         return true;
     }
 
-    @Override
-    public GroupWorld getPrevRank(String name) {
-        rwl.readLock().lock();
-
-        String rawPrev = groupConfig.getString("groups." + name + ".prev");
-        rwl.readLock().unlock();
-        if (rawPrev == null)
-            return null;
-        String[] split = rawPrev.split(",", 2); // Split into at most 2 parts
-        // ("world,blah" -> "world",
-        // "blah")("blah" -> "blah")
-        if (split.length == 0)
-            return null;
-        if (split.length == 1)
-            return new GroupWorld(world, split[0]);
-        else
-            return new GroupWorld(split[0], split[1]);
-
-    }
-
-    @Override
-    public GroupWorld getNextRank(String name) {
-        rwl.readLock().lock();
-
-        String rawPrev = groupConfig.getString("groups." + name + ".next");
-        rwl.readLock().unlock();
-        if (rawPrev == null)
-            return null;
-        String[] split = rawPrev.split(",", 2); // Split into at most 2 parts
-        // ("world,blah" -> "world",
-        // "blah")("blah" -> "blah")
-        if (split.length == 0)
-            return null;
-        if (split.length == 1)
-            return new GroupWorld(world, split[0]);
-        else
-            return new GroupWorld(split[0], split[1]);
-    }
+    
 
     @Override
     public int getWeight(String name) {
@@ -321,5 +284,35 @@ public class YamlGroupStorage implements GroupStorage {
         groupConfig.setProperty("groups."+name+".info."+path, data);
         rwl.writeLock().unlock();
         return;        
+    }
+
+    @Override
+    public Set<String> getTracks() {
+        rwl.readLock().lock();
+        List<String> rawTracks = groupConfig.getKeys("tracks");
+        rwl.readLock().unlock();
+        if(rawTracks==null)return null;
+        return new HashSet<String>(rawTracks);
+    }
+
+    @Override
+    public LinkedList<GroupWorld> getTrack(String trackName) {
+        rwl.readLock().lock();
+        List<String> rawGroups = groupConfig.getStringList("tracks."+trackName,null);
+        rwl.readLock().unlock();
+
+        LinkedHashSet<GroupWorld> track = new LinkedHashSet<GroupWorld>(rawGroups.size());
+        for (String raw : rawGroups) {
+            String[] split = raw.split(",", 2); // Split into at most 2 parts
+            // ("world,blah" -> "world",
+            // "blah")("blah" -> "blah")
+            if (split.length == 0)
+                continue;
+            if (split.length == 1)
+                track.add(new GroupWorld(world, split[0]));
+            else
+                track.add(new GroupWorld(split[0], split[1]));
+        }
+        return new LinkedList<GroupWorld>(track);
     }
 }

@@ -1,6 +1,6 @@
 package com.nijiko;
 
-import org.bukkit.entity.Player;
+import org.bukkit.command.CommandSender;
 
 /**
  * Permissions 2.x
@@ -30,7 +30,7 @@ import org.bukkit.entity.Player;
  */
 public class Messaging {
 
-    public static Player player = null;
+    public static CommandSender sender = null;
 
     /**
      * Converts a list of arguments into points.
@@ -130,53 +130,53 @@ public class Messaging {
     }
 
     /**
-     * Save the player to be sent messages later. Ease of use sending messages. <br />
+     * Save the CommandSender to be sent messages later. Ease of use sending messages. <br />
      * <br />
      * Example: <blockquote>
      * 
      * <pre>
-     * Messaging.save(player);
-     * Messaging.send(&quot;This will go to the player saved.&quot;);
+     * Messaging.save(sender);
+     * Messaging.send(&quot;This will go to the sender saved.&quot;);
      * </pre>
      * 
      * </blockquote>
      * 
-     * @param player
-     *            The player we wish to save for later.
+     * @param sender
+     *            The CommandSender we wish to save for later.
      */
-    public static void save(Player player) {
-        Messaging.player = player;
+    public static void save(CommandSender sender) {
+        Messaging.sender = sender;
     }
 
     /**
-     * Sends a message to a specific player. <br />
+     * Sends a message to a specific CommandSender. <br />
      * <br />
      * Example: <blockquote>
      * 
      * <pre>
-     * Messaging.send(player, &quot;This will go to the player saved.&quot;);
+     * Messaging.send(sender, &quot;This will go to the CommandSender specified.&quot;);
      * </pre>
      * 
      * </blockquote>
      * 
-     * @param player
-     *            Player we are sending the message to.
+     * @param sender
+     *            CommandSender we are sending the message to.
      * @param message
      *            The message to be sent.
      */
-    public static void send(Player player, String message) {
-        player.sendMessage(parse(message));
+    public static void send(CommandSender sender, String message) {
+        sender.sendMessage(parse(message));
     }
 
     /**
-     * Sends a message to the stored player.
+     * Sends a message to the stored CommandSender.
      * 
      * @param message
      *            The message to be sent.
-     * @see Messaging#save(Player)
+     * @see Messaging#save(CommandSender)
      */
     public static void send(String message) {
-        if (Messaging.player != null)
-            player.sendMessage(parse(message));
+        if (Messaging.sender != null)
+            sender.sendMessage(parse(message));
     }
 }

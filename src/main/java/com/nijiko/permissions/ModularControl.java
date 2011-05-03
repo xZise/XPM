@@ -318,7 +318,7 @@ public class ModularControl extends PermissionHandler {
     public Collection<User> getUsers(String world) {
         world = getParentWorldUser(world);
         if (WorldUsers.get(world) == null)
-            return new HashSet<User>();
+            return null;
         return WorldUsers.get(world).values();
     }
 
@@ -326,7 +326,7 @@ public class ModularControl extends PermissionHandler {
     public Collection<Group> getGroups(String world) {
         world = getParentWorldGroup(world);
         if (WorldGroups.get(world.toLowerCase()) == null)
-            return new HashSet<Group>();
+            return null;
         return WorldGroups.get(world).values();
     }
 

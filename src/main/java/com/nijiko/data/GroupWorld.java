@@ -24,9 +24,9 @@ public class GroupWorld {
             GroupWorld otherPair = (GroupWorld) other;
             return ((this.world == otherPair.world || (this.world != null
                     && otherPair.world != null && this.world
-                    .equalsIgnoreCase(otherPair.world))) && (this.group == otherPair.group || (this.group != null
+                    .equals(otherPair.world))) && (this.group == otherPair.group || (this.group != null
                     && otherPair.group != null && this.group
-                    .equalsIgnoreCase(otherPair.group))));
+                    .equals(otherPair.group))));
         }
 
         return false;

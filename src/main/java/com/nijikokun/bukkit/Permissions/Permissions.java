@@ -2,6 +2,10 @@ package com.nijikokun.bukkit.Permissions;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.LinkedHashSet;
+import java.util.Set;
 import java.util.logging.Logger;
 
 import org.bukkit.ChatColor;
@@ -19,10 +23,14 @@ import org.bukkit.util.config.Configuration;
 import com.nijiko.Messaging;
 import com.nijiko.Misc;
 import com.nijiko.configuration.NotNullConfiguration;
+import com.nijiko.data.GroupWorld;
 //import com.nijiko.permissions.Group;
+import com.nijiko.permissions.Entry;
+import com.nijiko.permissions.Group;
 import com.nijiko.permissions.ModularControl;
 import com.nijiko.permissions.PermissionHandler;
 //import com.nijiko.permissions.User;
+import com.nijiko.permissions.User;
 
 /**
  * Permissions 2.x Copyright (C) 2011 Matt 'The Yeti' Burnett
@@ -75,21 +83,17 @@ public class Permissions extends JavaPlugin {
         PropertyHandler server = new PropertyHandler("server.properties");
         DefaultWorld = server.getString("level-name");
 
-        File storageOpt = new File("plugins" + File.separator + "Permissions"
-                + File.separator, "storageconfig.yml");
+        File storageOpt = new File("plugins" + File.separator + "Permissions" + File.separator, "storageconfig.yml");
         if (!storageOpt.isFile())
-            System.err
-                    .println("[Permissions] storageconfig.yml is not a file.");
+            System.err.println("[Permissions] storageconfig.yml is not a file.");
         if (!storageOpt.canRead())
-            System.err
-                    .println("[Permissions] storageconfig.yml cannot be read.");
+            System.err.println("[Permissions] storageconfig.yml cannot be read.");
         if (!storageOpt.exists())
             try {
                 System.out.println("[Permissions] Creating storageconfig.yml.");
                 storageOpt.createNewFile();
             } catch (IOException e) {
-                System.err
-                        .println("[Permissions] storageconfig.yml could not be created.");
+                System.err.println("[Permissions] storageconfig.yml could not be created.");
                 e.printStackTrace();
             }
         Configuration storageConfig = new NotNullConfiguration(storageOpt);
@@ -155,89 +159,301 @@ public class Permissions extends JavaPlugin {
         directory = getDataFolder();
 
         // Enabled
-        log.info("[" + description.getName() + "] version ["
-                + description.getVersion() + "] (" + codename + ")  loaded");
+        log.info("[" + description.getName() + "] version [" + description.getVersion() + "] (" + codename + ")  loaded");
 
-        this.getServer().getPluginManager()
-                .registerEvent(Event.Type.BLOCK_PLACE, l, Priority.High, this);
-        this.getServer().getPluginManager()
-                .registerEvent(Event.Type.BLOCK_BREAK, l, Priority.High, this);
+        this.getServer().getPluginManager().registerEvent(Event.Type.BLOCK_PLACE, l, Priority.High, this);
+        this.getServer().getPluginManager().registerEvent(Event.Type.BLOCK_BREAK, l, Priority.High, this);
     }
 
     @Override
-    public boolean onCommand(CommandSender sender, Command command,
-            String commandLabel, String[] args) {
+    public boolean onCommand(CommandSender sender, Command command, String commandLabel, String[] args) {
         Player player = null;
-        String commandName = command.getName().toLowerCase();
+        // String commandName = command.getName().toLowerCase();
         PluginDescriptionFile pdfFile = this.getDescription();
 
+        Messaging.save(sender);
         if (sender instanceof Player) {
             player = (Player) sender;
-
-            Messaging.save(player);
         }
 
-        if (commandName.compareToIgnoreCase("permissions") == 0) {
-            if (args.length < 1) {
-                if (player != null) {
-                    Messaging.send("&7-------[ &fPermissions&7 ]-------");
-                    Messaging.send("&7Currently running version: &f["
-                            + pdfFile.getVersion() + "] (" + codename + ")");
+        if (args.length == 0) {
+            if (player != null) {
+                Messaging.send("&7-------[ &fPermissions&7 ]-------");
+                Messaging.send("&7Currently running version: &f[" + pdfFile.getVersion() + "] (" + codename + ")");
 
-                    if (Security.has(player.getWorld().getName(), player.getName(), "permissions.reload")) {
-                        Messaging
-                                .send("&7Reload with: &f/permissions -reload [World]");
-                        Messaging
-                                .send("&fLeave [World] blank to reload default world.");
-                    }
-
-                    Messaging.send("&7-------[ &fPermissions&7 ]-------");
-                    return true;
-                } else {
-                    sender.sendMessage("[" + pdfFile.getName() + "] version ["
-                            + pdfFile.getVersion() + "] (" + codename
-                            + ")  loaded");
-                    return true;
+                if (Security.has(player.getWorld().getName(), player.getName(), "permissions.reload")) {
+                    Messaging.send("&7Reload with: &f/permissions &a-reload &e<world>");
+                    Messaging.send("&fLeave &e<world> blank to reload default world.");
                 }
-            }
 
-            if (args[0].equalsIgnoreCase("-reload") && args.length >= 2) {
-                return reload(sender, args[1]);
-            }
-            else if(args[0].equalsIgnoreCase("has") && args.length == 4)
-            {
-                String world = args[1];
-                String user = args[2];
-                String node = args[3];
-                sender.sendMessage(String.valueOf(Security.permission(world, user, node)));
+                Messaging.send("&7-------[ &fPermissions&7 ]-------");
+                return true;
+            } else {
+                sender.sendMessage("[" + pdfFile.getName() + "] version [" + pdfFile.getVersion() + "] (" + codename + ")  loaded");
                 return true;
             }
-//            else if(args[0].equals("user") && args.length > 3)
-//            {
-//                User user = null;
-//                try {
-//                    user = Security.safeGetUser(args[2], args[1]);
-//                } catch (Exception e) {
-//                    sender.sendMessage(ChatColor.RED + "Error retrieving user data.");
-//                    e.printStackTrace();
-//                    return true;
-//                }
-//                //Process the rest of the command
-//            }
-//            else if(args[0].equals("group") && args.length > 3)
-//            {
-//                Group group = null;
-//                try {
-//                    group = Security.safeGetGroup(args[2], args[1]);
-//                } catch (Exception e) {
-//                    sender.sendMessage(ChatColor.RED + "Error retrieving user data.");
-//                    e.printStackTrace();
-//                    return true;
-//                }
-//                //Process the rest of the command
-//            }
-            //Add new commands here
         }
+
+        if (args[0].equalsIgnoreCase("-reload") && args.length >= 2) {
+            return reload(sender, args[1]);
+        } else if (args[0].equalsIgnoreCase("-list")) {
+            if (args.length > 1) {
+                if (args[1].equalsIgnoreCase("worlds")) {
+                    Set<String> worlds = Security.getWorlds();
+                    String text = "";
+                    if (worlds.isEmpty()) {
+                        text = "&4[Permissions] No worlds loaded.";
+                    } else {
+                        text = "&a[Permissions] Loaded worlds: &b";
+                        for (String world : worlds) {
+                            text = text + world + " ,";
+                        }
+                        text = text.substring(0, text.length() - 2);
+                    }
+                    Messaging.send(text);
+                    return true;
+                }
+                if (args.length > 2) {
+                    String world = args[2];
+                    if (args[1].equalsIgnoreCase("users")) {
+                        Collection<User> users = Security.getUsers(world);
+                        Messaging.send(listEntries(users, "Users"));
+                        return true;
+                    } else if (args[1].equalsIgnoreCase("groups")) {
+                        Collection<Group> groups = Security.getGroups(world);
+                        Messaging.send(listEntries(groups, "Groups"));
+                        return true;
+                    }
+                }
+            }
+            Messaging.send("&7[Permissions] Syntax: ");
+            Messaging.send("&b/permissions &a-list &eworlds.");
+            Messaging.send("&b/permissions &a-list &e[users|groups] &d<world>.");
+            return true;
+        }
+
+        // This part is for selecting the appropriate entry (/pr (g:)<entryname>
+        // (w:<world>) ...)
+        int currentArg = 0;
+        boolean isGroup = args[0].startsWith("g:");
+        String name = isGroup ? args[0].substring(2) : args[0];
+        currentArg++;
+        String world = sender instanceof Player ? ((Player) sender).getWorld().getName() : null;
+        if (args.length > currentArg && args[currentArg].startsWith("w:")) {
+            world = args[currentArg].substring(2);
+            currentArg++;
+        }
+        if (world == null) {
+            Messaging.send("&4[Permissions] No world specified.");
+            return true;
+        }
+        Entry entry = isGroup ? Security.getGroupObject(world, name) : Security.getUserObject(world, name);
+        // Note that entry may be null if the user/group doesn't exist
+        if (args.length > currentArg) {
+            if (args[currentArg].equalsIgnoreCase("create")) {
+                if (entry != null) {
+                    Messaging.send("&4[Permissions] User/Group already exists.");
+                    return true;
+                }
+                try {
+                    entry = isGroup ? Security.safeGetGroup(world, name) : Security.safeGetUser(world, name);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    Messaging.send("&4[Permissions] Error creating user/group.");
+                    return true;
+                }
+                Messaging.send("&7[Permissions] User/Group created.");
+                return true;
+            } else if (entry == null) {
+                Messaging.send("&4[Permissions] User/Group does not exist.");
+                return true;
+            } else if (args[currentArg].equalsIgnoreCase("perms")) {
+                currentArg++;
+                if (args.length > currentArg) {
+                    if (args[currentArg].equalsIgnoreCase("list")) {
+                        Set<String> perms = entry.getPermissions();
+                        String text = "";
+                        if (perms == null || perms.isEmpty()) {
+                            text = "&4[Permissions] User/Group has no non-inherited permissions.";
+                        } else {
+                            for (String perm : perms) {
+                                text = text + perm + ",";
+                            }
+                            text = text.substring(0, text.length() - 1);
+                        }
+                        Messaging.send(text);
+                        return true;
+                    } else if (args[currentArg].equalsIgnoreCase("add") || args[currentArg].equalsIgnoreCase("remove")) {
+                        boolean add = args[currentArg].equalsIgnoreCase("add");
+                        currentArg++;
+                        String text = add ? "&7[Permissions]&b Permission added successfully." : "&7[Permissions]&b Permission removed successfully.";
+                        if (args.length > currentArg) {
+                            String permission = args[currentArg];
+                            Set<String> perms = entry.getPermissions();
+                            if (!(perms.contains(permission) ^ add))
+                                text = "&4[Permissions] User/Group already has that permission.";
+                            else
+                                entry.setPermission(permission, add);
+                        }
+                        Messaging.send(text);
+                        return true;
+                    }
+                }
+                Messaging.send("&7[Permissions] Syntax: ");
+                Messaging.send("&b/permissions &a(g:)<target> (w:<world>) perms list.");
+                Messaging.send("&b/permissions &a(g:)<target> (w:<world>) perms [add|remove] <node>.");
+                return true;
+            } else if (args[currentArg].equalsIgnoreCase("parents")) {
+                currentArg++;
+                if (args.length > currentArg) {
+                    if (args[currentArg].equalsIgnoreCase("list")) {
+                        LinkedHashSet<GroupWorld> parents = entry.getParents();
+                        String text = "&7[Permissions]&b Parents: ";
+                        if (parents == null || parents.isEmpty()) {
+                            text = "&4[Permissions] User/Group has no parents.";
+                        } else {
+                            for (GroupWorld parent : parents) {
+                                text = text + parent.toString() + " ,";
+                            }
+                            text = text.substring(0, text.length() - 2);
+                        }
+                        Messaging.send(text);
+                        return true;
+                    } else if (args[currentArg].equalsIgnoreCase("add") || args[currentArg].equalsIgnoreCase("remove")) {
+                        boolean add = args[currentArg].equalsIgnoreCase("add");
+                        currentArg++;
+                        String text = add ? "&7[Permissions]&b Parent added successfully." : "&7[Permissions]&b Parent removed successfully.";
+                        if (args.length > currentArg) {
+                            String parentName = args[currentArg];
+                            String parentWorld = world;
+                            if (args.length > (++currentArg)) {
+                                parentWorld = args[currentArg];
+                            }
+                            LinkedHashSet<GroupWorld> parents = entry.getParents();
+                            if (add && parents.contains(new GroupWorld(parentWorld, parentName)))
+                                text = "&4[Permissions] User/Group already has that parent.";
+                            if (!add && !parents.contains(new GroupWorld(parentWorld, parentName)))
+                                text = "&4[Permissions] User/Group does not have such a parent.";
+                            else {
+                                Group parent = Security.getGroupObject(parentWorld, parentName);
+                                if (parent == null) {
+                                    text = "&4[Permissions] No such group exists.";
+                                } else {
+                                    if (add)
+                                        entry.addParent(parent);
+                                    else
+                                        entry.removeParent(parent);
+                                }
+                            }
+                        }
+                        Messaging.send(text);
+                        return true;
+                    }
+                }
+                Messaging.send("&7[Permissions] Syntax: ");
+                Messaging.send("&b/permissions &a(g:)<target> (w:<world>) perms list.");
+                Messaging.send("&b/permissions &a(g:)<target> (w:<world>) perms [add|remove] <node>.");
+                return true;
+            }
+            if (isGroup && entry instanceof Group)// Just in case
+            {
+                Group group = (Group) entry;
+                if (args[currentArg].equalsIgnoreCase("prefix") || args[currentArg].equalsIgnoreCase("suffix")) {
+                    boolean isPrefix = args[currentArg].equalsIgnoreCase("prefix");
+                    currentArg++;
+                    if (args.length > currentArg) {
+                        if (args[currentArg].equalsIgnoreCase("get")) {
+                            String text = isPrefix ? "&7[Permissions]&b " + group.getName() + "'s prefix:" : "&7[Permissions]&b " + group.getName() + "'s suffix:";
+                            Messaging.send(text);
+                            text = isPrefix ? group.getPrefix() : group.getSuffix();
+                            Messaging.send( "\""+text+"\"");
+                            return true;
+                        } else if (args[currentArg].equalsIgnoreCase("set")) {
+                            currentArg++;
+                            String newFix = "";
+                            if (args.length > currentArg) {
+                                String[] fullFix = Arrays.copyOfRange(args, currentArg, args.length);
+                                for (String part : fullFix) {
+                                    newFix = newFix + part + " ";
+                                }
+                                newFix = newFix.substring(0, newFix.length() - 1); //Possible bug
+                            }
+                            if (isPrefix)
+                                group.setPrefix(newFix);
+                            else
+                                group.setSuffix(newFix);
+                            String text = isPrefix ? "&7[Permissions]&b Group's prefix set to " + newFix + ".": "&7[Permissions]&7 Group's suffix set to " + newFix + ".";
+                            Messaging.send(text);
+                            return true;
+                        }
+                    }
+                } else if (args[currentArg].equalsIgnoreCase("build")) {
+                    currentArg++;
+                    if (args.length > currentArg) {
+                        if (args[currentArg].equalsIgnoreCase("get")) {
+                            if (group.canBuild())
+                                Messaging.send("&7[Permissions]&b " + group.getName() + " can build.");
+                            else
+                                Messaging.send("&7[Permissions]&b "+group.getName() + " cannot build.");
+                            return true;
+                        } else if (args[currentArg].equalsIgnoreCase("set")) {
+                            currentArg++;
+                            if (args.length > currentArg) {
+                                String bool = args[currentArg];
+                                boolean build = Boolean.parseBoolean(bool);
+                                group.setBuild(build);
+                                Messaging.send("&7[Permissions]&b" + group.getName() + "'s build setting was set to " + Boolean.toString(build));
+                                return true;
+                            }
+
+                            Messaging.send("&7[Permissions] Syntax: &b/permissions &ag:<target> (w:<world>) build set <true|false>.");
+                            return true;
+                        }
+                    }
+                }
+            } else if (entry instanceof User) {
+                User user = (User) entry;
+                if (args[currentArg].equalsIgnoreCase("promote") || args[currentArg].equalsIgnoreCase("demote")) {
+                    boolean isPromote = args[currentArg].equalsIgnoreCase("promote");
+                    currentArg++;
+                    if(args.length > currentArg)
+                    {
+                        String parentName = args[currentArg];
+                        String parentWorld = world;
+                        if (args.length > currentArg && args[currentArg].startsWith("w:")) {
+                            world = args[currentArg].substring(2);
+                            currentArg++;
+                        }
+                        Group group = Security.getGroupObject(parentWorld, parentName);
+                        if(group==null)
+                        {
+                            Messaging.send("&4[Permissions] No such group.");
+                            return true;
+                        }
+                        if(!user.inGroup(parentWorld, parentName))
+                        {
+                            Messaging.send("&4[Permissions] User not in specified group.");
+                            return true;
+                        }
+                        if(args.length > currentArg)
+                        {
+                            String track = args[currentArg];
+                            if(!group.getTracks().contains(track))
+                            {
+                                Messaging.send("&4[Permissions] Specified track does not exist.");
+                                return true;
+                            }
+                            if(isPromote) user.promote(group, track);
+                            else user.demote(group, track);
+                            String text = isPromote ? "&7[Permissions]&b User promoted along track " + track + ".": "&7[Permissions]&7 User demoted along track " + track + ".";
+                            Messaging.send(text);
+                        }
+                    }
+                    // /pr <target> (w:<world>) [promote|demote] <parent> (w:<parentworld>) <track>
+                }
+            }
+        }
+
         return false;
     }
 
@@ -245,41 +461,49 @@ public class Permissions extends JavaPlugin {
         if (sender instanceof Player) {
             Player p = (Player) sender;
             if (Security.has(p.getWorld().getName(), p.getName(), "permissions.reload")) {
-                p.sendMessage(ChatColor.RED
-                        + "[Permissions] You lack the necessary permissions to perform this action.");
+                p.sendMessage(ChatColor.RED + "[Permissions] You lack the necessary permissions to perform this action.");
                 return true;
             }
         }
 
         if (arg == null || arg.equals("")) {
             Security.reload(DefaultWorld);
-            sender.sendMessage(ChatColor.GRAY
-                    + "[Permissions] Default world reloaded.");
+            sender.sendMessage(ChatColor.GRAY + "[Permissions] Default world reloaded.");
             return true;
         }
 
         if (arg.equalsIgnoreCase("all")) {
             Security.reload();
-            sender.sendMessage(ChatColor.GRAY
-                    + "[Permissions] All worlds reloaded.");
+            sender.sendMessage(ChatColor.GRAY + "[Permissions] All worlds reloaded.");
             return true;
         }
 
         if (Security.reload(arg))
-            sender.sendMessage(ChatColor.GRAY
-                    + "[Permissions] Reload of World " + arg + " completed.");
+            sender.sendMessage(ChatColor.GRAY + "[Permissions] Reload of World " + arg + " completed.");
         else
-            sender.sendMessage(ChatColor.GRAY + "[Permissions] World " + arg
-                    + " does not exist.");
+            sender.sendMessage(ChatColor.GRAY + "[Permissions] World " + arg + " does not exist.");
         return true;
 
     }
-    
+
     @Override
-    public String toString()
-    {
+    public String toString() {
         return name + " version " + version + " (" + codename + ")";
     }
-    
-    
+
+    private String listEntries(Collection<? extends Entry> entries, String type) {
+        String text = "";
+        if (entries == null) {
+            text = "&4[Permissions] World does not exist.";
+        } else if (entries.isEmpty()) {
+            text = "&4[Permissions] No " + type.toLowerCase() + " in that world.";
+        } else {
+            text = "&a[Permissions] " + type + ": &b";
+            for (Entry entry : entries) {
+                text = text + entry.getName() + ", ";
+            }
+            text = text.substring(0, text.length() - 2);
+        }
+        return text;
+    }
 }

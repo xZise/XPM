@@ -40,18 +40,20 @@ public class User extends Entry {
 
     @Override
     public void setPermission(final String permission, final boolean add) {
-        Set<String> permissions = this.getPermissions();
-        String negated = permission.startsWith("-") ? permission.substring(1)
-                : "-" + permission;
-        if (add) {
-            if (permissions.contains(negated)) {
-                data.removePermission(name, negated);
-            }
-            data.addPermission(name, permission);
-        } else {
-            data.removePermission(name, permission);
-            data.addPermission(name, negated);
-        }
+//        Set<String> permissions = this.getPermissions();
+//        String negated = permission.startsWith("-") ? permission.substring(1)
+//                : "-" + permission;
+//        if (add) {
+//            if (permissions.contains(negated)) {
+//                data.removePermission(name, negated);
+//            }
+//            data.addPermission(name, permission);
+//        } else {
+//            data.removePermission(name, permission);
+//            data.addPermission(name, negated);
+//        }
+        if(add) data.addPermission(name, permission);
+        else data.removePermission(name, permission);
     }
 
     @Override
@@ -66,10 +68,10 @@ public class User extends Entry {
     }
     
     
-    public void demote(Group group) {
+    public void demote(Group group, String track) {
         if(group==null) return;
         if(!this.getParentGroups().contains(group)) return;
-        GroupWorld prevRank = group.getPrevRank();
+        GroupWorld prevRank = group.getPrevRank(track);
         if(prevRank == null) return;
         
         this.removeParent(group);
@@ -79,10 +81,10 @@ public class User extends Entry {
         this.addParent(prev);
     }
     
-    public void promote(Group group) {
+    public void promote(Group group, String track) {
         if(group==null) return;
         if(!this.getParentGroups().contains(group)) return;
-        GroupWorld nextRank = group.getNextRank();
+        GroupWorld nextRank = group.getNextRank(track);
         if(nextRank==null)return;
         this.removeParent(group);
         if(this.getParents().contains(nextRank)) return;
