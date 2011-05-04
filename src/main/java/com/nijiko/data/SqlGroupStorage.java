@@ -4,6 +4,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -17,6 +18,7 @@ public class SqlGroupStorage implements GroupStorage {
     private Map<String, String> groupSuffixes = new HashMap<String, String>();
     private Map<String, Set<String>> groupPermissions = new HashMap<String, Set<String>>();
     private Map<String, Set<GroupWorld>> groupParents = new HashMap<String, Set<GroupWorld>>();
+    private Map<String, List<GroupWorld>> tracks = new HashMap<String, List<GroupWorld>>();
 
     public SqlGroupStorage(String groupWorld) {
         // TODO Auto-generated constructor stub

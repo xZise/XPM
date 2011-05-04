@@ -1,9 +1,11 @@
 Changelog
+
 3.0
 Fix for lowercase world name issue
 Removal of Control and replaced with ModularControl
 Configuration files split to seperate users/groups per world
 Initial data storage backend system implemented
+Commands added
 New codename & version!
 
 2.7.2
