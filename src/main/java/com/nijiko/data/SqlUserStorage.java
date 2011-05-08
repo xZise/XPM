@@ -1,6 +1,7 @@
 package com.nijiko.data;
 
 import java.sql.Connection;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
@@ -13,6 +14,7 @@ import java.util.Set;
 import javax.sql.DataSource;
 
 import com.nijiko.permissions.EntryType;
+import com.nijiko.permissions.Group;
 
 public class SqlUserStorage implements UserStorage {
 
@@ -20,11 +22,16 @@ public class SqlUserStorage implements UserStorage {
     private Map<String, Set<String>> userPermissions = new HashMap<String, Set<String>>();
     private Map<String, LinkedHashSet<GroupWorld>> userParents = new HashMap<String, LinkedHashSet<GroupWorld>>();
 
-    private static final String permGetStmt = "";
-    private static final String parentGetStmt = "";
-
+    private static final String permGetText = "SELECT * FROM Worlds, Users, UserPermissions WHERE Worlds.worldname = ?, Users.username = ?, Users.worldid = World.worldid, UserPermissions.uid = Users.uid;";
+    private static final String parentGetText = "SELECT * FROM Worlds, Users, UserInheritance WHERE Worlds.worldname = ?, Users.username = ?, Users.worldid = World.worldid, UserInheritance.uid = Users.uid;";
+    
+    private static final String permAddText = "";
+    private static final String parentAddText = "";
+    
+    private static PreparedStatement permGetStmt;
+    private static PreparedStatement parentGetStmt;
     public SqlUserStorage(String userWorld) {
-        // TODO Auto-generated constructor stub
+        reload();
     }
 
     @Override
@@ -46,9 +53,8 @@ public class SqlUserStorage implements UserStorage {
         }
 
         try {
-            Statement s = dbConn.createStatement();
-            s.execute(permGetStmt);
-            ResultSet rs = s.getResultSet();
+            permGetStmt.clearParameters();
+            ResultSet rs = permGetStmt.executeQuery();
             while (rs.next()) {
                 permissions.add(rs.getString(1));
             }
@@ -85,9 +91,8 @@ public class SqlUserStorage implements UserStorage {
         }
 
         try {
-            Statement s = dbConn.createStatement();
-            s.execute(parentGetStmt);
-            ResultSet rs = s.getResultSet();
+            parentGetStmt.clearParameters();
+            ResultSet rs = parentGetStmt.executeQuery();
             while (rs.next()) {
                 GroupWorld gw = new GroupWorld(rs.getString(1), rs.getString(2));
                 parents.add(gw);
@@ -174,7 +179,14 @@ public class SqlUserStorage implements UserStorage {
     public void reload() {
         userPermissions.clear();
         userParents.clear();
-
+        try {
+            Connection dbConn = SqlStorage.getSource().getConnection();
+            permGetStmt = dbConn.prepareStatement(permGetText);
+            parentGetStmt = dbConn.prepareStatement(parentGetText);
+        } catch (SQLException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
     }
 
     @Override
@@ -196,15 +208,49 @@ public class SqlUserStorage implements UserStorage {
     }
 
     @Override
-    public String getData(String name, String path) {
+    public String getString(String name, String path) {
         // TODO Auto-generated method stub
         return null;
     }
 
     @Override
-    public void setData(String name, String path, String data) {
+    public int getInt(String name, String path) {
         // TODO Auto-generated method stub
+        return 0;
+    }
+
+    @Override
+    public double getDouble(String name, String path) {
+        // TODO Auto-generated method stub
+        return 0;
+    }
+
+    @Override
+    public boolean getBool(String name, String path) {
+        // TODO Auto-generated method stub
+        return false;
+    }
+
+    @Override
+    public void setData(String name, String path, Object data) {
+        String szForm = "";
+        if (data instanceof Integer) {
+            szForm = ((Integer) data).toString();
+        } else if (data instanceof Boolean) {
+            szForm = ((Boolean) data).toString();
+        } else if (data instanceof Double) {
+            szForm = ((Double) data).toString();
+        } else if (data instanceof String) {
+            szForm = (String) data;
+        } else {
+            throw new IllegalArgumentException("Only ints, bools, doubles and Strings are allowed!");
+        }
         
     }
 
+    @Override
+    public void removeData(String name, String path) {
+        // TODO Auto-generated method stub
+        
+    }
 }

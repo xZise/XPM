@@ -136,12 +136,32 @@ public class Group extends Entry {
     }
 
     @Override
-    public void setData(String path, String newdata) {
+    public void setData(String path, Object newdata) {
         data.setData(name,path,newdata);
     }
 
     @Override
-    public String getData(String path) {
-        return data.getData(name,path);
+    public String getString(String path) {
+        return data.getString(name,path);
+    }
+
+    @Override
+    public int getInt(String path) {
+        return data.getInt(name, path);
+    }
+
+    @Override
+    public boolean getBool(String path) {
+        return data.getBool(name, path);
+    }
+
+    @Override
+    public double getDouble(String path) {
+        return data.getDouble(name, path);
+    }
+
+    @Override
+    public void removeData(String path) {
+        data.removeData(name, path);
     }
 }

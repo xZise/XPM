@@ -221,8 +221,6 @@ public final class FileManager {
                     new FileReader(new File(directory, file)));
 
             try {
-                this.source = input.readLine();
-
                 while ((line = input.readLine()) != null) {
                     this.lines.add(line);
                 }

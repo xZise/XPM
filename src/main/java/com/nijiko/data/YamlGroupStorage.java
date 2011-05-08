@@ -271,7 +271,7 @@ public class YamlGroupStorage implements GroupStorage {
     }
     
     @Override
-    public String getData(String name, String path) {
+    public String getString(String name, String path) {
         rwl.readLock().lock();
         String data = groupConfig.getString("groups."+name+".info."+path);
         rwl.readLock().unlock();
@@ -279,7 +279,7 @@ public class YamlGroupStorage implements GroupStorage {
     }
 
     @Override
-    public void setData(String name, String path, String data) {
+    public void setData(String name, String path, Object data) {
         rwl.writeLock().lock();
         groupConfig.setProperty("groups."+name+".info."+path, data);
         rwl.writeLock().unlock();
@@ -314,5 +314,39 @@ public class YamlGroupStorage implements GroupStorage {
                 track.add(new GroupWorld(split[0], split[1]));
         }
         return new LinkedList<GroupWorld>(track);
+    }
+
+    @Override
+    public void removeData(String name, String path) {
+        rwl.writeLock().lock();
+        groupConfig.removeProperty("groups."+name+".info."+path);
+        rwl.writeLock().unlock();
+        return;        
+    }
+    
+
+
+    @Override
+    public int getInt(String name, String path) {
+        rwl.readLock().lock();
+        int data = groupConfig.getInt("groups."+name+".info."+path , 0);
+        rwl.readLock().unlock();
+        return data;
+    }
+
+    @Override
+    public double getDouble(String name, String path) {
+        rwl.readLock().lock();
+        double data = groupConfig.getDouble("groups."+name+".info."+path , 0D);
+        rwl.readLock().unlock();
+        return data;
+    }
+
+    @Override
+    public boolean getBool(String name, String path) {
+        rwl.readLock().lock();
+        boolean data = groupConfig.getBoolean("groups."+name+".info."+path , false);
+        rwl.readLock().unlock();
+        return data;
     }
 }

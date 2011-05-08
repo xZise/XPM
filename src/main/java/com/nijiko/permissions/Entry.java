@@ -168,7 +168,7 @@ public abstract class Entry {
         return maxWeight;
     }
     
-    protected Set<Group> getAncestors() {
+    public Set<Group> getAncestors() {
         Set<Group> groupSet = new HashSet<Group>();
         Queue<Group> queue = new LinkedList<Group>();
 
@@ -240,15 +240,15 @@ public abstract class Entry {
         return false;
     }
 
-    public Set<String> getGroups() {
-        Set<Group> groupSet = this.getAncestors();
-        Set<String> nameSet = new HashSet<String>();
-        for (Group grp : groupSet) {
-            if (grp != null)
-                nameSet.add(grp.name);
-        }
-        return nameSet;
-    }
+//    public Set<String> getGroups() {
+//        Set<Group> groupSet = this.getAncestors();
+//        Set<String> nameSet = new HashSet<String>();
+//        for (Group grp : groupSet) {
+//            if (grp != null)
+//                nameSet.add(grp.name);
+//        }
+//        return nameSet;
+//    }
 
     public abstract EntryType getType();
 
@@ -265,7 +265,12 @@ public abstract class Entry {
         return "Entry " + name + " in " + world;
     }
     
-    public abstract void setData(String path, String data);
+    public abstract void setData(String path, Object data);
     
-    public abstract String getData(String path);
+    public abstract String getString(String path);
+    public abstract int getInt(String path);
+    public abstract boolean getBool(String path);
+    public abstract double getDouble(String path);
+    
+    public abstract void removeData(String path);
 }

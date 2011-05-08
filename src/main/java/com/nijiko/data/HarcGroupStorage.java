@@ -139,18 +139,6 @@ public class HarcGroupStorage implements GroupStorage {
     }
 
     @Override
-    public String getData(String name, String path) {
-        // TODO Auto-generated method stub
-        return null;
-    }
-
-    @Override
-    public void setData(String name, String path, String data) {
-        // TODO Auto-generated method stub
-        
-    }
-
-    @Override
     public Set<String> getTracks() {
         // TODO Auto-generated method stub
         return null;
@@ -160,6 +148,42 @@ public class HarcGroupStorage implements GroupStorage {
     public LinkedList<GroupWorld> getTrack(String track) {
         // TODO Auto-generated method stub
         return null;
+    }
+
+    @Override
+    public String getString(String name, String path) {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public int getInt(String name, String path) {
+        // TODO Auto-generated method stub
+        return 0;
+    }
+
+    @Override
+    public double getDouble(String name, String path) {
+        // TODO Auto-generated method stub
+        return 0;
+    }
+
+    @Override
+    public boolean getBool(String name, String path) {
+        // TODO Auto-generated method stub
+        return false;
+    }
+
+    @Override
+    public void setData(String name, String path, Object data) {
+        // TODO Auto-generated method stub
+        
+    }
+
+    @Override
+    public void removeData(String name, String path) {
+        // TODO Auto-generated method stub
+        
     }
 
 }

@@ -1,5 +1,4 @@
 package com.nijiko.data;
-
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Statement;
@@ -7,17 +6,11 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
 import javax.sql.DataSource;
-
 import org.sqlite.SQLiteDataSource;
-
 import com.mysql.jdbc.jdbc2.optional.MysqlDataSource;
-
 import com.nijikokun.bukkit.Permissions.Permissions;
-
 public class SqlStorage {
-
     private static DataSource dbSource;
     // private static int reloadDelay;
     private static boolean init = false;
@@ -27,15 +20,15 @@ public class SqlStorage {
     static {
         create.add("CREATE TABLE IF NOT EXISTS Worlds ("
                 + " worldid INT NOT NULL PRIMARY KEY,"
-                + " worldname VARCHAR(32) NOT NULL,"
-                + " CONSTRAINT WorldNoSelfInherit CHECK (worldid IS NOT = parentid),"
-                + ")");
+                + " worldname VARCHAR(32) NOT NULL UNIQUE"
+                + ");");
         create.add("CREATE TABLE IF NOT EXISTS Users ("
                 + " uid INT NOT NULL PRIMARY KEY,"
                 + " username VARCHAR(32) NOT NULL,"
                 + " worldid INT NOT NULL FORIEGN KEY REFERENCES Worlds(worldid),"
                 + " CONSTRAINT UserNameWorld UNIQUE (username, World),"
-                + " INDEX(username)" + ")");
+                + " INDEX(username)" 
+                + ");");
         create.add("CREATE TABLE IF NOT EXISTS Groups ("
                 + " gid INT NOT NULL PRIMARY KEY,"
                 + " groupname VARCHAR(32) NOT NULL,"
@@ -47,42 +40,62 @@ public class SqlStorage {
                 + " previd INT NOT NULL FOREIGN KEY REFERENCES Groups(gid)"
                 + " nextid INT NOT NULL FOREIGN KEY REFERENCES Groups(gid)"
                 + " build TINYINT NOT NULL DEFAULT 0"
-                + " CONSTRAINT GroupNameWorld UNIQUE (groupname, World)," + ")");
-        create.add("CREATE TABLE IF NOT EXISTS UserPermission ("
+                + " CONSTRAINT GroupNameWorld UNIQUE (groupname, World)"
+                + ");");
+        create.add("CREATE TABLE IF NOT EXISTS UserPermissions ("
                 + " upermid INT NOT NULL PRIMARY KEY,"
                 + " permstring VARCHAR(64) NOT NULL,"
-                + " uid int NOT NULL FOREIGN KEY REFERENCES Users(uid)" + ")");
-        create.add("CREATE TABLE IF NOT EXISTS GroupPermission ("
+                + " uid int NOT NULL FOREIGN KEY REFERENCES Users(uid)"
+                + " CONSTRAINT UserPerm UNIQUE (uid, permstring)"
+                + ");");
+        create.add("CREATE TABLE IF NOT EXISTS GroupPermissions ("
                 + " gpermid INT NOT NULL PRIMARY KEY,"
                 + " permstring VARCHAR(64) NOT NULL,"
-                + " gid int NOT NULL FOREIGN KEY REFERENCES Groups(gid)" + ")");
+                + " gid int NOT NULL FOREIGN KEY REFERENCES Groups(gid)"
+                + " CONSTRAINT UserPerm UNIQUE (gid, permstring)"
+                + ");");
         create.add("CREATE TABLE IF NOT EXISTS UserInheritance ("
                 + " uinheritid INT NOT NULL PRIMARY KEY,"
                 + " childid INT NOT NULL FOREIGN KEY REFERENCES Users(uid),"
                 + " parentid int NOT NULL FOREIGN KEY REFERENCES Groups(gid)"
+                + " CONSTRAINT UserParent UNIQUE (childid, parentid)"
                 + ");");
         create.add("CREATE TABLE IF NOT EXISTS GroupInheritance ("
                 + " ginheritid INT NOT NULL PRIMARY KEY,"
                 + " childid INT NOT NULL FOREIGN KEY REFERENCES Groups(gid),"
                 + " parentid int NOT NULL FOREIGN KEY REFERENCES Groups(gid),"
+                + " CONSTRAINT UserParent UNIQUE (childid, parentid),"
                 + " CONSTRAINT GroupNoSelfInherit CHECK (childid IS NOT = parentid)"
-                + ")");
+                + ");");
         create.add("CREATE TABLE IF NOT EXISTS WorldBase ("
                 + " worldid INT NOT NULL FOREIGN KEY REFERENCES Worlds(worldid),"
-                + " defaultid INT NOT NULL FOREIGN KEY REFERENCES Groups(gid),"
-                + ")");
+                + " defaultid INT NOT NULL FOREIGN KEY REFERENCES Groups(gid)"
+                + ");");
         create.add("CREATE TABLE IF NOT EXISTS UserData ("
+                + " dataid INT NOT NULL PRIMARY KEY,"
                 + " uid INT NOT NULL FOREIGN KEY REFERENCES Users(uid),"
                 + " path VARCHAR(64) NOT NULL,"
-                + " data VARCHAR(64) NOT NULL,"                
-                + ")");
+                + " data VARCHAR(64) NOT NULL"
+                + " CONSTRAINT UserDataUnique UNIQUE (uid, path)"
+                + ");");
         create.add("CREATE TABLE IF NOT EXISTS GroupData ("
-                + " gid INT NOT NULL FOREIGN KEY REFERENCES Groups(uid),"
+                + " dataid INT NOT NULL PRIMARY KEY,"
+                + " gid INT NOT NULL FOREIGN KEY REFERENCES Groups(gid),"
                 + " path VARCHAR(64) NOT NULL,"
-                + " data VARCHAR(64) NOT NULL,"                
-                + ")");
+                + " data VARCHAR(64) NOT NULL"
+                + " CONSTRAINT GroupDataUnique UNIQUE (gid, path)"
+                + ");");
+        create.add("CREATE TABLE IF NOT EXISTS Tracks ("
+                + " trackid INT NOT NULL PRIMARY KEY,"
+                + " trackname VARCHAR(64) NOT NULL UNIQUE"
+                + ");");
+        create.add("CREATE TABLE IF NOT EXISTS TrackGroups (" 
+                + " trackgroupid INT NOT NULL PRIMARY KEY,"
+                + " trackid INT NOT NULL FORIEGN KEY REFERENCES Tracks(trackid),"
+                + " gid INT NOT NULL FOREIGN KEY REFERENCES Groups(gid)"
+                + " CONSTRAINT TrackGroupsUnique UNIQUE (trackid, group)"
+                + ");");
     }
-
     public static void init(String dbmsName, String uri, String username,
             String password, int reloadDelay) throws Exception {
         if (init)
@@ -112,15 +125,11 @@ public class SqlStorage {
                             public void run() {
                                 refresh();
                             }
-
                         }, reloadDelay, reloadDelay);
-
         init = true;
     }
-
     private SqlStorage() {
     }
-
     private static void refresh() // Used for periodic cache flush
     {
         for (SqlUserStorage instance : userStores.values()) {
@@ -130,36 +139,28 @@ public class SqlStorage {
             instance.reload();
         }
     }
-
     private static void verifyAndCreateTables(Dbms dbms) throws SQLException {
         Connection dbConn = SqlStorage.dbSource.getConnection();
         Statement s = dbConn.createStatement();
         // Verify stuff
-
         String engine = dbms.equals(Dbms.MYSQL) ? " ENGINE = InnoDB;" : ";";
         for (String state : create) {
             s.executeUpdate(state + engine);
         }
     }
-
     static DataSource getSource() {
         return dbSource;
     }
 }
-
 enum Dbms {
     SQLITE("org.sqlite.JDBC"), MYSQL("com.mysql.jdbc.driver");
-
     private final String driver;
-
     Dbms(String driverClass) {
         this.driver = driverClass;
     }
-
     public String getDriver() {
         return driver;
     }
-
     public DataSource getSource(String username, String password, String url) {
         switch (this) {
         case MYSQL:

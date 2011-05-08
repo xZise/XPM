@@ -33,7 +33,15 @@ public interface UserStorage {
     
     public boolean createUser(String name);
 
-    public String getData(String name, String path);
+
+    public String getString(String name, String path);
     
-    public void setData(String name, String path, String data);
+    public int getInt(String name, String path);
+    
+    public double getDouble(String name, String path);
+    
+    public boolean getBool(String name, String path);
+    
+    public void setData(String name, String path, Object data);
+    public void removeData(String name, String path);
 }
