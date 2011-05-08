@@ -194,13 +194,12 @@ public class Permissions extends JavaPlugin {
             }
         }
 
-        if (args[0].equalsIgnoreCase("-reload") && args.length >= 2) {
+        if (args[0].equalsIgnoreCase("-reload")) {
             return reload(sender, args[1]);
         } else if (args[0].equalsIgnoreCase("-list")) {
             if (args.length > 1) {
                 if (args[1].equalsIgnoreCase("worlds")) {
-                    if(player!=null&&!Security.has(player, "permissions.list.worlds"))
-                    {
+                    if (player != null && !Security.has(player, "permissions.list.worlds")) {
                         Messaging.send("&4[Permissions] You do not have permissions to use this command.");
                         return true;
                     }
@@ -221,8 +220,7 @@ public class Permissions extends JavaPlugin {
                 if (args.length > 2) {
                     String world = args[2];
                     if (args[1].equalsIgnoreCase("users")) {
-                        if(player!=null&&!Security.has(player, "permissions.list.users"))
-                        {
+                        if (player != null && !Security.has(player, "permissions.list.users")) {
                             Messaging.send("&4[Permissions] You do not have permissions to use this command.");
                             return true;
                         }
@@ -230,8 +228,7 @@ public class Permissions extends JavaPlugin {
                         Messaging.send(listEntries(users, "Users"));
                         return true;
                     } else if (args[1].equalsIgnoreCase("groups")) {
-                        if(player!=null&&!Security.has(player, "permissions.list.groups"))
-                        {
+                        if (player != null && !Security.has(player, "permissions.list.groups")) {
                             Messaging.send("&4[Permissions] You do not have permissions to use this command.");
                             return true;
                         }
@@ -266,8 +263,7 @@ public class Permissions extends JavaPlugin {
         // Note that entry may be null if the user/group doesn't exist
         if (args.length > currentArg) {
             if (args[currentArg].equalsIgnoreCase("create")) {
-                if(player!=null&&!Security.has(player, "permissions.create"))
-                {
+                if (player != null && !Security.has(player, "permissions.create")) {
                     Messaging.send("&4[Permissions] You do not have permissions to use this command.");
                     return true;
                 }
@@ -291,8 +287,7 @@ public class Permissions extends JavaPlugin {
                 currentArg++;
                 if (args.length > currentArg) {
                     if (args[currentArg].equalsIgnoreCase("list")) {
-                        if(player!=null&&!Security.has(player, "permissions.perms.list"))
-                        {
+                        if (player != null && !Security.has(player, "permissions.perms.list")) {
                             Messaging.send("&4[Permissions] You do not have permissions to use this command.");
                             return true;
                         }
@@ -310,14 +305,13 @@ public class Permissions extends JavaPlugin {
                         return true;
                     } else if (args[currentArg].equalsIgnoreCase("add") || args[currentArg].equalsIgnoreCase("remove")) {
                         boolean add = args[currentArg].equalsIgnoreCase("add");
-                        
-                        String permNode =  add ? "permissions.perms.add" : "permissions.perms.remove";
-                        if(player!=null&&!Security.has(player, permNode))
-                        {
+
+                        String permNode = add ? "permissions.perms.add" : "permissions.perms.remove";
+                        if (player != null && !Security.has(player, permNode)) {
                             Messaging.send("&4[Permissions] You do not have permissions to use this command.");
                             return true;
                         }
-                        
+
                         currentArg++;
                         String text = add ? "&7[Permissions]&b Permission added successfully." : "&7[Permissions]&b Permission removed successfully.";
                         if (args.length > currentArg) {
@@ -333,15 +327,14 @@ public class Permissions extends JavaPlugin {
                     }
                 }
                 Messaging.send("&7[Permissions] Syntax: ");
-                Messaging.send("&b/permissions &a(g:)<target> (w:<world>) perms list.");
-                Messaging.send("&b/permissions &a(g:)<target> (w:<world>) perms [add|remove] <node>.");
+                Messaging.send("&b/permissions &a(g:)<target> (w:<world>) perms list");
+                Messaging.send("&b/permissions &a(g:)<target> (w:<world>) perms [add|remove] <node>");
                 return true;
             } else if (args[currentArg].equalsIgnoreCase("parents")) {
                 currentArg++;
                 if (args.length > currentArg) {
                     if (args[currentArg].equalsIgnoreCase("list")) {
-                        if(player!=null&&!Security.has(player, "permissions.parents.list"))
-                        {
+                        if (player != null && !Security.has(player, "permissions.parents.list")) {
                             Messaging.send("&4[Permissions] You do not have permissions to use this command.");
                             return true;
                         }
@@ -359,9 +352,8 @@ public class Permissions extends JavaPlugin {
                         return true;
                     } else if (args[currentArg].equalsIgnoreCase("add") || args[currentArg].equalsIgnoreCase("remove")) {
                         boolean add = args[currentArg].equalsIgnoreCase("add");
-                        String permNode =  add ? "permissions.perms.add" : "permissions.perms.remove";
-                        if(player!=null&&!Security.has(player, permNode))
-                        {
+                        String permNode = add ? "permissions.perms.add" : "permissions.perms.remove";
+                        if (player != null && !Security.has(player, permNode)) {
                             Messaging.send("&4[Permissions] You do not have permissions to use this command.");
                             return true;
                         }
@@ -395,8 +387,60 @@ public class Permissions extends JavaPlugin {
                     }
                 }
                 Messaging.send("&7[Permissions] Syntax: ");
-                Messaging.send("&b/permissions &a(g:)<target> (w:<world>) perms list.");
-                Messaging.send("&b/permissions &a(g:)<target> (w:<world>) perms [add|remove] <node>.");
+                Messaging.send("&b/permissions &a(g:)<target> (w:<world>) parents list");
+                Messaging.send("&b/permissions &a(g:)<target> (w:<world>) parents [add|remove] <parentname> (parentworld)");
+                return true;
+            } else if (args[currentArg].equalsIgnoreCase("info")) {
+                currentArg++;
+                if (args.length > currentArg) {
+                    String choice = args[currentArg];
+                    if (choice.equalsIgnoreCase("get")) {
+                        currentArg++;
+                        if (player != null && !Security.has(player, "permissions.info.get")) {
+                            Messaging.send("&4[Permissions] You do not have permissions to use this command.");
+                            return true;
+                        }
+                        if (args.length > currentArg) {
+                            String path = args[currentArg];
+                            Messaging.send("&7[Permissions]&b " + entry.getString(path));
+                            return true;
+                        }
+                    } else if (choice.equalsIgnoreCase("set")) {
+                        currentArg++;
+                        if (player != null && !Security.has(player, "permissions.info.set")) {
+                            Messaging.send("&4[Permissions] You do not have permissions to use this command.");
+                            return true;
+                        }
+                        if (args.length > currentArg) {
+                            String path = args[currentArg];
+                            currentArg++;
+                            if (args.length > currentArg) {
+                                String newValueString = args[currentArg];
+                                Object newValue;
+                                String type = "";
+                                if (newValueString.startsWith("b:")) {
+                                    newValue = Boolean.parseBoolean(newValueString.substring(2));
+                                    type = "Boolean";
+                                } else if (newValueString.startsWith("d:")) {
+                                    newValue = Double.parseDouble(newValueString.substring(2));
+                                    type = "Double";
+                                } else if (newValueString.startsWith("i:")) {
+                                    newValue = Integer.parseInt(newValueString.substring(2));
+                                    type = "Integer";
+                                } else {
+                                    newValue = newValueString;
+                                    type = "String";
+                                }
+                                entry.setData(path, newValue);
+                                Messaging.send("&7[Permissions]&b &a" + path + "&b set to &a" + type + " &c" + newValue.toString());
+                                return true;
+                            }
+                        }
+                    }
+                }
+                Messaging.send("&7[Permissions] Syntax: ");
+                Messaging.send("&b/permissions &a(g:)<target> (w:<world>) info get <path>");
+                Messaging.send("&b/permissions &a(g:)<target> (w:<world>) info set <path> (i:|d:|b:)<data>");
                 return true;
             }
             if (isGroup && entry instanceof Group)// Just in case
@@ -408,20 +452,18 @@ public class Permissions extends JavaPlugin {
                     if (args.length > currentArg) {
                         if (args[currentArg].equalsIgnoreCase("get")) {
                             String node = isPrefix ? "permissions.prefix.get" : "permissions.suffix.get";
-                            if(player!=null&&!Security.has(player, node))
-                            {
+                            if (player != null && !Security.has(player, node)) {
                                 Messaging.send("&4[Permissions] You do not have permissions to use this command.");
                                 return true;
                             }
                             String text = isPrefix ? "&7[Permissions]&b " + group.getName() + "'s prefix:" : "&7[Permissions]&b " + group.getName() + "'s suffix:";
                             Messaging.send(text);
                             text = isPrefix ? group.getPrefix() : group.getSuffix();
-                            Messaging.send( "\""+text+"\"");
+                            Messaging.send("\"" + text + "\"");
                             return true;
                         } else if (args[currentArg].equalsIgnoreCase("set")) {
                             String node = isPrefix ? "permissions.prefix.set" : "permissions.suffix.set";
-                            if(player!=null&&!Security.has(player, node))
-                            {
+                            if (player != null && !Security.has(player, node)) {
                                 Messaging.send("&4[Permissions] You do not have permissions to use this command.");
                                 return true;
                             }
@@ -432,34 +474,37 @@ public class Permissions extends JavaPlugin {
                                 for (String part : fullFix) {
                                     newFix = newFix + part + " ";
                                 }
-                                newFix = newFix.substring(0, newFix.length() - 1); //Possible bug
+                                newFix = newFix.substring(0, newFix.length() - 1); // Possible
+                                                                                   // bug
                             }
                             if (isPrefix)
                                 group.setPrefix(newFix);
                             else
                                 group.setSuffix(newFix);
-                            String text = isPrefix ? "&7[Permissions]&b Group's prefix set to " + newFix + ".": "&7[Permissions]&7 Group's suffix set to " + newFix + ".";
+                            String text = isPrefix ? "&7[Permissions]&b Group's prefix set to " + newFix + "." : "&7[Permissions]&7 Group's suffix set to " + newFix + ".";
                             Messaging.send(text);
                             return true;
                         }
                     }
+                    Messaging.send("&7[Permissions] Syntax: ");
+                    Messaging.send("&b/permissions &ag:<target> (w:<world>) [prefix|suffix] get");
+                    Messaging.send("&b/permissions &ag:<target> (w:<world>) [prefix|suffix] set <newfix>");
+                    return true;
                 } else if (args[currentArg].equalsIgnoreCase("build")) {
                     currentArg++;
                     if (args.length > currentArg) {
                         if (args[currentArg].equalsIgnoreCase("get")) {
-                            if(player!=null&&!Security.has(player, "permissions.build.get"))
-                            {
+                            if (player != null && !Security.has(player, "permissions.build.get")) {
                                 Messaging.send("&4[Permissions] You do not have permissions to use this command.");
                                 return true;
                             }
                             if (group.canBuild())
                                 Messaging.send("&7[Permissions]&b " + group.getName() + " can build.");
                             else
-                                Messaging.send("&7[Permissions]&b "+group.getName() + " cannot build.");
+                                Messaging.send("&7[Permissions]&b " + group.getName() + " cannot build.");
                             return true;
                         } else if (args[currentArg].equalsIgnoreCase("set")) {
-                            if(player!=null&&!Security.has(player, "permissions.build.set"))
-                            {
+                            if (player != null && !Security.has(player, "permissions.build.set")) {
                                 Messaging.send("&4[Permissions] You do not have permissions to use this command.");
                                 return true;
                             }
@@ -476,14 +521,20 @@ public class Permissions extends JavaPlugin {
                             return true;
                         }
                     }
+                    Messaging.send("&7[Permissions] Syntax: ");
+                    Messaging.send("&b/permissions &ag:<target> (w:<world>) build get");
+                    Messaging.send("&b/permissions &ag:<target> (w:<world>) build set <newfix>");
+                    return true;
                 }
+
+                Messaging.send("&7[Permissions] Syntax: ");
+                Messaging.send("&b/permissions &ag:<target> (w:<world>) [prefix|suffix|build] [get|set] ...");
             } else if (entry instanceof User) {
                 User user = (User) entry;
                 if (args[currentArg].equalsIgnoreCase("promote") || args[currentArg].equalsIgnoreCase("demote")) {
                     boolean isPromote = args[currentArg].equalsIgnoreCase("promote");
                     currentArg++;
-                    if(args.length > currentArg)
-                    {
+                    if (args.length > currentArg) {
                         String parentName = args[currentArg];
                         String parentWorld = world;
                         if (args.length > currentArg && args[currentArg].startsWith("w:")) {
@@ -491,41 +542,43 @@ public class Permissions extends JavaPlugin {
                             currentArg++;
                         }
                         Group group = Security.getGroupObject(parentWorld, parentName);
-                        if(group==null)
-                        {
+                        if (group == null) {
                             Messaging.send("&4[Permissions] No such group.");
                             return true;
                         }
-                        if(!user.inGroup(parentWorld, parentName))
-                        {
+                        if (!user.inGroup(parentWorld, parentName)) {
                             Messaging.send("&4[Permissions] User not in specified group.");
                             return true;
                         }
-                        if(args.length > currentArg)
-                        {
+                        if (args.length > currentArg) {
                             String track = args[currentArg];
-                            if(!group.getTracks().contains(track))
-                            {
+                            if (!group.getTracks().contains(track)) {
                                 Messaging.send("&4[Permissions] Specified track does not exist.");
                                 return true;
                             }
                             String permNode = isPromote ? "permissions.promote." + track : "permission.demote." + track;
-                            if(player!=null&&!Security.has(player, permNode))
-                            {
+                            if (player != null && !Security.has(player, permNode)) {
                                 Messaging.send("&4[Permissions] You do not have permissions to use this command.");
                                 return true;
                             }
-                            if(isPromote) user.promote(group, track);
-                            else user.demote(group, track);
-                            String text = isPromote ? "&7[Permissions]&b User promoted along track " + track + ".": "&7[Permissions]&7 User demoted along track " + track + ".";
+                            if (isPromote)
+                                user.promote(group, track);
+                            else
+                                user.demote(group, track);
+                            String text = isPromote ? "&7[Permissions]&b User promoted along track " + track + "." : "&7[Permissions]&7 User demoted along track " + track + ".";
                             Messaging.send(text);
                             return true;
                         }
+                        Messaging.send("&4[Permissions] Syntax: /permissions <target> (w:<world>) [promote|demote] <parent> (w:<parentworld>) <track>");
+                        return true;
                     }
-                    Messaging.send("&4[Permissions] Syntax: /permissions <target> (w:<world>) [promote|demote] <parent> (w:<parentworld>) <track>");
-                    return true;
                 }
+
+                Messaging.send("&7[Permissions] Syntax: ");
+                Messaging.send("&b/permissions &a<target> (w:<world>) [promote|demote] ...");
             }
+
+            Messaging.send("&b/permissions &a(g:)<target> (w:<world>) [perms|parents] [list|add|remove] ...");
         }
 
         return false;
