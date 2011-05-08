@@ -29,9 +29,9 @@ import org.bukkit.entity.Player;
  * 
  * @author Nijiko
  */
-public interface PermissionHandler {
+public abstract class PermissionHandler {
 
-    public void setDefaultWorld(String world);
+    public abstract void setDefaultWorld(String world);
 
     /**
      * This function attempts to load a world, creating the files if necessary.
@@ -39,56 +39,56 @@ public interface PermissionHandler {
      * @return True if the world is not already loaded, false otherwise
      * @throws Exception Exception thrown by the world loader
      */
-    public boolean loadWorld(String world) throws Exception;
+    public abstract boolean loadWorld(String world) throws Exception;
     
     /**
      * This function forces the load of a world, even if the world is already loaded, creating the files if necessary.
      * @param world Name of world
      * @throws Exception Exception thrown by the world loader
      */
-    public void forceLoadWorld(String world) throws Exception;
+    public abstract void forceLoadWorld(String world) throws Exception;
 
     /**
      * Check if world is loaded.
      * @param world Name of world
      * @return True if the world is loaded, false otherwise.
      */
-    public boolean checkWorld(String world);
+    public abstract boolean checkWorld(String world);
 
     /**
      * Get a set of the names of loaded worlds.
      * @return Set of the names of loaded worlds
      */
-    public Set<String> getWorlds();
+    public abstract Set<String> getWorlds();
     
     /**
      * Loads the default world
      * @throws Exception Exception thrown by the world loader
      */
-    public void load() throws Exception;
+    public abstract void load() throws Exception;
 
     /**
      * Reloads every world
      */
-    public void reload();
+    public abstract void reload();
 
     /**
      * Reloads the specified world
      * @param world Name of world
      * @return True if the world is loaded, false otherwise.
      */
-    public boolean reload(String world);
+    public abstract boolean reload(String world);
     
     /**
      * Forces a save of the specified world
      * @param world Name of world
      */
-    public void save(String world);
+    public abstract void save(String world);
 
     /**
      * Forces a save of all worlds
      */
-    public void saveAll();
+    public abstract void saveAll();
 
     
     //Permission-checking methods
@@ -101,7 +101,7 @@ public interface PermissionHandler {
      * @return boolean
      */
 //    @Deprecated
-    public boolean has(Player player, String permission);
+    public abstract boolean has(Player player, String permission);
     /**
      * Redirects to permission(String,String,String)
      * @param player
@@ -109,7 +109,7 @@ public interface PermissionHandler {
      * @return
      */
 //    @Deprecated
-    public boolean permission(Player player, String permission);
+    public abstract boolean permission(Player player, String permission);
 
     /**
      * Checks to see if a player has permission to a specific tree node. <br />
@@ -133,7 +133,7 @@ public interface PermissionHandler {
      * @param permission
      * @return boolean
      */
-    public boolean permission(String world, String name, String permission);
+    public abstract boolean permission(String world, String name, String permission);
     /**
      * Simple alias for permission method. Easier to understand / recognize what
      * it does and is checking for.
@@ -142,7 +142,7 @@ public interface PermissionHandler {
      * @param permission
      * @return boolean
      */
-    public boolean has(String world, String name, String permission);
+    public abstract boolean has(String world, String name, String permission);
   
     
     //Group-related methods
@@ -155,7 +155,7 @@ public interface PermissionHandler {
      * @param group
      * @return String
      */
-    public String getGroupPrefix(String world, String group);
+    public abstract String getGroupPrefix(String world, String group);
 
     /**
      * Grabs group suffix, line that comes after the group. <br />
@@ -166,7 +166,7 @@ public interface PermissionHandler {
      * @param group
      * @return String
      */
-    public String getGroupSuffix(String world, String group);
+    public abstract String getGroupSuffix(String world, String group);
 
     /**
      * Checks to see if the group has build permission. <br />
@@ -177,7 +177,7 @@ public interface PermissionHandler {
      * @param group
      * @return String
      */
-    public boolean canGroupBuild(String world, String group);
+    public abstract boolean canGroupBuild(String world, String group);
     
 
     //User&Group object related methods
@@ -188,7 +188,7 @@ public interface PermissionHandler {
      * @return
      * @throws Exception
      */
-    public User safeGetUser(String world, String name)
+    public abstract User safeGetUser(String world, String name)
             throws Exception;
     /**
      * This method returns the specified group, creating it if necessary. Never returns null.
@@ -197,12 +197,12 @@ public interface PermissionHandler {
      * @return
      * @throws Exception
      */
-    public Group safeGetGroup(String world, String name)
+    public abstract Group safeGetGroup(String world, String name)
             throws Exception;
 
-    public Collection<User> getUsers(String world);
+    public abstract Collection<User> getUsers(String world);
 
-    public Collection<Group> getGroups(String world);
+    public abstract Collection<Group> getGroups(String world);
 
     /**
      * This method returns the specified user, and returns null if no such user exists.
@@ -211,7 +211,7 @@ public interface PermissionHandler {
      * @return
      * @throws Exception
      */
-    public User getUserObject(String world, String name);
+    public abstract User getUserObject(String world, String name);
 
     /**
      * This method returns the specified group, and returns null if no such group exists.
@@ -220,7 +220,7 @@ public interface PermissionHandler {
      * @return
      * @throws Exception
      */
-    public Group getGroupObject(String world, String name);
+    public abstract Group getGroupObject(String world, String name);
 
     /**
      * This method returns the default group for the specified world.
@@ -229,7 +229,7 @@ public interface PermissionHandler {
      * @return
      * @throws Exception
      */
-    public Group getDefaultGroup(String world);
+    public abstract Group getDefaultGroup(String world);
 
     /**
      * This retrieves the parent/ancestor groups for the specified user.
@@ -238,7 +238,7 @@ public interface PermissionHandler {
      * @param ancestors If true, ancestors(parents of parents) will also be returned.
      * @return
      */
-    public Set<Group> getUserParentGroups(String world, String name, boolean ancestors);
+    public abstract Set<Group> getUserParentGroups(String world, String name, boolean ancestors);
     
 
 
@@ -249,7 +249,7 @@ public interface PermissionHandler {
      * @param ancestors If true, ancestors(parents of parents) will also be returned.
      * @return
      */
-    public Set<Group> getGroupParentGroups(String world, String name, boolean ancestors);
+    public abstract Set<Group> getGroupParentGroups(String world, String name, boolean ancestors);
     
     /**
      * Check if specified user exists.
@@ -257,7 +257,7 @@ public interface PermissionHandler {
      * @param name
      * @return
      */
-    public boolean userExists(String world, String name);
+    public abstract boolean userExists(String world, String name);
 
     /**
      * Check if specified group exists.
@@ -265,7 +265,7 @@ public interface PermissionHandler {
      * @param name
      * @return
      */
-    public boolean groupExists(String world, String name);
+    public abstract boolean groupExists(String world, String name);
     
     /**
      * Depreciated alias for getGroupName()
@@ -274,7 +274,7 @@ public interface PermissionHandler {
      * @return
      */
     @Deprecated
-    public String getGroup(String world, String name);
+    public abstract String getGroup(String world, String name);
     
     /**
      * Grabs group's name (i.e the name in the config file) with proper capitali[zs]ation. <br />
@@ -284,7 +284,7 @@ public interface PermissionHandler {
      * @param group
      * @return String
      */
-    public String getGroupName(String world, String name);
+    public abstract String getGroupName(String world, String name);
     
     /**
      * Grabs users groups in the same world. <br />
@@ -293,7 +293,7 @@ public interface PermissionHandler {
      * @param group
      * @return Array
      */
-    public String[] getGroups(String world, String name);
+    public abstract String[] getGroups(String world, String name);
 
 
     /**
@@ -306,7 +306,7 @@ public interface PermissionHandler {
      *            - Group to be checked upon.
      * @return boolean
      */
-    public boolean inGroup(String world, String name, String group);
+    public abstract boolean inGroup(String world, String name, String group);
     /**
      * Checks to see if the player is in the requested group.
      * @param world User's world
@@ -315,7 +315,7 @@ public interface PermissionHandler {
      * @param group Group's name
      * @return
      */
-    public boolean inGroup(String world, String name, String groupWorld,
+    public abstract boolean inGroup(String world, String name, String groupWorld,
             String group);
     /**
      * Checks to see if a player is in a single group. This does not check
@@ -328,7 +328,7 @@ public interface PermissionHandler {
      *            - Group to be checked
      * @return boolean
      */
-    public boolean inSingleGroup(String world, String name,
+    public abstract boolean inSingleGroup(String world, String name,
             String group);
 
     /** 
@@ -340,7 +340,7 @@ public interface PermissionHandler {
      * @param group Group's name
      * @return
      */
-    public boolean inSingleGroup(String world, String name, String groupWorld,
+    public abstract boolean inSingleGroup(String world, String name, String groupWorld,
             String group);
 
 
@@ -354,7 +354,7 @@ public interface PermissionHandler {
      * @param permission
      * @return String. If no string found return "".
      */
-    public String getGroupPermissionString(String world, String group,
+    public abstract String getGroupPermissionString(String world, String group,
             String permission);
 
     /**
@@ -367,7 +367,7 @@ public interface PermissionHandler {
      * @param permission
      * @return Integer. No integer found return -1.
      */
-    public int getGroupPermissionInteger(String world, String group,
+    public abstract int getGroupPermissionInteger(String world, String group,
             String permission);
 
     /**
@@ -379,7 +379,7 @@ public interface PermissionHandler {
      * @param permission
      * @return Boolean. No boolean found return false.
      */
-    public boolean getGroupPermissionBoolean(String world,
+    public abstract boolean getGroupPermissionBoolean(String world,
             String group, String permission);
 
     /**
@@ -392,7 +392,7 @@ public interface PermissionHandler {
      * @param permission
      * @return Double. No value found return -1.0
      */
-    public double getGroupPermissionDouble(String world, String group,
+    public abstract double getGroupPermissionDouble(String world, String group,
             String permission);
 
     /**
@@ -405,7 +405,7 @@ public interface PermissionHandler {
      * @param permission
      * @return String. If no string found return "".
      */
-    public String getUserPermissionString(String world, String name,
+    public abstract String getUserPermissionString(String world, String name,
             String permission);
 
     /**
@@ -418,7 +418,7 @@ public interface PermissionHandler {
      * @param permission
      * @return Integer. No integer found return -1.
      */
-    public int getUserPermissionInteger(String world, String name,
+    public abstract int getUserPermissionInteger(String world, String name,
             String permission);
 
     /**
@@ -431,7 +431,7 @@ public interface PermissionHandler {
      * @param permission
      * @return Boolean. No boolean found return false.
      */
-    public boolean getUserPermissionBoolean(String world, String name,
+    public abstract boolean getUserPermissionBoolean(String world, String name,
             String permission);
 
     /**
@@ -444,7 +444,7 @@ public interface PermissionHandler {
      * @param permission
      * @return Double. No value found return -1.0
      */
-    public double getUserPermissionDouble(String world, String name,
+    public abstract double getUserPermissionDouble(String world, String name,
             String permission);
 
     /**
@@ -457,7 +457,7 @@ public interface PermissionHandler {
      * @param permission
      * @return String. If no string found return "".
      */
-    public String[] getPermissionString(String world, String name,
+    public abstract String[] getPermissionString(String world, String name,
             String permission);
 
     /**
@@ -470,7 +470,7 @@ public interface PermissionHandler {
      * @param permission
      * @return Integer. No integer found return -1.
      */
-    public int[] getPermissionInteger(String world, String name,
+    public abstract int[] getPermissionInteger(String world, String name,
             String permission);
 
     /**
@@ -483,7 +483,7 @@ public interface PermissionHandler {
      * @param permission
      * @return Boolean. No boolean found return false.
      */
-    public boolean[] getPermissionBoolean(String world, String name,
+    public abstract boolean[] getPermissionBoolean(String world, String name,
             String permission);
 
     /**
@@ -496,18 +496,18 @@ public interface PermissionHandler {
      * @param permission
      * @return Double. No value found return -1.0
      */
-    public double[] getPermissionDouble(String world, String name,
+    public abstract double[] getPermissionDouble(String world, String name,
             String permission);
 
-    public void addGroupInfo(String world, String group, String node,
+    public abstract void addGroupInfo(String world, String group, String node,
             Object data);
 
-    public void removeGroupInfo(String world, String group, String node);
+    public abstract void removeGroupInfo(String world, String group, String node);
 
-    public void addUserPermission(String world, String user,
+    public abstract void addUserPermission(String world, String user,
             String node);
 
-    public void removeUserPermission(String world, String user,
+    public abstract void removeUserPermission(String world, String user,
             String node);
     /**
      * Compares the weights of two different users
@@ -517,9 +517,9 @@ public interface PermissionHandler {
      * @param second Name of second user
      * @return -1 if the second user's weight is higher than the first, 1 if vice versa, 0 if equal.
      */
-    public int compareWeights(String firstWorld, String first, String secondWorld, String second);
+    public abstract int compareWeights(String firstWorld, String first, String secondWorld, String second);
 
-    public int compareWeights(String world, String first, String second);
+    public abstract int compareWeights(String world, String first, String second);
 
 
 

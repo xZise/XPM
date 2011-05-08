@@ -16,7 +16,7 @@ import com.nijiko.data.GroupWorld;
 import com.nijiko.data.StorageFactory;
 import com.nijiko.data.UserStorage;
 
-public class ModularControl implements PermissionHandler {
+public class ModularControl extends PermissionHandler {
     private Map<String, UserStorage> WorldUserStorage = new HashMap<String, UserStorage>();
     private Map<String, GroupStorage> WorldGroupStorage = new HashMap<String, GroupStorage>();
     private Map<String, String> WorldUserStorageCopy = new HashMap<String, String>();

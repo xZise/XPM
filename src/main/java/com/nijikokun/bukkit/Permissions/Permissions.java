@@ -292,14 +292,14 @@ public class Permissions extends JavaPlugin {
                             return true;
                         }
                         Set<String> perms = entry.getPermissions();
-                        String text = "";
+                        String text = "&7[Permissions]&b Permissions: &c";
                         if (perms == null || perms.isEmpty()) {
                             text = "&4[Permissions] User/Group has no non-inherited permissions.";
                         } else {
                             for (String perm : perms) {
-                                text = text + perm + ",";
+                                text = text + perm + "&b,&c ";
                             }
-                            text = text.substring(0, text.length() - 1);
+                            text = text.substring(0, text.length() - 6);
                         }
                         Messaging.send(text);
                         return true;
@@ -339,14 +339,14 @@ public class Permissions extends JavaPlugin {
                             return true;
                         }
                         LinkedHashSet<GroupWorld> parents = entry.getParents();
-                        String text = "&7[Permissions]&b Parents: ";
+                        String text = "&7[Permissions]&b Parents: &c";
                         if (parents == null || parents.isEmpty()) {
                             text = "&4[Permissions] User/Group has no parents.";
                         } else {
                             for (GroupWorld parent : parents) {
-                                text = text + parent.toString() + " ,";
+                                text = text + parent.toString() + "&b,&c ";
                             }
-                            text = text.substring(0, text.length() - 2);
+                            text = text.substring(0, text.length() - 6);
                         }
                         Messaging.send(text);
                         return true;
