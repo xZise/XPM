@@ -274,6 +274,7 @@ public class YamlGroupStorage implements GroupStorage {
     public String getString(String name, String path) {
         rwl.readLock().lock();
         String data = groupConfig.getString("groups."+name+".info."+path);
+        groupConfig.save();
         rwl.readLock().unlock();
         return data;
     }
@@ -282,6 +283,7 @@ public class YamlGroupStorage implements GroupStorage {
     public void setData(String name, String path, Object data) {
         rwl.writeLock().lock();
         groupConfig.setProperty("groups."+name+".info."+path, data);
+        groupConfig.save();
         rwl.writeLock().unlock();
         return;        
     }
@@ -320,6 +322,7 @@ public class YamlGroupStorage implements GroupStorage {
     public void removeData(String name, String path) {
         rwl.writeLock().lock();
         groupConfig.removeProperty("groups."+name+".info."+path);
+        groupConfig.save();
         rwl.writeLock().unlock();
         return;        
     }
@@ -330,6 +333,7 @@ public class YamlGroupStorage implements GroupStorage {
     public int getInt(String name, String path) {
         rwl.readLock().lock();
         int data = groupConfig.getInt("groups."+name+".info."+path , 0);
+        groupConfig.save();
         rwl.readLock().unlock();
         return data;
     }
@@ -338,6 +342,7 @@ public class YamlGroupStorage implements GroupStorage {
     public double getDouble(String name, String path) {
         rwl.readLock().lock();
         double data = groupConfig.getDouble("groups."+name+".info."+path , 0D);
+        groupConfig.save();
         rwl.readLock().unlock();
         return data;
     }
@@ -346,6 +351,7 @@ public class YamlGroupStorage implements GroupStorage {
     public boolean getBool(String name, String path) {
         rwl.readLock().lock();
         boolean data = groupConfig.getBoolean("groups."+name+".info."+path , false);
+        groupConfig.save();
         rwl.readLock().unlock();
         return data;
     }

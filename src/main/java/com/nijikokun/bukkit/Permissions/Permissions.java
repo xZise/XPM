@@ -436,6 +436,18 @@ public class Permissions extends JavaPlugin {
                                 return true;
                             }
                         }
+                    } else if (choice.equalsIgnoreCase("remove")) {
+                        currentArg++;
+                        if (player != null && !Security.has(player, "permissions.info.remove")) {
+                            Messaging.send("&4[Permissions] You do not have permissions to use this command.");
+                            return true;
+                        }
+                        if (args.length > currentArg) {
+                            String path = args[currentArg];
+                            entry.removeData(path);
+                            Messaging.send("&7[Permissions]&b &a" + path + "&b cleared.");
+                            return true;
+                        }
                     }
                 }
                 Messaging.send("&7[Permissions] Syntax: ");
@@ -579,6 +591,7 @@ public class Permissions extends JavaPlugin {
             }
 
             Messaging.send("&b/permissions &a(g:)<target> (w:<world>) [perms|parents] [list|add|remove] ...");
+            Messaging.send("&b/permissions &a(g:)<target> (w:<world>) info [get|set|remove] ...");
         }
 
         return false;
