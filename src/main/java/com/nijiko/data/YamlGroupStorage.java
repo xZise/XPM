@@ -265,15 +265,16 @@ public class YamlGroupStorage implements GroupStorage {
     @Override
     public int getWeight(String name) {
         rwl.readLock().lock();
-        int weight = groupConfig.getInt("groups."+name+".weight", 0);
+        int weight = groupConfig.getInt("groups."+name+".weight", -1);
         rwl.readLock().unlock();
         return weight;        
     }
+    //TODO: Add setWeight()
     
     @Override
     public String getString(String name, String path) {
         rwl.readLock().lock();
-        String data = groupConfig.getString("groups."+name+".info."+path);
+        String data = groupConfig.getString("groups."+name+".info."+path, "");
         groupConfig.save();
         rwl.readLock().unlock();
         return data;
@@ -332,7 +333,7 @@ public class YamlGroupStorage implements GroupStorage {
     @Override
     public int getInt(String name, String path) {
         rwl.readLock().lock();
-        int data = groupConfig.getInt("groups."+name+".info."+path , 0);
+        int data = groupConfig.getInt("groups."+name+".info."+path , -1);
         groupConfig.save();
         rwl.readLock().unlock();
         return data;
@@ -341,7 +342,7 @@ public class YamlGroupStorage implements GroupStorage {
     @Override
     public double getDouble(String name, String path) {
         rwl.readLock().lock();
-        double data = groupConfig.getDouble("groups."+name+".info."+path , 0D);
+        double data = groupConfig.getDouble("groups."+name+".info."+path , -1.0D);
         groupConfig.save();
         rwl.readLock().unlock();
         return data;

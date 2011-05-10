@@ -457,7 +457,7 @@ public abstract class PermissionHandler {
      * @param permission
      * @return String. If no string found return "".
      */
-    public abstract String[] getPermissionString(String world, String name,
+    public abstract String getPermissionString(String world, String name,
             String permission);
 
     /**
@@ -470,7 +470,7 @@ public abstract class PermissionHandler {
      * @param permission
      * @return Integer. No integer found return -1.
      */
-    public abstract int[] getPermissionInteger(String world, String name,
+    public abstract int getPermissionInteger(String world, String name,
             String permission);
 
     /**
@@ -483,7 +483,7 @@ public abstract class PermissionHandler {
      * @param permission
      * @return Boolean. No boolean found return false.
      */
-    public abstract boolean[] getPermissionBoolean(String world, String name,
+    public abstract boolean getPermissionBoolean(String world, String name,
             String permission);
 
     /**
@@ -496,7 +496,7 @@ public abstract class PermissionHandler {
      * @param permission
      * @return Double. No value found return -1.0
      */
-    public abstract double[] getPermissionDouble(String world, String name,
+    public abstract double getPermissionDouble(String world, String name,
             String permission);
 
     public abstract void addGroupInfo(String world, String group, String node,

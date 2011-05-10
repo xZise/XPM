@@ -427,7 +427,7 @@ public class ModularControl extends PermissionHandler {
         Group g = this.getGroupObject(world, group);
         if (g == null)
             return null;
-        return g.getString(path);
+        return g.getRawString(path);
     }
 
     @Override
@@ -435,7 +435,7 @@ public class ModularControl extends PermissionHandler {
         Group g = this.getGroupObject(world, group);
         if (g == null)
             return 0;
-        return g.getInt(path);
+        return g.getRawInt(path);
     }
 
     @Override
@@ -443,7 +443,7 @@ public class ModularControl extends PermissionHandler {
         Group g = this.getGroupObject(world, group);
         if (g == null)
             return false;
-        return g.getBool(path);
+        return g.getRawBool(path);
     }
 
     @Override
@@ -451,7 +451,7 @@ public class ModularControl extends PermissionHandler {
         Group g = this.getGroupObject(world, group);
         if (g == null)
             return 0D;
-        return g.getDouble(path);
+        return g.getRawDouble(path);
     }
 
     @Override
@@ -459,7 +459,7 @@ public class ModularControl extends PermissionHandler {
         User u = this.getUserObject(world, name);
         if (u == null)
             return null;
-        return u.getString(path);
+        return u.getRawString(path);
     }
 
     @Override
@@ -467,7 +467,7 @@ public class ModularControl extends PermissionHandler {
         User u = this.getUserObject(world, name);
         if (u == null)
             return 0;
-        return u.getInt(path);
+        return u.getRawInt(path);
     }
 
     @Override
@@ -475,7 +475,7 @@ public class ModularControl extends PermissionHandler {
         User u = this.getUserObject(world, name);
         if (u == null)
             return false;
-        return u.getBool(path);
+        return u.getRawBool(path);
     }
 
     @Override
@@ -483,90 +483,40 @@ public class ModularControl extends PermissionHandler {
         User u = this.getUserObject(world, name);
         if (u == null)
             return 0D;
+        return u.getRawDouble(path);
+    }
+
+    @Override
+    public String getPermissionString(String world, String name, String path) {
+        //TODO: Make algorithm recursive and allow overrides
+        User u = this.getUserObject(world, name);
+        if (u == null)
+            return null;
+        return u.getString(path);
+    }
+
+    @Override
+    public int getPermissionInteger(String world, String name, String path) {
+        User u = this.getUserObject(world, name);
+        if (u == null)
+            return 0;
+        return u.getInt(path);
+    }
+
+    @Override
+    public boolean getPermissionBoolean(String world, String name, String path) {
+        User u = this.getUserObject(world, name);
+        if (u == null)
+            return false;
+        return u.getBool(path);
+    }
+
+    @Override
+    public double getPermissionDouble(String world, String name, String path) {
+        User u = this.getUserObject(world, name);
+        if (u == null)
+            return -1.0d;
         return u.getDouble(path);
-    }
-
-    @Override
-    public String[] getPermissionString(String world, String name, String path) {
-        User u = this.getUserObject(world, name);
-        if (u == null)
-            return null;
-        Set<Group> groups = u.getAncestors();
-        ArrayList<String> data = new ArrayList<String>();
-        String value = u.getString(path);
-        if (value != null)
-            data.add(value);
-        for (Group g : groups) {
-            if (g == null)
-                continue;
-            value = g.getString(path);
-            if (value != null)
-                data.add(value);
-        }
-        return data.toArray(new String[0]);
-    }
-
-    @Override
-    public int[] getPermissionInteger(String world, String name, String path) {
-        User u = this.getUserObject(world, name);
-        if (u == null)
-            return null;
-        Set<Group> groups = u.getAncestors();
-        ArrayList<Integer> data = new ArrayList<Integer>(groups.size());
-        int value = u.getInt(path);
-        for (Group g : groups) {
-            if (g == null)
-                continue;
-            value = g.getInt(path);
-            data.add(value);
-        }
-        int[] array = new int[data.size()];
-        for(int i = 0; i < data.size(); i++) {
-            array[i] = data.get(i);
-        }
-        return array;
-    }
-
-    @Override
-    public boolean[] getPermissionBoolean(String world, String name, String path) {
-        User u = this.getUserObject(world, name);
-        if (u == null)
-            return null;
-        Set<Group> groups = u.getAncestors();
-        ArrayList<Boolean> data = new ArrayList<Boolean>(groups.size());
-        boolean value = u.getBool(path);
-        for (Group g : groups) {
-            if (g == null)
-                continue;
-            value = g.getBool(path);
-            data.add(value);
-        }
-        boolean[] array = new boolean[data.size()];
-        for(int i = 0; i < data.size(); i++) {
-            array[i] = data.get(i);
-        }
-        return array;
-    }
-
-    @Override
-    public double[] getPermissionDouble(String world, String name, String path) {
-        User u = this.getUserObject(world, name);
-        if (u == null)
-            return null;
-        Set<Group> groups = u.getAncestors();
-        ArrayList<Double> data = new ArrayList<Double>(groups.size());
-        double value = u.getDouble(path);
-        for (Group g : groups) {
-            if (g == null)
-                continue;
-            value = g.getDouble(path);
-            data.add(value);
-        }
-        double[] array = new double[data.size()];
-        for(int i = 0; i < data.size(); i++) {
-            array[i] = data.get(i);
-        }
-        return array;
     }
 
     @Override

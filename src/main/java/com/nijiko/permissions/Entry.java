@@ -1,6 +1,7 @@
 package com.nijiko.permissions;
 
 //import java.util.Arrays;
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
@@ -156,18 +157,18 @@ public abstract class Entry {
         return controller.stringToGroups(getParents());
     }
 
-    public int getWeight()
-    {
-        Set<Group> groups = this.getAncestors();
-        if(this instanceof Group) groups.add((Group) this);
-        int maxWeight = 0;
-        for(Group group : groups)
-        {
-            maxWeight = maxWeight < group.getRawWeight() ? group.getRawWeight() : maxWeight;
-        }
-        return maxWeight;
+    public int getWeight() {
+        Set<Group> checked = new HashSet<Group>();
+        Integer value = this.recursiveCheck(checked, new GroupValue<Integer>() {
+            @Override
+            public Integer value(Group g) {
+                int val = g.getRawWeight();
+                return val == -1 ? null : val;
+            }
+        });
+        return value == null ? -1 : value;
     }
-    
+
     public Set<Group> getAncestors() {
         Set<Group> groupSet = new HashSet<Group>();
         Queue<Group> queue = new LinkedList<Group>();
@@ -193,62 +194,88 @@ public abstract class Entry {
         return groupSet;
     }
 
-    protected boolean inGroup(String world, String group, Set<Group> checked) {
-        Set<Group> parents = getParentGroups();
-        if (parents == null || parents.isEmpty())
-            return false;
-        for (Group grp : parents) {
-            if (checked.contains(grp))
-                continue;
-            checked.add(grp);
-            if (grp.world.equalsIgnoreCase(world) && grp.name.equalsIgnoreCase(group))
-                return true;
-            if (grp.inGroup(world, group, checked))
-                return true;
-        }
-        return false;
-    }
-
     public boolean inGroup(String world, String group) {
         if (this.getType() == EntryType.GROUP && this.world.equalsIgnoreCase(world) && this.name.equalsIgnoreCase(group))
             return true;
         Set<Group> checked = new HashSet<Group>();
-        return this.inGroup(world, group, checked);
+        class GroupChecker implements GroupValue<Boolean> {
+            protected final String world;
+            protected final String group;
+
+            GroupChecker(String world, String group) {
+                this.world = world;
+                this.group = group;
+            }
+
+            @Override
+            public Boolean value(Group g) {
+                if (g.world != null && g.name != null && g.world.equals(world) && g.name.equalsIgnoreCase(group))
+                    return true;
+                return null;
+            }
+        }
+        Boolean val = this.recursiveCheck(checked, new GroupChecker(world, group));
+        return val == null ? false : val;
     }
 
     public boolean canBuild() {
         Set<Group> checked = new HashSet<Group>();
-        return this.canBuild(checked);
+        Boolean value = this.recursiveCheck(checked, new GroupValue<Boolean>() {
+            @Override
+            public Boolean value(Group g) {
+                if (g.canSelfBuild())
+                    return true;
+                return null;
+            }
+        });
+        return value == null ? false : value;
     }
 
-    protected boolean canBuild(Set<Group> checked) {
+    protected <T> T recursiveCheck(Set<Group> checked, GroupValue<T> checker) {
         Set<Group> parents = getParentGroups();
         if (this instanceof Group) {
             Group g = (Group) this;
-            if (g.canSelfBuild())
-                return true;
+            T result = checker.value(g);
+            return result;
         }
         if (parents == null || parents.isEmpty())
-            return false;
+            return null;
         for (Group grp : parents) {
             if (checked.contains(grp))
                 continue;
             checked.add(grp);
-            if (grp.canBuild(checked))
-                return true;
+            if (grp != null) {
+                T result = grp.recursiveCheck(checked, checker);
+                if (result != null)
+                    return result;
+            }
         }
-        return false;
+        return null;
     }
 
-//    public Set<String> getGroups() {
-//        Set<Group> groupSet = this.getAncestors();
-//        Set<String> nameSet = new HashSet<String>();
-//        for (Group grp : groupSet) {
-//            if (grp != null)
-//                nameSet.add(grp.name);
-//        }
-//        return nameSet;
-//    }
+    protected <T> T recursiveCheck(Set<Group> checked, GroupValue<T> checker, Comparator<T> comparator) {
+        Set<Group> parents = getParentGroups();
+        if (this instanceof Group) {
+            Group g = (Group) this;
+            T result = checker.value(g);
+            return result;
+        }
+        if (parents == null || parents.isEmpty())
+            return null;
+        T currentValue = null;
+        for (Group grp : parents) {
+            if (checked.contains(grp))
+                continue;
+            checked.add(grp);
+            if (grp != null) {
+                T result = grp.recursiveCheck(checked, checker);
+                if (result != null) {
+                    if(comparator.compare(result ,currentValue)==1)  currentValue = result;
+                }
+            }
+        }
+        return currentValue;
+    }
 
     public abstract EntryType getType();
 
@@ -264,13 +291,101 @@ public abstract class Entry {
     public String toString() {
         return "Entry " + name + " in " + world;
     }
-    
+
     public abstract void setData(String path, Object data);
-    
-    public abstract String getString(String path);
-    public abstract int getInt(String path);
-    public abstract boolean getBool(String path);
-    public abstract double getDouble(String path);
-    
+
+    public abstract String getRawString(String path);
+
+    public abstract int getRawInt(String path);
+
+    public abstract boolean getRawBool(String path);
+
+    public abstract double getRawDouble(String path);
+
     public abstract void removeData(String path);
+
+    protected interface GroupValue<T> {
+        /**
+         * Checks for appropriate conditions
+         * 
+         * @param g Group to test
+         * @return Null if check fails, any applicable value otherwise
+         */
+        T value(Group g);
+    }
+
+    public int getInt(String path) {
+        return getInt(path, new SimpleComparator<Integer>());
+    }
+
+    protected int getInt(final String path, Comparator<Integer> comparator) {
+        Integer value = this.recursiveCheck(new HashSet<Group>(), new GroupValue<Integer>(){
+            @Override
+            public Integer value(Group g) {
+                int value = g.getRawInt(path);
+                if(value != -1) return value;
+                return null;
+            }}, comparator);
+        return value == null ? -1 : value;
+    }
+    
+
+
+    public double getDouble(String path) {
+        return getDouble(path, new SimpleComparator<Double>());
+    }
+
+    protected double getDouble(final String path, Comparator<Double> comparator) {
+        Double value = this.recursiveCheck(new HashSet<Group>(), new GroupValue<Double>(){
+            @Override
+            public Double value(Group g) {
+                double value = g.getRawDouble(path);
+                if(value != -1.0D) return value;
+                return null;
+            }}, comparator);
+        return value == null ? -1.0D : value;
+    }
+    
+    public boolean getBool(String path) {
+        return getBool(path, new SimpleComparator<Boolean>());
+    }
+
+    protected boolean getBool(final String path, Comparator<Boolean> comparator) {
+        Boolean value = this.recursiveCheck(new HashSet<Group>(), new GroupValue<Boolean>(){
+            @Override
+            public Boolean value(Group g) {
+                boolean value = g.getRawBool(path);
+                if(value) return value;
+                return null;
+            }}, comparator);
+        return value == null ? false : value;
+    }
+
+    public String getString(String path) {
+        return getString(path, new SimpleComparator<String>());
+    }
+
+    protected String getString(final String path, Comparator<String> comparator) {
+        String value = this.recursiveCheck(new HashSet<Group>(), new GroupValue<String>(){
+            @Override
+            public String value(Group g) {
+                String value = g.getRawString(path);
+                if(!value.isEmpty()) return value;
+                return null;
+            }}, comparator);
+        return value == null ? "" : value;
+    }
+    
+    //And now to showcase how insane Java generics can get
+    protected static class SimpleComparator<T extends Comparable<T>> implements Comparator<T> {
+        @Override
+        public int compare(T o1, T o2) {
+            if(o1 == null) {
+                if(o2 == null) return 0;
+                return -1;
+            }
+            if(o2 == null) return 1;
+            return o1.compareTo(o2);
+        }
+    }
 }

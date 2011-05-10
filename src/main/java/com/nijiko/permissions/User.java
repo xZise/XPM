@@ -99,22 +99,22 @@ public class User extends Entry {
     }
 
     @Override
-    public String getString(String path) {
+    public String getRawString(String path) {
         return data.getString(name,path);
     }
 
     @Override
-    public int getInt(String path) {
+    public int getRawInt(String path) {
         return data.getInt(name, path);
     }
 
     @Override
-    public boolean getBool(String path) {
+    public boolean getRawBool(String path) {
         return data.getBool(name, path);
     }
 
     @Override
-    public double getDouble(String path) {
+    public double getRawDouble(String path) {
         return data.getDouble(name, path);
     }
 

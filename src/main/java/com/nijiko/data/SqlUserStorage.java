@@ -18,16 +18,19 @@ import com.nijiko.permissions.Group;
 
 public class SqlUserStorage implements UserStorage {
 
+    private Connection dbConn;
+    
     private String userWorld;
+    private int worldId;
     private Map<String, Set<String>> userPermissions = new HashMap<String, Set<String>>();
     private Map<String, LinkedHashSet<GroupWorld>> userParents = new HashMap<String, LinkedHashSet<GroupWorld>>();
 
     private static final String permGetText = "SELECT * FROM Worlds, Users, UserPermissions WHERE Worlds.worldname = ?, Users.username = ?, Users.worldid = World.worldid, UserPermissions.uid = Users.uid;";
     private static final String parentGetText = "SELECT * FROM Worlds, Users, UserInheritance WHERE Worlds.worldname = ?, Users.username = ?, Users.worldid = World.worldid, UserInheritance.uid = Users.uid;";
-    
-    private static final String permAddText = "";
-    private static final String parentAddText = "";
-    
+
+    private static final String permAddText = "INSERT INTO UserPermissions (uid, permstring) VALUES (<?>,<?>);";
+    private static final String parentAddText = "INSERT INTO UserPermissions (childid, parentid) VALUES (<?>,<?>);";
+
     private static PreparedStatement permGetStmt;
     private static PreparedStatement parentGetStmt;
     public SqlUserStorage(String userWorld) {
@@ -180,11 +183,13 @@ public class SqlUserStorage implements UserStorage {
         userPermissions.clear();
         userParents.clear();
         try {
-            Connection dbConn = SqlStorage.getSource().getConnection();
+//            if(dbConn != null) dbConn.close();
+//            dbConn = SqlStorage.getSource().getConnection();
+            ResultSet rs = SqlStorage.getWorldStmt.executeQuery();
+            worldId = rs.getInt(1);
             permGetStmt = dbConn.prepareStatement(permGetText);
             parentGetStmt = dbConn.prepareStatement(parentGetText);
         } catch (SQLException e) {
-            // TODO Auto-generated catch block
             e.printStackTrace();
         }
     }
@@ -245,12 +250,17 @@ public class SqlUserStorage implements UserStorage {
         } else {
             throw new IllegalArgumentException("Only ints, bools, doubles and Strings are allowed!");
         }
-        
+
     }
 
     @Override
     public void removeData(String name, String path) {
         // TODO Auto-generated method stub
+
+    }
+    
+    @Override
+    public void finalize() {
         
     }
 }
