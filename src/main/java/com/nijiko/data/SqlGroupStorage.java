@@ -10,8 +10,10 @@ import java.util.Set;
 
 public class SqlGroupStorage implements GroupStorage {
 
+    private int worldId;
     private String groupWorld;
     private String baseGroup = null;
+    private Map<String, Integer> groupIds = new HashMap<String, Integer>();
     private Set<String> buildGroups = new HashSet<String>();
     private Map<String, Integer> groupWeights = new HashMap<String, Integer>();
     private Map<String, String> groupPrefixes = new HashMap<String, String>();
@@ -20,8 +22,9 @@ public class SqlGroupStorage implements GroupStorage {
     private Map<String, Set<GroupWorld>> groupParents = new HashMap<String, Set<GroupWorld>>();
     private Map<String, List<GroupWorld>> tracks = new HashMap<String, List<GroupWorld>>();
 
-    public SqlGroupStorage(String groupWorld) {
-        // TODO Auto-generated constructor stub
+    public SqlGroupStorage(String groupWorld, int id) {
+        worldId = id;
+        this.groupWorld = groupWorld;
     }
 
     @Override
@@ -208,4 +211,7 @@ public class SqlGroupStorage implements GroupStorage {
         
     }
 
+    Integer getGroupId(String name) {
+        return this.groupIds.get(name);
+    }
 }
