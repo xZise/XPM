@@ -160,6 +160,7 @@ public class Permissions extends JavaPlugin {
 
         // Enabled
         log.info("[" + description.getName() + "] version [" + description.getVersion() + "] (" + codename + ")  loaded");
+        log.info("This version of Permissions is currently in beta. All issues should be reported to the bug tracker on GitHub. The safety of your data is not guarenteed.");
 
         this.getServer().getPluginManager().registerEvent(Event.Type.BLOCK_PLACE, l, Priority.High, this);
         this.getServer().getPluginManager().registerEvent(Event.Type.BLOCK_BREAK, l, Priority.High, this);
