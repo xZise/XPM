@@ -23,27 +23,27 @@ public abstract class SqlStorage {
     private static Map<String, Integer> worldMap = new HashMap<String, Integer>();
     private static List<String> create = new ArrayList<String>(8);
 
-    static final String getWorld = "SELECT worldid FROM Worlds WHERE worldname = ?;";
-    static final String getUser = "SELECT * FROM Users WHERE Users.worldid = ? AND Users.username = ?;";
-    static final String getGroup = "SELECT * FROM Groups WHERE Groups.worldid = ? AND Groups.groupname = ?;";
+    static final String getWorld = "SELECT Worlds.worldid FROM Worlds WHERE Worlds.worldname = '?';";
+    static final String getUser = "SELECT userid FROM Users WHERE Users.worldid = ? AND Users.username = '?';";
+    static final String getGroup = "SELECT * FROM Groups WHERE Groups.worldid = ? AND Groups.groupname = '?';";
 
-    static final String createWorld = "INSERT INTO Worlds (worldname) VALUES (?);";
-    static final String createUser = "INSERT INTO Users (worldid,username) VALUES (?,?);";
-    static final String createGroup = "INSERT INTO Groups (worldid, groupname, prefix, suffix, previd, nextid) VALUES (?,?, '','', NULL, NULL);";
+    static final String createWorld = "INSERT INTO Worlds (worldname) VALUES ('?');";
+    static final String createUser = "INSERT INTO Users (worldid,username) VALUES (?,'?');";
+    static final String createGroup = "INSERT INTO Groups (worldid, groupname, prefix, suffix) VALUES (?,'?', '','', 0,0);";
 
     static {
-        create.add("CREATE TABLE IF NOT EXISTS Worlds (" + " worldid INT NOT NULL PRIMARY KEY AUTO_INCREMENT," + " worldname VARCHAR(32) NOT NULL UNIQUE" + ");");
-        create.add("CREATE TABLE IF NOT EXISTS Users (" + " uid INT NOT NULL PRIMARY KEY AUTO_INCREMENT," + " username VARCHAR(32) NOT NULL," + " worldid INT NOT NULL FORIEGN KEY REFERENCES Worlds(worldid)," + " CONSTRAINT UserNameWorld UNIQUE (username, World)," + " INDEX(username)" + ");");
-        create.add("CREATE TABLE IF NOT EXISTS Groups (" + " gid INT NOT NULL PRIMARY KEY AUTO_INCREMENT," + " groupname VARCHAR(32) NOT NULL," + " worldid  INT NOT NULL FORIEGN KEY REFERENCES Worlds(worldid)," + " prefix VARCHAR(32) NOT NULL," + " suffix VARCHAR(32) NOT NULL, " + " build TINYINT NOT NULL DEFAULT 0" + " weight INT NOT NULL DEFAULT 0" + " previd INT FOREIGN KEY REFERENCES Groups(gid)" + " nextid INT FOREIGN KEY REFERENCES Groups(gid)" + " CONSTRAINT GroupNameWorld UNIQUE (groupname, World)" + ");");
-        create.add("CREATE TABLE IF NOT EXISTS UserPermissions (" + " upermid INT NOT NULL PRIMARY KEY AUTO_INCREMENT," + " permstring VARCHAR(64) NOT NULL," + " uid int NOT NULL FOREIGN KEY REFERENCES Users(uid)" + " CONSTRAINT UserPerm UNIQUE (uid, permstring)" + ");");
-        create.add("CREATE TABLE IF NOT EXISTS GroupPermissions (" + " gpermid INT NOT NULL PRIMARY KEY AUTO_INCREMENT," + " permstring VARCHAR(64) NOT NULL," + " gid int NOT NULL FOREIGN KEY REFERENCES Groups(gid)" + " CONSTRAINT UserPerm UNIQUE (gid, permstring)" + ");");
-        create.add("CREATE TABLE IF NOT EXISTS UserInheritance (" + " uinheritid INT NOT NULL PRIMARY KEY AUTO_INCREMENT," + " childid INT NOT NULL FOREIGN KEY REFERENCES Users(uid)," + " parentid int NOT NULL FOREIGN KEY REFERENCES Groups(gid)" + " CONSTRAINT UserParent UNIQUE (childid, parentid)" + ");");
-        create.add("CREATE TABLE IF NOT EXISTS GroupInheritance (" + " ginheritid INT NOT NULL PRIMARY KEY," + " childid INT NOT NULL FOREIGN KEY REFERENCES Groups(gid)," + " parentid int NOT NULL FOREIGN KEY REFERENCES Groups(gid)," + " CONSTRAINT UserParent UNIQUE (childid, parentid)," + " CONSTRAINT GroupNoSelfInherit CHECK (childid IS NOT = parentid)" + ");");
-        create.add("CREATE TABLE IF NOT EXISTS WorldBase (" + " worldid INT NOT NULL FOREIGN KEY REFERENCES Worlds(worldid)," + " defaultid INT NOT NULL FOREIGN KEY REFERENCES Groups(gid)" + ");");
-        create.add("CREATE TABLE IF NOT EXISTS UserData (" + " dataid INT NOT NULL PRIMARY KEY AUTO_INCREMENT," + " uid INT NOT NULL FOREIGN KEY REFERENCES Users(uid)," + " path VARCHAR(64) NOT NULL," + " data VARCHAR(64) NOT NULL" + " CONSTRAINT UserDataUnique UNIQUE (uid, path)" + ");");
-        create.add("CREATE TABLE IF NOT EXISTS GroupData (" + " dataid INT NOT NULL PRIMARY KEY AUTO_INCREMENT," + " gid INT NOT NULL FOREIGN KEY REFERENCES Groups(gid)," + " path VARCHAR(64) NOT NULL," + " data VARCHAR(64) NOT NULL" + " CONSTRAINT GroupDataUnique UNIQUE (gid, path)" + ");");
-        create.add("CREATE TABLE IF NOT EXISTS Tracks (" + " trackid INT NOT NULL PRIMARY KEY AUTO_INCREMENT," + " trackname VARCHAR(64) NOT NULL UNIQUE" + ");");
-        create.add("CREATE TABLE IF NOT EXISTS TrackGroups (" + " trackgroupid INT NOT NULL PRIMARY KEY AUTO_INCREMENT," + " trackid INT NOT NULL FORIEGN KEY REFERENCES Tracks(trackid)," + " gid INT NOT NULL FOREIGN KEY REFERENCES Groups(gid)" + " CONSTRAINT TrackGroupsUnique UNIQUE (trackid, group)" + ");");
+        create.add("CREATE TABLE IF NOT EXISTS Worlds (" + " worldid INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT," + " worldname VARCHAR(32) NOT NULL UNIQUE" + ");");
+        create.add("CREATE TABLE IF NOT EXISTS Users (" + " uid INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT," + " username VARCHAR(32) NOT NULL," + " worldid INTEGER NOT NULL," + " CONSTRAINT UserNameWorld UNIQUE (username, worldid)," + " FOREIGN KEY(worldid) REFERENCES Worlds(worldid)" + ");");
+        create.add("CREATE TABLE IF NOT EXISTS Groups (" + " gid INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT," + " groupname VARCHAR(32) NOT NULL," + " worldid  INTEGER NOT NULL," + " prefix VARCHAR(32) NOT NULL," + " suffix VARCHAR(32) NOT NULL, " + " build TINYINT NOT NULL DEFAULT 0," + " weight INTEGER NOT NULL DEFAULT 0," + " CONSTRAINT GroupNameWorld UNIQUE (groupname, worldid)," + " FOREIGN KEY(worldid) REFERENCES Worlds(worldid)" + ");");
+        create.add("CREATE TABLE IF NOT EXISTS UserPermissions (" + " upermid INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT," + " permstring VARCHAR(64) NOT NULL," + " uid INTEGER NOT NULL," + " CONSTRAINT UserPerm UNIQUE (uid, permstring)," + " FOREIGN KEY(uid) REFERENCES Users(uid)" + ");");
+        create.add("CREATE TABLE IF NOT EXISTS GroupPermissions (" + " gpermid INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT," + " permstring VARCHAR(64) NOT NULL," + " gid INTEGER NOT NULL," + " CONSTRAINT GroupPerm UNIQUE (gid, permstring)," + " FOREIGN KEY(gid) REFERENCES Groups(gid)" + ");");
+        create.add("CREATE TABLE IF NOT EXISTS UserInheritance (" + " uinheritid INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT," + " childid INTEGER NOT NULL," + " parentid INTEGER NOT NULL," + " CONSTRAINT UserParent UNIQUE (childid, parentid)," + " FOREIGN KEY(childid) REFERENCES Users(uid)," + " FOREIGN KEY(parentid) REFERENCES Groups(gid)" + ");");
+        create.add("CREATE TABLE IF NOT EXISTS GroupInheritance (" + " ginheritid INTEGER NOT NULL PRIMARY KEY," + " childid INTEGER NOT NULL," + " parentid INTEGER NOT NULL," + " CONSTRAINT UserParent UNIQUE (childid, parentid)," + " CONSTRAINT GroupNoSelfInherit CHECK (childid <> parentid)," + " FOREIGN KEY(childid) REFERENCES Groups(gid)," + " FOREIGN KEY(parentid) REFERENCES Groups(gid)" + ");");
+        create.add("CREATE TABLE IF NOT EXISTS WorldBase (" + " worldid INTEGER NOT NULL," + " defaultid INTEGER," + "FOREIGN KEY(worldid) REFERENCES Worlds(worldid)," + "FOREIGN KEY(defaultid) REFERENCES Groups(gid)" + ");");
+        create.add("CREATE TABLE IF NOT EXISTS UserData (" + " dataid INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT," + " uid INTEGER NOT NULL ," + " path VARCHAR(64) NOT NULL," + " data VARCHAR(64) NOT NULL," + " CONSTRAINT UserDataUnique UNIQUE (uid, path)," + "FOREIGN KEY(uid) REFERENCES Users(uid)" + ");");
+        create.add("CREATE TABLE IF NOT EXISTS GroupData (" + " dataid INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT," + " gid INTEGER NOT NULL," + " path VARCHAR(64) NOT NULL," + " data VARCHAR(64) NOT NULL," + " CONSTRAINT GroupDataUnique UNIQUE (gid, path)," + "FOREIGN KEY(gid) REFERENCES Groups(gid)" + ");");
+        create.add("CREATE TABLE IF NOT EXISTS Tracks (" + " trackid INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT," + " trackname VARCHAR(64) NOT NULL UNIQUE," + "worldid INTEGER NOT NULL,"+ "FOREIGN KEY(worldid) REFERENCES Worlds(worldid)"+");");
+        create.add("CREATE TABLE IF NOT EXISTS TrackGroups (" + " trackgroupid INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT," + " trackid INTEGER NOT NULL," + " gid INTEGER NOT NULL," + " groupOrder INTEGER NOT NULL,"+" CONSTRAINT TrackGroupsUnique UNIQUE (trackid, gid)," + "FOREIGN KEY(trackid) REFERENCES Tracks(trackid)," + "FOREIGN KEY(gid) REFERENCES Groups(gid)" + ");");
     }
 
     public static void init(String dbmsName, String uri, String username, String password, int reloadDelay) throws Exception {
@@ -91,8 +91,12 @@ public abstract class SqlStorage {
         // Verify stuff
         String engine = dbms.equals(Dbms.MYSQL) ? " ENGINE = InnoDB;" : ";";
         for (String state : create) {
+            if(dbms==Dbms.MYSQL) {
+                state = state.replace("AUTOINCREMENT", "AUTO_INCREMENT");
+            }
             s.executeUpdate(state + engine);
         }
+        s.executeUpdate("CREATE INDEX IF NOT EXISTS username_index ON Users(username);");
     }
 
     static DataSource getSource() {
@@ -105,13 +109,14 @@ public abstract class SqlStorage {
         Connection dbConn = getConnection();
         Statement stmt = dbConn.createStatement();
         String query = getWorld.replace("?", name);
-        if (!stmt.execute(query)) {
+        ResultSet rs = stmt.executeQuery(query);
+        if (!rs.next()) {
+            System.out.println("[Permissions] Creating world '" + name + "'.");
             String addQuery = createWorld.replace("?", name);
             stmt.executeUpdate(addQuery);
-            stmt.execute(query);
+            rs = stmt.executeQuery(query);
+            rs.next();
         }
-        ResultSet rs = stmt.getResultSet();
-        rs.next();
         int id = rs.getInt(1);
         worldMap.put(name, id);
         rs.close();
@@ -132,14 +137,14 @@ public abstract class SqlStorage {
         Statement stmt = dbConn.createStatement();
         int worldId = getWorld(world);
         String query = getUser.replaceFirst("\\?", String.valueOf(worldId)).replaceFirst("\\?", name);
-        if (!stmt.execute(query))
-        {
+        ResultSet rs = stmt.executeQuery(query);
+        if (!rs.next()) {
+            System.out.println("[Permissions] Creating user '" + name + "' in world '" + world + "'.");
             String addQuery = createUser.replaceFirst("\\?", String.valueOf(worldId)).replaceFirst("\\?", name);
             stmt.executeUpdate(addQuery);
-            stmt.execute(query);
+            rs = stmt.executeQuery(query);
+            rs.next();
         }
-        ResultSet rs = stmt.getResultSet();
-        rs.next();
         int id = rs.getInt(1);
         rs.close();
         stmt.close();
@@ -159,14 +164,14 @@ public abstract class SqlStorage {
         Statement stmt = dbConn.createStatement();
         int worldId = getWorld(world);
         String query = getGroup.replaceFirst("\\?", String.valueOf(worldId)).replaceFirst("\\?", name);
-        if (!stmt.execute(query))
-        {
+        ResultSet rs = stmt.executeQuery(query);
+        if (!rs.next()) {
+            System.out.println("[Permissions] Creating group '" + name + "' in world '" + world + "'.");
             String addQuery = createGroup.replaceFirst("\\?", String.valueOf(worldId)).replaceFirst("\\?", name);
             stmt.executeUpdate(addQuery);
-            stmt.execute(query);
+            rs = stmt.executeQuery(query);
+            rs.next();
         }
-        ResultSet rs = stmt.getResultSet();
-        rs.next();
         int id = rs.getInt(1);
         rs.close();
         stmt.close();

@@ -58,6 +58,7 @@ public class StorageFactory {
                 return SqlStorage.getUserStorage(userWorld);
             } catch (Exception e) {
                 System.err.println("Error occured while connecting to SQL database. Reverting to YAML.");
+                e.printStackTrace();
             }
             // Will fall through only if an exception occurs
         default:
@@ -124,6 +125,7 @@ public class StorageFactory {
                 return SqlStorage.getGroupStorage(groupWorld);
             } catch (Exception e) {
                 System.err.println("Error occured while connecting to SQL database. Reverting to YAML.");
+                e.printStackTrace();
             }
             // Will fall through only if an exception occurs
         default:
