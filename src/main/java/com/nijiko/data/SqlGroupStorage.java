@@ -28,51 +28,51 @@ public class SqlGroupStorage implements GroupStorage {
     private Map<String, Map<String, String>> groupData = new HashMap<String, Map<String, String>>();
     private Connection dbConn;
 
-    private static final String permGetText = "SELECT GroupPermissions.permstring FROM GroupPermissions WHERE GroupPermissions.gid = ?;";
+    private static final String permGetText = "SELECT PrGroupPermissions.permstring FROM PrGroupPermissions WHERE PrGroupPermissions.gid = ?;";
     PreparedStatement permGetStmt;
-    private static final String parentGetText = "SELECT * FROM GroupInheritance WHERE GroupInheritance.childid = ?;";
+    private static final String parentGetText = "SELECT * FROM PrGroupInheritance WHERE PrGroupInheritance.childid = ?;";
     PreparedStatement parentGetStmt;
 
-    private static final String getGroupText = "SELECT * FROM Groups WHERE Groups.worldid = ? AND Groups.gid = ?;";
+    private static final String getGroupText = "SELECT * FROM PrGroups WHERE PrGroups.worldid = ? AND PrGroups.gid = ?;";
     PreparedStatement getGroupStmt;
-    private static final String getGroupsText = "SELECT * FROM Groups WHERE Groups.worldid = ? AND Groups.gid = ?;";
+    private static final String getGroupsText = "SELECT * FROM PrGroups WHERE PrGroups.worldid = ? AND PrGroups.gid = ?;";
     PreparedStatement getGroupsStmt;
-    private static final String getBaseText = "SELECT Groups.groupname FROM WorldBase, Groups WHERE WorldBase.worldid = ? AND Groups.worldid = ? AND WorldBase.defaultid = Groups.gid;";
+    private static final String getBaseText = "SELECT PrGroups.groupname FROM PrWorldBase, PrGroups WHERE PrWorldBase.worldid = ? AND PrGroups.worldid = ? AND PrWorldBase.defaultid = PrGroups.gid;";
     PreparedStatement getBaseStmt;
 
-    private static final String permAddText = "INSERT INTO GroupPermissions (gid, permstring) VALUES (?,?);";
+    private static final String permAddText = "INSERT INTO PrGroupPermissions (gid, permstring) VALUES (?,?);";
     PreparedStatement permAddStmt;
-    private static final String permRemText = "DELETE FROM GroupPermissions WHERE gid = ? AND permstring = ?;";
+    private static final String permRemText = "DELETE FROM PrGroupPermissions WHERE gid = ? AND permstring = ?;";
     PreparedStatement permRemStmt;
-    private static final String parentAddText = "INSERT INTO GroupInheritance (childid, parentid) VALUES (?,?);";
+    private static final String parentAddText = "INSERT INTO PrGroupInheritance (childid, parentid) VALUES (?,?);";
     PreparedStatement parentAddStmt;
-    private static final String parentRemText = "DELETE FROM GroupInheritance WHERE childid = ? AND parentid = ?;";
+    private static final String parentRemText = "DELETE FROM PrGroupInheritance WHERE childid = ? AND parentid = ?;";
     PreparedStatement parentRemStmt;
 
-    private static final String groupListText = "SELECT groupname, gid FROM Groups WHERE worldid = ?;";
+    private static final String groupListText = "SELECT groupname, gid FROM PrGroups WHERE worldid = ?;";
     PreparedStatement groupListStmt;
-    private static final String groupAddText = "INSERT INTO Groups (worldid,groupname) VALUES (?,?);";
+    private static final String groupAddText = "INSERT INTO PrGroups (worldid,groupname) VALUES (?,?);";
     PreparedStatement groupAddStmt;
 
-    private static final String dataGetText = "SELECT * FROM GroupData WHERE gid = ? AND path = ?;";
+    private static final String dataGetText = "SELECT * FROM PrGroupData WHERE gid = ? AND path = ?;";
     PreparedStatement dataGetStmt;
-    private static final String dataAddText = "INSERT INTO GroupData (data, gid, path) VALUES (?,?,?);";
+    private static final String dataAddText = "INSERT INTO PrGroupData (data, gid, path) VALUES (?,?,?);";
     PreparedStatement dataAddStmt;
-    private static final String dataEditText = "UPDATE GroupData SET data = ? WHERE gid = ? AND path = ?;";
+    private static final String dataEditText = "UPDATE PrGroupData SET data = ? WHERE gid = ? AND path = ?;";
     PreparedStatement dataEditStmt;
-    private static final String dataDelText = "DELETE FROM GroupData WHERE gid = ? AND path = ?;";
+    private static final String dataDelText = "DELETE FROM PrGroupData WHERE gid = ? AND path = ?;";
     PreparedStatement dataDelStmt;
 
-    private static final String buildSetText = "UPDATE Groups SET build = ? WHERE gid = ?;";
+    private static final String buildSetText = "UPDATE PrGroups SET build = ? WHERE gid = ?;";
     PreparedStatement buildSetStmt;
-    private static final String prefixSetText = "UPDATE Groups SET prefix = ? WHERE gid = ?;";
+    private static final String prefixSetText = "UPDATE PrGroups SET prefix = ? WHERE gid = ?;";
     PreparedStatement prefixSetStmt;
-    private static final String suffixSetText = "UPDATE Groups SET suffix = ? WHERE gid = ?;";
+    private static final String suffixSetText = "UPDATE PrGroups SET suffix = ? WHERE gid = ?;";
     PreparedStatement suffixSetStmt;
 
-    private static final String trackListText = "SELECT * FROM Tracks WHERE worldid = ?;";
+    private static final String trackListText = "SELECT * FROM PrTracks WHERE worldid = ?;";
     PreparedStatement trackListStmt;
-    private static final String trackGetText = "SELECT Worlds.worldname, Groups.groupname FROM Worlds, Groups, Tracks, TrackGroups WHERE TrackGroups.trackid = Tracks.trackid AND Tracks.worldid = ? AND Tracks.trackname = ? AND Groups.gid = TrackGroups.gid AND Worlds.worldid = Groups.worldid ORDER BY groupOrder;";
+    private static final String trackGetText = "SELECT PrWorlds.worldname, PrGroups.groupname FROM PrWorlds, PrGroups, PrTracks, PrTrackGroups WHERE PrTrackGroups.trackid = PrTracks.trackid AND PrTracks.worldid = ? AND PrTracks.trackname = ? AND PrGroups.gid = PrTrackGroups.gid AND PrWorlds.worldid = PrGroups.worldid ORDER BY PrTrackGroups.groupOrder;";
     PreparedStatement trackGetStmt;
     // private static final String weightSetText =
     // "UPDATE Groups SET suffix = ? WHERE gid = ?;";

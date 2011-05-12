@@ -21,33 +21,33 @@ public class SqlUserStorage implements UserStorage {
     private Map<String, Map<String, String>> userData = new HashMap<String, Map<String, String>>();
     private Connection dbConn;
 
-    private static final String permGetText = "SELECT UserPermissions.permstring FROM UserPermissions WHERE UserPermissions.uid = ?;";
+    private static final String permGetText = "SELECT PrUserPermissions.permstring FROM PrUserPermissions WHERE PrUserPermissions.uid = ?;";
     PreparedStatement permGetStmt;
-    private static final String parentGetText = "SELECT * FROM UserInheritance WHERE UserInheritance.childid = ?;";
+    private static final String parentGetText = "SELECT * FROM PrUserInheritance WHERE PrUserInheritance.childid = ?;";
     PreparedStatement parentGetStmt;
 
 
-    private static final String permAddText = "INSERT INTO UserPermissions (uid, permstring) VALUES (?,?);";
+    private static final String permAddText = "INSERT INTO PrUserPermissions (uid, permstring) VALUES (?,?);";
     PreparedStatement permAddStmt;
-    private static final String permRemText = "DELETE FROM UserPermissions WHERE uid = ? AND permstring = ?;";
+    private static final String permRemText = "DELETE FROM PrUserPermissions WHERE uid = ? AND permstring = ?;";
     PreparedStatement permRemStmt;
-    private static final String parentAddText = "INSERT INTO UserInheritance (childid, parentid) VALUES (?,?);";
+    private static final String parentAddText = "INSERT INTO PrUserInheritance (childid, parentid) VALUES (?,?);";
     PreparedStatement parentAddStmt;
-    private static final String parentRemText = "DELETE FROM UserInheritance WHERE childid = ? AND parentid = ?;";
+    private static final String parentRemText = "DELETE FROM PrUserInheritance WHERE childid = ? AND parentid = ?;";
     PreparedStatement parentRemStmt;
 
-    private static final String userListText = "SELECT username, uid FROM Users WHERE worldid = ?;";
+    private static final String userListText = "SELECT username, uid FROM PrUsers WHERE worldid = ?;";
     PreparedStatement userListStmt;
-    private static final String userAddText = "INSERT INTO Users (worldid,username) VALUES (?,?);";
+    private static final String userAddText = "INSERT INTO PrUsers (worldid,username) VALUES (?,?);";
     PreparedStatement userAddStmt;
     
-    private static final String dataGetText = "SELECT * FROM UserData WHERE uid = ? AND path = ?;";
+    private static final String dataGetText = "SELECT * FROM PrUserData WHERE uid = ? AND path = ?;";
     PreparedStatement dataGetStmt;
-    private static final String dataAddText = "INSERT INTO UserData (data, uid, path) VALUES (?,?,?);";
+    private static final String dataAddText = "INSERT INTO PrUserData (data, uid, path) VALUES (?,?,?);";
     PreparedStatement dataAddStmt;
-    private static final String dataEditText = "UPDATE UserData SET data = ? WHERE uid = ? AND path = ?;";
+    private static final String dataEditText = "UPDATE PrUserData SET data = ? WHERE uid = ? AND path = ?;";
     PreparedStatement dataEditStmt;
-    private static final String dataDelText = "DELETE FROM UserData WHERE uid = ? AND path = ?;";
+    private static final String dataDelText = "DELETE FROM PrUserData WHERE uid = ? AND path = ?;";
     PreparedStatement dataDelStmt;
     
     public SqlUserStorage(String userWorld, int id) {
