@@ -96,7 +96,7 @@ public abstract class SqlStorage {
             }
             s.executeUpdate(state + engine);
         }
-        s.executeUpdate("CREATE INDEX IF NOT EXISTS pr_username_index ON Users(username);");
+        s.executeUpdate("CREATE INDEX IF NOT EXISTS pr_username_index ON PrUsers(username);");
     }
 
     static DataSource getSource() {

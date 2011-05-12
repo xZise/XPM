@@ -599,26 +599,41 @@ public class Permissions extends JavaPlugin {
     }
 
     private boolean reload(CommandSender sender, String arg) {
+        Player p = null;
         if (sender instanceof Player) {
-            Player p = (Player) sender;
-            if (Security.has(p.getWorld().getName(), p.getName(), "permissions.reload")) {
-                p.sendMessage(ChatColor.RED + "[Permissions] You lack the necessary permissions to perform this action.");
-                return true;
-            }
+            p = (Player) sender;
         }
 
         if (arg == null || arg.equals("")) {
+
+            if (p!=null&&!Security.has(p.getWorld().getName(), p.getName(), "permissions.reload.default")) {
+                p.sendMessage(ChatColor.RED + "[Permissions] You lack the necessary permissions to perform this action.");
+                return true;
+            }
+            
             Security.reload(DefaultWorld);
             sender.sendMessage(ChatColor.GRAY + "[Permissions] Default world reloaded.");
             return true;
         }
 
         if (arg.equalsIgnoreCase("all")) {
+
+            if (p!=null&&Security.has(p.getWorld().getName(), p.getName(), "permissions.reload.all")) {
+                p.sendMessage(ChatColor.RED + "[Permissions] You lack the necessary permissions to perform this action.");
+                return true;
+            }
+            
             Security.reload();
             sender.sendMessage(ChatColor.GRAY + "[Permissions] All worlds reloaded.");
             return true;
         }
 
+
+        if (p!=null&&!Security.has(p.getWorld().getName(), p.getName(), "permissions.reload."+arg)) {
+            p.sendMessage(ChatColor.RED + "[Permissions] You lack the necessary permissions to perform this action.");
+            return true;
+        }
+        
         if (Security.reload(arg))
             sender.sendMessage(ChatColor.GRAY + "[Permissions] Reload of World " + arg + " completed.");
         else
