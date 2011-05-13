@@ -440,7 +440,7 @@ public class SqlGroupStorage implements GroupStorage {
             }
 
             getGroupsStmt.setInt(1, worldId);
-            rs = getGroupStmt.executeQuery();
+            rs = getGroupsStmt.executeQuery();
             while (rs.next()) {
                 int gid = rs.getInt(1);
                 String groupName = rs.getString(2);
