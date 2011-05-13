@@ -84,7 +84,7 @@ public class Permissions extends JavaPlugin {
         DefaultWorld = server.getString("level-name");
 
         File storageOpt = new File("plugins" + File.separator + "Permissions" + File.separator, "storageconfig.yml");
-        storageOpt.mkdirs();
+        storageOpt.getParentFile().mkdirs();
         if (!storageOpt.isFile())
             System.err.println("[Permissions] storageconfig.yml is not a file.");
         if (!storageOpt.canRead())
