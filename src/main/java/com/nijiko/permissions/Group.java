@@ -63,7 +63,7 @@ public class Group extends Entry {
     }
 
     @Override
-    public LinkedHashSet<GroupWorld> getParents() {
+    public LinkedHashSet<GroupWorld> getRawParents() {
         return data.getParents(name);
     }
 

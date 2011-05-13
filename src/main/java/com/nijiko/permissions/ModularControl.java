@@ -62,6 +62,7 @@ public class ModularControl extends PermissionHandler {
     @Override
     public void load() throws Exception {
         this.loadWorld(defaultWorld);
+        this.loadWorld("*"); //Global permissions
     }
 
     @Override
@@ -152,11 +153,11 @@ public class ModularControl extends PermissionHandler {
     }
 
     @Override
-    public Set<Group> getUserParentGroups(String world, String name, boolean ancestors) {
+    public Set<Entry> getUserParentGroups(String world, String name, boolean ancestors) {
         world = getParentWorldUser(world);
         User u = this.getUserObject(world, name);
         if (u == null) {
-            Set<Group> groups = new HashSet<Group>();
+            Set<Entry> groups = new HashSet<Entry>();
             Group defaultGroup = this.getDefaultGroup(world);
             if (defaultGroup == null)
                 return groups;
@@ -164,17 +165,17 @@ public class ModularControl extends PermissionHandler {
             groups.addAll(defaultGroup.getAncestors());
             return groups;
         }
-        return ancestors ? u.getAncestors() : this.stringToGroups(u.getParents());
+        return ancestors ? u.getAncestors() : u.getParents();
     }
 
     @Override
-    public Set<Group> getGroupParentGroups(String world, String name, boolean ancestors) {
+    public Set<Entry> getGroupParentGroups(String world, String name, boolean ancestors) {
         world = getParentWorldUser(world);
         Group g = this.getGroupObject(world, name);
         if (g == null) {
-            return new HashSet<Group>();
+            return new HashSet<Entry>();
         }
-        return ancestors ? g.getAncestors() : this.stringToGroups(g.getParents());
+        return ancestors ? g.getAncestors() : g.getParents();
     }
 
     @Override
@@ -346,17 +347,18 @@ public class ModularControl extends PermissionHandler {
     @Override
     public String[] getGroups(String world, String name) {
         world = getParentWorldGroup(world);
-        Set<Group> groups;
+        Set<Entry> parents;
         User u = this.getUserObject(world, name);
         if (u == null)
             return new String[0];
-        groups = u.getAncestors();
-        List<String> groupList = new ArrayList<String>(groups.size());
-        for (Group g : groups) {
-            if (g == null)
-                continue;
-            if (g.getWorld().equalsIgnoreCase(world))
-                groupList.add(g.getName());
+        parents = u.getAncestors();
+        List<String> groupList = new ArrayList<String>(parents.size());
+        for (Entry e : parents) {
+            if (e instanceof Group) {
+                Group g = (Group) e;
+                if (g.getWorld().equalsIgnoreCase(world))
+                    groupList.add(g.getName());
+            }
         }
         return groupList.toArray(new String[0]);
     }

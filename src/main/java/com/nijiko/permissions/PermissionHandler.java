@@ -238,7 +238,7 @@ public abstract class PermissionHandler {
      * @param ancestors If true, ancestors(parents of parents) will also be returned.
      * @return
      */
-    public abstract Set<Group> getUserParentGroups(String world, String name, boolean ancestors);
+    public abstract Set<Entry> getUserParentGroups(String world, String name, boolean ancestors);
     
 
 
@@ -249,7 +249,7 @@ public abstract class PermissionHandler {
      * @param ancestors If true, ancestors(parents of parents) will also be returned.
      * @return
      */
-    public abstract Set<Group> getGroupParentGroups(String world, String name, boolean ancestors);
+    public abstract Set<Entry> getGroupParentGroups(String world, String name, boolean ancestors);
     
     /**
      * Check if specified user exists.

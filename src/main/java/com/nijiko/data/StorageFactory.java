@@ -8,7 +8,7 @@ import org.bukkit.util.config.Configuration;
 import com.nijikokun.bukkit.Permissions.Permissions;
 
 //TODO: Remove duplicated code
-public class StorageFactory {
+public abstract class StorageFactory {
     private static Configuration config;
 
     public static final void setConfig(Configuration storageConfig) {
@@ -63,13 +63,15 @@ public class StorageFactory {
             // Will fall through only if an exception occurs
         default:
         case YAML:
-            String worldString = Permissions.instance.getDataFolder().getPath() + File.separator + userWorld;
+            boolean global = userWorld.equals("*");
+            String worldString = Permissions.instance.getDataFolder().getPath();
+            if(!global) worldString = worldString + File.separator + userWorld;
             File worldFolder = new File(worldString);
             if (!worldFolder.exists())
                 worldFolder.mkdirs();
             if (!worldFolder.isDirectory())
                 throw new IOException("World folder for world " + userWorld + " is not a directory.");
-            File userFile = new File(worldString, "users.yml");
+            File userFile = new File(worldString, global ?  "globalUsers.yml" :"users.yml");
             if (!userFile.exists())
                 userFile.createNewFile();
             if (!userFile.isFile())
@@ -130,13 +132,15 @@ public class StorageFactory {
             // Will fall through only if an exception occurs
         default:
         case YAML:
-            String worldString = Permissions.instance.getDataFolder().getPath() + File.separator + groupWorld;
+            boolean global = groupWorld.equals("*");
+            String worldString = Permissions.instance.getDataFolder().getPath();
+            if(!global) worldString = worldString + File.separator + groupWorld;
             File worldFolder = new File(worldString);
             if (!worldFolder.exists())
                 worldFolder.mkdirs();
             if (!worldFolder.isDirectory())
                 throw new IOException("World folder for world " + groupWorld + " is not a directory.");
-            File userFile = new File(worldString, "groups.yml");
+            File userFile = new File(worldString, global ? "globalGroups.yml" : "groups.yml");
             if (!userFile.exists())
                 userFile.createNewFile();
             if (!userFile.isFile())
@@ -147,8 +151,5 @@ public class StorageFactory {
                 throw new IOException("Group config for world " + groupWorld + " cannot be written to.");
             return new YamlGroupStorage(new Configuration(userFile), groupWorld, delay, autosave);
         }
-    }
-
-    private StorageFactory() {
     }
 }

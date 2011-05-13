@@ -34,7 +34,7 @@ public class User extends Entry {
     }
 
     @Override
-    public LinkedHashSet<GroupWorld> getParents() {
+    public LinkedHashSet<GroupWorld> getRawParents() {
         return data.getParents(name);
     }
 
@@ -70,12 +70,12 @@ public class User extends Entry {
     
     public void demote(Group group, String track) {
         if(group==null) return;
-        if(!this.getParentGroups().contains(group)) return;
+        if(!this.getParents().contains(group)) return;
         GroupWorld prevRank = group.getPrevRank(track);
         if(prevRank == null) return;
         
         this.removeParent(group);
-        if(this.getParents().contains(prevRank)) return;
+        if(this.getRawParents().contains(prevRank)) return;
         Group prev = controller.getGroupObject(prevRank.getWorld(), prevRank.getName());
         if(prev==null) return;
         this.addParent(prev);
@@ -83,11 +83,11 @@ public class User extends Entry {
     
     public void promote(Group group, String track) {
         if(group==null) return;
-        if(!this.getParentGroups().contains(group)) return;
+        if(!this.getParents().contains(group)) return;
         GroupWorld nextRank = group.getNextRank(track);
         if(nextRank==null)return;
         this.removeParent(group);
-        if(this.getParents().contains(nextRank)) return;
+        if(this.getRawParents().contains(nextRank)) return;
         Group prev = controller.getGroupObject(nextRank.getWorld(), nextRank.getName());
         if (prev == null)
             return;

@@ -340,7 +340,7 @@ public class Permissions extends JavaPlugin {
                             Messaging.send("&4[Permissions] You do not have permissions to use this command.");
                             return true;
                         }
-                        LinkedHashSet<GroupWorld> parents = entry.getParents();
+                        LinkedHashSet<GroupWorld> parents = entry.getRawParents();
                         String text = "&7[Permissions]&b Parents: &c";
                         if (parents == null || parents.isEmpty()) {
                             text = "&4[Permissions] User/Group has no parents.";
@@ -367,7 +367,7 @@ public class Permissions extends JavaPlugin {
                             if (args.length > (++currentArg)) {
                                 parentWorld = args[currentArg];
                             }
-                            LinkedHashSet<GroupWorld> parents = entry.getParents();
+                            LinkedHashSet<GroupWorld> parents = entry.getRawParents();
                             if (add && parents.contains(new GroupWorld(parentWorld, parentName)))
                                 text = "&4[Permissions] User/Group already has that parent.";
                             if (!add && !parents.contains(new GroupWorld(parentWorld, parentName)))
