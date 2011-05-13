@@ -35,7 +35,7 @@ public class SqlGroupStorage implements GroupStorage {
 
     private static final String getGroupText = "SELECT * FROM PrGroups WHERE PrGroups.worldid = ? AND PrGroups.gid = ?;";
     PreparedStatement getGroupStmt;
-    private static final String getGroupsText = "SELECT * FROM PrGroups WHERE PrGroups.worldid = ? AND PrGroups.gid = ?;";
+    private static final String getGroupsText = "SELECT * FROM PrGroups WHERE PrGroups.worldid = ?;";
     PreparedStatement getGroupsStmt;
     private static final String getBaseText = "SELECT PrGroups.groupname FROM PrWorldBase, PrGroups WHERE PrWorldBase.worldid = ? AND PrGroups.worldid = ? AND PrWorldBase.defaultid = PrGroups.gid;";
     PreparedStatement getBaseStmt;
