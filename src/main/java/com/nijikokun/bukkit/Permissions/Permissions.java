@@ -285,6 +285,18 @@ public class Permissions extends JavaPlugin {
             } else if (entry == null) {
                 Messaging.send("&4[Permissions] User/Group does not exist.");
                 return true;
+            } else if (args[currentArg].equalsIgnoreCase("has")) {
+                currentArg++;
+                if (player != null && !Security.has(player, "permissions.has")) {
+                    Messaging.send("&4[Permissions] You do not have permissions to use this command.");
+                    return true;
+                }
+                if(args.length > currentArg) {
+                    String permission = args[currentArg];
+                    boolean has = entry.hasPermission(permission);
+                    Messaging.send("&7[Permissions]&b User/Group " + (has ? "has" : "does not have") + " that permission.");
+                    return true;
+                }
             } else if (args[currentArg].equalsIgnoreCase("perms")) {
                 currentArg++;
                 if (args.length > currentArg) {

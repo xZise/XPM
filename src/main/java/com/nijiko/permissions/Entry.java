@@ -158,7 +158,7 @@ public abstract class Entry {
         LinkedHashSet<Entry> parents = new LinkedHashSet<Entry>();
         if(global != null) parents.add(global);
         parents.addAll(groupParents);
-        return null;
+        return parents;
     }
 
     public int getWeight() {
