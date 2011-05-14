@@ -212,7 +212,8 @@ public class ModularControl extends PermissionHandler {
         Group g = this.getGroupObject(world, group);
         if (g == null)
             return "";
-        return g.getPrefix();
+        String prefix = g.getPrefix();
+        return prefix == null ? "" : prefix;
     }
 
     @Override
@@ -221,7 +222,8 @@ public class ModularControl extends PermissionHandler {
         Group g = this.getGroupObject(world, group);
         if (g == null)
             return "";
-        return g.getSuffix();
+        String suffix = g.getSuffix();
+        return suffix == null ? "" : suffix;
     }
 
     @Override
@@ -327,7 +329,7 @@ public class ModularControl extends PermissionHandler {
     public User getUserObject(String world, String name) {
         world = getParentWorldUser(world);
         if (WorldUsers.get(world) == null)
-            return null;
+            return world.equals("*") ? null : getUserObject("*", name);
         return WorldUsers.get(world).get(name.toLowerCase());
     }
 
@@ -335,7 +337,7 @@ public class ModularControl extends PermissionHandler {
     public Group getGroupObject(String world, String name) {
         world = getParentWorldGroup(world);
         if (WorldGroups.get(world) == null)
-            return null;
+            return world.equals("*") ? null : getGroupObject("*", name);
         return WorldGroups.get(world).get(name.toLowerCase());
     }
 
@@ -538,14 +540,13 @@ public class ModularControl extends PermissionHandler {
     }
 
     public String getParentWorldGroup(String world) {
-        if (WorldGroupStorageCopy.get(world) != null)
+        if (!world.equals("*")&&WorldGroupStorageCopy.get(world) != null)
             return WorldGroupStorageCopy.get(world);
         return world;
     }
 
     public String getParentWorldUser(String world) {
-
-        if (WorldUserStorageCopy.get(world) != null)
+        if (!world.equals("*")&&WorldUserStorageCopy.get(world) != null)
             world = WorldUserStorageCopy.get(world);
         return world;
     }

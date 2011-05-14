@@ -24,8 +24,8 @@ public abstract class SqlStorage {
     private static Map<String, Integer> worldMap = new HashMap<String, Integer>();
     private static List<String> create = new ArrayList<String>(8);
     static final String getWorld = "SELECT PrWorlds.worldid FROM PrWorlds WHERE PrWorlds.worldname = '?';";
-    static final String getUser = "SELECT userid FROM PrUsers WHERE PrUsers.worldid = ? AND PrUsers.username = '?';";
-    static final String getGroup = "SELECT * FROM PrGroups WHERE PrGroups.worldid = ? AND PrGroups.groupname = '?';";
+    static final String getUser = "SELECT uid FROM PrUsers WHERE PrUsers.worldid = ? AND PrUsers.username = '?';";
+    static final String getGroup = "SELECT gid FROM PrGroups WHERE PrGroups.worldid = ? AND PrGroups.groupname = '?';";
     static final String createWorld = "INSERT INTO PrWorlds (worldname) VALUES ('?');";
     static final String createUser = "INSERT INTO PrUsers (worldid,username) VALUES (?,'?');";
     static final String createGroup = "INSERT INTO PrGroups (worldid, groupname, prefix, suffix) VALUES (?,'?', '','', 0,0);";
