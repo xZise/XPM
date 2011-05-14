@@ -116,7 +116,7 @@ public class SqlUserStorage implements UserStorage {
             return new LinkedHashSet<GroupWorld>();
         }
         userParents.put(name, parents);
-        return null;
+        return parents;
     }
 
     @Override

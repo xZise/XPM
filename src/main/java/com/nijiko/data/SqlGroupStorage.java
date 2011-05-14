@@ -218,7 +218,7 @@ public class SqlGroupStorage implements GroupStorage {
             return new LinkedHashSet<GroupWorld>();
         }
         groupParents.put(name, parents);
-        return null;
+        return parents;
     }
 
     @Override

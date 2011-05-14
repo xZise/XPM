@@ -521,6 +521,8 @@ public abstract class PermissionHandler {
 
     public abstract int compareWeights(String world, String first, String second);
 
+    public abstract void closeAll();
+
 
 
 }

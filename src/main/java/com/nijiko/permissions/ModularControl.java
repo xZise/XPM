@@ -13,6 +13,7 @@ import org.bukkit.util.config.Configuration;
 
 import com.nijiko.data.GroupStorage;
 import com.nijiko.data.GroupWorld;
+import com.nijiko.data.SqlStorage;
 import com.nijiko.data.StorageFactory;
 import com.nijiko.data.UserStorage;
 
@@ -28,6 +29,11 @@ public class ModularControl extends PermissionHandler {
     // private Configuration storageConfig;
     private String defaultWorld = "";
 
+    @Override
+    public void closeAll() {
+        this.saveAll();
+        SqlStorage.closeAll();
+    }
     public ModularControl(Configuration storageConfig) {
         // this.storageConfig = storageConfig;
         StorageFactory.setConfig(storageConfig);

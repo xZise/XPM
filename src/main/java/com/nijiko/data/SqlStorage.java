@@ -9,6 +9,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import javax.sql.DataSource;
+
 import org.sqlite.SQLiteDataSource;
 
 import com.mysql.jdbc.jdbc2.optional.MysqlDataSource;
@@ -28,7 +29,7 @@ public abstract class SqlStorage {
     static final String getGroup = "SELECT gid FROM PrGroups WHERE PrGroups.worldid = ? AND PrGroups.groupname = '?';";
     static final String createWorld = "INSERT INTO PrWorlds (worldname) VALUES ('?');";
     static final String createUser = "INSERT INTO PrUsers (worldid,username) VALUES (?,'?');";
-    static final String createGroup = "INSERT INTO PrGroups (worldid, groupname, prefix, suffix) VALUES (?,'?', '','', 0,0);";
+    static final String createGroup = "INSERT INTO PrGroups (worldid, groupname, prefix, suffix, build, weight) VALUES (?,'?', '','', 0,0);";
 
     static {
         create.add("CREATE TABLE IF NOT EXISTS PrWorlds (" + " worldid INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT," + " worldname VARCHAR(32) NOT NULL UNIQUE" + ")");
@@ -206,7 +207,7 @@ public abstract class SqlStorage {
         return sgs;
     }
 
-    synchronized static void closeAll() {
+    public synchronized static void closeAll() {
         try {
             for (SqlUserStorage sus : userStores.values()) {
                 sus.close();

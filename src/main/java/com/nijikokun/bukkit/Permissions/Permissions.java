@@ -117,7 +117,7 @@ public class Permissions extends JavaPlugin {
     @Override
     public void onDisable() {
         // Addition by rcjrrjcr
-        Security.saveAll();
+        Security.closeAll();
         log.info("[Permissions] (" + codename + ") saved all data.");
         // End of addition by rcjrrjcr
 
