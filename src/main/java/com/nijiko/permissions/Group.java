@@ -141,23 +141,23 @@ public class Group extends Entry {
     }
 
     @Override
-    public String getRawString(String path) {
-        return data.getString(name,path);
+    public String getRawString(String path, String def) {
+        return data.getString(name,path,def);
     }
 
     @Override
-    public int getRawInt(String path) {
-        return data.getInt(name, path);
+    public int getRawInt(String path, int def) {
+        return data.getInt(name, path, def);
     }
 
     @Override
-    public boolean getRawBool(String path) {
-        return data.getBool(name, path);
+    public boolean getRawBool(String path, boolean def) {
+        return data.getBool(name, path, def);
     }
 
     @Override
-    public double getRawDouble(String path) {
-        return data.getDouble(name, path);
+    public double getRawDouble(String path, double def) {
+        return data.getDouble(name, path, def);
     }
 
     @Override

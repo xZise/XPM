@@ -30,6 +30,9 @@ public abstract class SqlStorage {
     static final String createWorld = "INSERT INTO PrWorlds (worldname) VALUES ('?');";
     static final String createUser = "INSERT INTO PrUsers (worldid,username) VALUES (?,'?');";
     static final String createGroup = "INSERT INTO PrGroups (worldid, groupname, prefix, suffix, build, weight) VALUES (?,'?', '','', 0,0);";
+    static final String getWorldName = "SELECT worldname FROM PrWorlds WHERE worldid = ?;";
+    static final String getUserName = "SELECT username FROM PrUsers WHERE PrUsers.worldid = ? AND PrUsers.uid = ?;";
+    static final String getGroupName = "SELECT groupname FROM PrGroups WHERE PrGroups.worldid = ? AND PrGroups.gid = ?;";
 
     static {
         create.add("CREATE TABLE IF NOT EXISTS PrWorlds (" + " worldid INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT," + " worldname VARCHAR(32) NOT NULL UNIQUE" + ")");
@@ -189,6 +192,46 @@ public abstract class SqlStorage {
         return id;
     }
 
+    static String getWorldName(int id) throws SQLException {
+        Connection dbConn = getConnection();
+        Statement stmt = dbConn.createStatement();
+        String query = getWorldName.replace("?", String.valueOf(id));
+        ResultSet rs = stmt.executeQuery(query);
+        rs.next(); //TODO: What if there are no results? Same for getUserName and getGroupName
+        String name = rs.getString(1);
+        worldMap.put(name, id);
+        rs.close();
+        stmt.close();
+        dbConn.close();
+        return name;
+    }
+
+    static String getUserName(int worldid, int uid) throws SQLException {
+        Connection dbConn = getConnection();
+        Statement stmt = dbConn.createStatement();
+        String query = getUserName.replaceFirst("\\?", String.valueOf(worldid));
+        query = query.replaceFirst("\\?", String.valueOf(uid));
+        ResultSet rs = stmt.executeQuery(query);
+        rs.next();
+        String name = rs.getString(1);
+        rs.close();
+        stmt.close();
+        dbConn.close();
+        return name;
+    }
+    static String getGroupName(int worldid, int gid) throws SQLException {
+        Connection dbConn = getConnection();
+        Statement stmt = dbConn.createStatement();
+        String query = getGroupName.replaceFirst("\\?", String.valueOf(worldid));
+        query = query.replaceFirst("\\?", String.valueOf(gid));
+        ResultSet rs = stmt.executeQuery(query);
+        rs.next();
+        String name = rs.getString(1);
+        rs.close();
+        stmt.close();
+        dbConn.close();
+        return name;
+    }
     static SqlUserStorage getUserStorage(String world) throws SQLException {
         if (userStores.containsKey(world)) {
             return userStores.get(world);

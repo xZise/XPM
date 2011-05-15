@@ -102,7 +102,7 @@ public class SqlGroupStorage implements GroupStorage {
                 groupIds.put(name, gid);
             getGroupStmt.setInt(1, worldId);
             getGroupStmt.setInt(2, gid);
-            ResultSet rs = permGetStmt.executeQuery();
+            ResultSet rs = getGroupStmt.executeQuery();
             rs.next();
             build = (rs.getByte(6) != 0);
 
@@ -210,7 +210,11 @@ public class SqlGroupStorage implements GroupStorage {
             parentGetStmt.setInt(1, gid);
             ResultSet rs = parentGetStmt.executeQuery();
             while (rs.next()) {
-                GroupWorld gw = new GroupWorld(rs.getString(1), rs.getString(2));
+                int worldid = rs.getInt(1);
+                int groupid = rs.getInt(2);
+                String worldName = SqlStorage.getWorldName(worldid);
+                String groupName = SqlStorage.getGroupName(worldid, groupid);
+                GroupWorld gw = new GroupWorld(worldName, groupName);
                 parents.add(gw);
             }
         } catch (SQLException e) {
@@ -571,7 +575,7 @@ public class SqlGroupStorage implements GroupStorage {
     }
 
     @Override
-    public String getString(String name, String path) {
+    public String getString(String name, String path, String def) {
         if (groupData.get(name) == null)
             groupData.put(name, new HashMap<String, String>());
         String data = groupData.get(name).get(path);
@@ -586,47 +590,47 @@ public class SqlGroupStorage implements GroupStorage {
             dataGetStmt.setString(2, path);
             ResultSet rs = dataGetStmt.executeQuery();
             if (!rs.next())
-                data = "";
+                data = def;
             else {
                 data = rs.getString(1);
             }
         } catch (SQLException e) {
             e.printStackTrace();
-            data = "";
+            data = def;
         }
         if (data == null)
-            data = "";
+            data = def;
         groupData.get(name).put(path, data);
         return data;
     }
 
     @Override
-    public int getInt(String name, String path) {
-        String raw = getString(name, path);
+    public int getInt(String name, String path, int def) {
+        String raw = getString(name, path, String.valueOf(def));
         int value;
         try {
             value = Integer.valueOf(raw);
         } catch (NumberFormatException e) {
-            value = -1;
+            value = def;
         }
         return value;
     }
 
     @Override
-    public double getDouble(String name, String path) {
-        String raw = getString(name, path);
+    public double getDouble(String name, String path, double def) {
+        String raw = getString(name, path, String.valueOf(def));
         double value;
         try {
             value = Double.valueOf(raw);
         } catch (NumberFormatException e) {
-            value = -1.0D;
+            value = def;
         }
         return value;
     }
 
     @Override
-    public boolean getBool(String name, String path) {
-        String raw = getString(name, path);
+    public boolean getBool(String name, String path, boolean def) {
+        String raw = getString(name, path,String.valueOf(def));
         boolean value;
         try {
             value = Boolean.valueOf(raw);

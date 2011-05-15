@@ -227,9 +227,9 @@ public class YamlUserStorage implements UserStorage {
     }
 
     @Override
-    public String getString(String name, String path) {
+    public String getString(String name, String path, String def) {
         rwl.readLock().lock();
-        String data = userConfig.getString("users."+name+".info."+path,"");
+        String data = userConfig.getString("users."+name+".info."+path, def);
         userConfig.save();
         rwl.readLock().unlock();
         return data;
@@ -254,27 +254,27 @@ public class YamlUserStorage implements UserStorage {
     }
 
     @Override
-    public int getInt(String name, String path) {
+    public int getInt(String name, String path, int def) {
         rwl.readLock().lock();
-        int data = userConfig.getInt("users."+name+".info."+path , -1);
+        int data = userConfig.getInt("users."+name+".info."+path , def);
         userConfig.save();
         rwl.readLock().unlock();
         return data;
     }
 
     @Override
-    public double getDouble(String name, String path) {
+    public double getDouble(String name, String path, double def) {
         rwl.readLock().lock();
-        double data = userConfig.getDouble("users."+name+".info."+path , -1.0D);
+        double data = userConfig.getDouble("users."+name+".info."+path , def);
         userConfig.save();
         rwl.readLock().unlock();
         return data;
     }
 
     @Override
-    public boolean getBool(String name, String path) {
+    public boolean getBool(String name, String path, boolean def) {
         rwl.readLock().lock();
-        boolean data = userConfig.getBoolean("users."+name+".info."+path , false);
+        boolean data = userConfig.getBoolean("users."+name+".info."+path , def);
         userConfig.save();
         rwl.readLock().unlock();
         return data;

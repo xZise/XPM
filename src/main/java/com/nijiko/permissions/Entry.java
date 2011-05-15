@@ -300,17 +300,17 @@ public abstract class Entry {
 
     public abstract void setData(String path, Object data);
 
-    public abstract String getRawString(String path);
+    public abstract String getRawString(String path, String def);
 
-    public abstract int getRawInt(String path);
+    public abstract int getRawInt(String path, int def);
 
-    public abstract boolean getRawBool(String path);
+    public abstract boolean getRawBool(String path, boolean def);
 
-    public abstract double getRawDouble(String path);
+    public abstract double getRawDouble(String path, double def);
 
     public abstract void removeData(String path);
 
-    protected interface GroupValue<T> {
+    public interface GroupValue<T> {
         /**
          * Checks for appropriate conditions
          * 
@@ -325,14 +325,17 @@ public abstract class Entry {
     }
 
     public int getInt(final String path, Comparator<Integer> comparator) {
+        return getInt(path,comparator,-1);
+    }
+    public int getInt(final String path, Comparator<Integer> comparator, final int def) {
         Integer value = this.recursiveCheck(new HashSet<Entry>(), new GroupValue<Integer>(){
             @Override
             public Integer value(Group g) {
-                int value = g.getRawInt(path);
+                int value = g.getRawInt(path, def);
                 if(value != -1) return value;
                 return null;
             }}, comparator);
-        return value == null ? -1 : value;
+        return value == null ? def : value;
     }
     
 
@@ -342,14 +345,17 @@ public abstract class Entry {
     }
 
     public double getDouble(final String path, Comparator<Double> comparator) {
+        return getDouble(path,comparator,-1.0d);
+    }
+    public double getDouble(final String path, Comparator<Double> comparator, final double def) {
         Double value = this.recursiveCheck(new HashSet<Entry>(), new GroupValue<Double>(){
             @Override
             public Double value(Group g) {
-                double value = g.getRawDouble(path);
+                double value = g.getRawDouble(path, def);
                 if(value != -1.0D) return value;
                 return null;
             }}, comparator);
-        return value == null ? -1.0D : value;
+        return value == null ? def : value;
     }
     
     public boolean getBool(String path) {
@@ -357,14 +363,18 @@ public abstract class Entry {
     }
 
     public boolean getBool(final String path, Comparator<Boolean> comparator) {
+        return getBool(path,comparator,false);
+    }
+
+    public boolean getBool(final String path, Comparator<Boolean> comparator, final boolean def) {
         Boolean value = this.recursiveCheck(new HashSet<Entry>(), new GroupValue<Boolean>(){
             @Override
             public Boolean value(Group g) {
-                boolean value = g.getRawBool(path);
+                boolean value = g.getRawBool(path, def);
                 if(value) return value;
                 return null;
             }}, comparator);
-        return value == null ? false : value;
+        return value == null ? def : value;
     }
 
     public String getString(String path) {
@@ -372,18 +382,22 @@ public abstract class Entry {
     }
 
     public String getString(final String path, Comparator<String> comparator) {
+        return getString(path,comparator,"");
+    }
+
+    public String getString(final String path, Comparator<String> comparator, final String def) {
         String value = this.recursiveCheck(new HashSet<Entry>(), new GroupValue<String>(){
             @Override
             public String value(Group g) {
-                String value = g.getRawString(path);
+                String value = g.getRawString(path, def);
                 if(!value.isEmpty()) return value;
                 return null;
             }}, comparator);
-        return value == null ? "" : value;
+        return value == null ? def : value;
     }
     
     //And now to showcase how insane Java generics can get
-    protected static class SimpleComparator<T extends Comparable<T>> implements Comparator<T> {
+    public static class SimpleComparator<T extends Comparable<T>> implements Comparator<T> {
         @Override
         public int compare(T o1, T o2) {
             if(o1 == null) {

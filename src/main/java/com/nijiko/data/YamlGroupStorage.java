@@ -272,9 +272,9 @@ public class YamlGroupStorage implements GroupStorage {
     //TODO: Add setWeight()
     
     @Override
-    public String getString(String name, String path) {
+    public String getString(String name, String path, String def) {
         rwl.readLock().lock();
-        String data = groupConfig.getString("groups."+name+".info."+path, "");
+        String data = groupConfig.getString("groups."+name+".info."+path, def);
         groupConfig.save();
         rwl.readLock().unlock();
         return data;
@@ -331,27 +331,27 @@ public class YamlGroupStorage implements GroupStorage {
 
 
     @Override
-    public int getInt(String name, String path) {
+    public int getInt(String name, String path, int def) {
         rwl.readLock().lock();
-        int data = groupConfig.getInt("groups."+name+".info."+path , -1);
+        int data = groupConfig.getInt("groups."+name+".info."+path , def);
         groupConfig.save();
         rwl.readLock().unlock();
         return data;
     }
 
     @Override
-    public double getDouble(String name, String path) {
+    public double getDouble(String name, String path, double def) {
         rwl.readLock().lock();
-        double data = groupConfig.getDouble("groups."+name+".info."+path , -1.0D);
+        double data = groupConfig.getDouble("groups."+name+".info."+path , def);
         groupConfig.save();
         rwl.readLock().unlock();
         return data;
     }
 
     @Override
-    public boolean getBool(String name, String path) {
+    public boolean getBool(String name, String path, boolean def) {
         rwl.readLock().lock();
-        boolean data = groupConfig.getBoolean("groups."+name+".info."+path , false);
+        boolean data = groupConfig.getBoolean("groups."+name+".info."+path , def);
         groupConfig.save();
         rwl.readLock().unlock();
         return data;

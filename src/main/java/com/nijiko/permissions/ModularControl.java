@@ -437,7 +437,7 @@ public class ModularControl extends PermissionHandler {
         Group g = this.getGroupObject(world, group);
         if (g == null)
             return null;
-        return g.getRawString(path);
+        return g.getRawString(path, "");
     }
 
     @Override
@@ -445,7 +445,7 @@ public class ModularControl extends PermissionHandler {
         Group g = this.getGroupObject(world, group);
         if (g == null)
             return 0;
-        return g.getRawInt(path);
+        return g.getRawInt(path, -1);
     }
 
     @Override
@@ -453,7 +453,7 @@ public class ModularControl extends PermissionHandler {
         Group g = this.getGroupObject(world, group);
         if (g == null)
             return false;
-        return g.getRawBool(path);
+        return g.getRawBool(path, false);
     }
 
     @Override
@@ -461,7 +461,7 @@ public class ModularControl extends PermissionHandler {
         Group g = this.getGroupObject(world, group);
         if (g == null)
             return 0D;
-        return g.getRawDouble(path);
+        return g.getRawDouble(path, -1.0d);
     }
 
     @Override
@@ -469,7 +469,7 @@ public class ModularControl extends PermissionHandler {
         User u = this.getUserObject(world, name);
         if (u == null)
             return null;
-        return u.getRawString(path);
+        return u.getRawString(path, "");
     }
 
     @Override
@@ -477,7 +477,7 @@ public class ModularControl extends PermissionHandler {
         User u = this.getUserObject(world, name);
         if (u == null)
             return 0;
-        return u.getRawInt(path);
+        return u.getRawInt(path, -1);
     }
 
     @Override
@@ -485,7 +485,7 @@ public class ModularControl extends PermissionHandler {
         User u = this.getUserObject(world, name);
         if (u == null)
             return false;
-        return u.getRawBool(path);
+        return u.getRawBool(path, false);
     }
 
     @Override
@@ -493,7 +493,7 @@ public class ModularControl extends PermissionHandler {
         User u = this.getUserObject(world, name);
         if (u == null)
             return 0D;
-        return u.getRawDouble(path);
+        return u.getRawDouble(path, -1.0d);
     }
 
     @Override
