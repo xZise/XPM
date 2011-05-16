@@ -159,7 +159,6 @@ public class SqlUserStorage implements UserStorage {
             int gid = SqlStorage.getGroup(groupWorld, groupName);
             parentAddStmt.setInt(1, uid);
             parentAddStmt.setInt(2, gid);
-            System.out.println(parentAddStmt.executeUpdate());
         } catch (SQLException e) {
             e.printStackTrace();
         }
