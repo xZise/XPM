@@ -10,15 +10,14 @@ import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
 
+import com.nijiko.data.SqlStorage.NameWorldId;
+
 
 public class SqlUserStorage implements UserStorage {
 
     private final String userWorld;
     private int worldId;
     private Map<String, Integer> userIds = new HashMap<String, Integer>();
-    private Map<String, Set<String>> userPermissions = new HashMap<String, Set<String>>();
-    private Map<String, LinkedHashSet<GroupWorld>> userParents = new HashMap<String, LinkedHashSet<GroupWorld>>();
-    private Map<String, Map<String, String>> userData = new HashMap<String, Map<String, String>>();
     private Connection dbConn;
 
     private static final String permGetText = "SELECT PrUserPermissions.permstring FROM PrUserPermissions WHERE PrUserPermissions.uid = ?;";
@@ -27,26 +26,22 @@ public class SqlUserStorage implements UserStorage {
     PreparedStatement parentGetStmt;
 
 
-    private static final String permAddText = "INSERT INTO PrUserPermissions (uid, permstring) VALUES (?,?);";
+    private static final String permAddText = "INSERT IGNORE INTO PrUserPermissions (uid, permstring) VALUES (?,?);";
     PreparedStatement permAddStmt;
     private static final String permRemText = "DELETE FROM PrUserPermissions WHERE uid = ? AND permstring = ?;";
     PreparedStatement permRemStmt;
-    private static final String parentAddText = "INSERT INTO PrUserInheritance (childid, parentid) VALUES (?,?);";
+    private static final String parentAddText = "INSERT IGNORE INTO PrUserInheritance (childid, parentid) VALUES (?,?);";
     PreparedStatement parentAddStmt;
     private static final String parentRemText = "DELETE FROM PrUserInheritance WHERE childid = ? AND parentid = ?;";
     PreparedStatement parentRemStmt;
 
     private static final String userListText = "SELECT username, uid FROM PrUsers WHERE worldid = ?;";
     PreparedStatement userListStmt;
-    private static final String userAddText = "INSERT INTO PrUsers (worldid,username) VALUES (?,?);";
-    PreparedStatement userAddStmt;
     
     private static final String dataGetText = "SELECT * FROM PrUserData WHERE uid = ? AND path = ?;";
     PreparedStatement dataGetStmt;
-    private static final String dataAddText = "INSERT INTO PrUserData (data, uid, path) VALUES (?,?,?);";
-    PreparedStatement dataAddStmt;
-    private static final String dataEditText = "UPDATE PrUserData SET data = ? WHERE uid = ? AND path = ?;";
-    PreparedStatement dataEditStmt;
+    private static final String dataModText = "REPLACE INTO PrUserData (data, uid, path) VALUES (?,?,?);";
+    PreparedStatement dataModStmt;
     private static final String dataDelText = "DELETE FROM PrUserData WHERE uid = ? AND path = ?;";
     PreparedStatement dataDelStmt;
     
@@ -60,10 +55,7 @@ public class SqlUserStorage implements UserStorage {
     public Set<String> getPermissions(String name) {
         if (name == null)
             return new HashSet<String>();
-        Set<String> permissions = userPermissions.get(name);
-        if (permissions != null)
-            return permissions;
-        permissions = new HashSet<String>();
+        Set<String> permissions = new HashSet<String>();
 
 
         try {
@@ -84,7 +76,6 @@ public class SqlUserStorage implements UserStorage {
             return new HashSet<String>();
         }
 
-        userPermissions.put(name, permissions);
         return permissions;
     }
 
@@ -92,10 +83,7 @@ public class SqlUserStorage implements UserStorage {
     public LinkedHashSet<GroupWorld> getParents(String name) {
         if (name == null)
             return new LinkedHashSet<GroupWorld>();
-        LinkedHashSet<GroupWorld> parents = userParents.get(name);
-        if (parents != null)
-            return parents;
-        parents = new LinkedHashSet<GroupWorld>();
+        LinkedHashSet<GroupWorld> parents = new LinkedHashSet<GroupWorld>();
 
         try {
             parentGetStmt.clearParameters();
@@ -108,30 +96,21 @@ public class SqlUserStorage implements UserStorage {
             parentGetStmt.setInt(1, uid);
             ResultSet rs = parentGetStmt.executeQuery();
             while (rs.next()) {
-                int worldid = rs.getInt(1);
                 int groupid = rs.getInt(2);
-                String worldName = SqlStorage.getWorldName(worldid);
-                String groupName = SqlStorage.getGroupName(worldid, groupid);
-                GroupWorld gw = new GroupWorld(worldName, groupName);
+                NameWorldId nw = SqlStorage.getGroupName(groupid);
+                String worldName = SqlStorage.getWorldName(nw.worldid);
+                GroupWorld gw = new GroupWorld(worldName, nw.name);
                 parents.add(gw);
             }
         } catch (SQLException e) {
             e.printStackTrace();
             return new LinkedHashSet<GroupWorld>();
         }
-        userParents.put(name, parents);
         return parents;
     }
 
     @Override
     public void addPermission(String name, String permission) {
-        if (userPermissions.get(name) == null)
-            userPermissions.put(name, new HashSet<String>());
-        Set<String> perms = userPermissions.get(name);
-        if (perms.contains(permission))
-            return;
-        perms.add(permission);
-
         try {
             permAddStmt.clearParameters();
             int uid = 0;
@@ -150,12 +129,6 @@ public class SqlUserStorage implements UserStorage {
 
     @Override
     public void removePermission(String name, String permission) {
-        if (userPermissions.get(name) == null)
-            userPermissions.put(name, new LinkedHashSet<String>());
-        Set<String> perms = userPermissions.get(name);
-        if (!perms.contains(permission))
-            return;
-        perms.remove(permission);
         try {
             permRemStmt.clearParameters();
             int uid = 0;
@@ -174,12 +147,7 @@ public class SqlUserStorage implements UserStorage {
 
     @Override
     public void addParent(String name, String groupWorld, String groupName) {
-        if (userParents.get(name) == null)
-            userParents.put(name, new LinkedHashSet<GroupWorld>());
-        Set<GroupWorld> parents = userParents.get(name);
-        if (parents.contains(groupWorld))
-            return;
-        parents.add(new GroupWorld(groupWorld, groupName));
+        System.out.println("Adding parent " + groupName + " in "+ groupWorld);
         try {
             parentAddStmt.clearParameters();
             int uid = 0;
@@ -191,7 +159,7 @@ public class SqlUserStorage implements UserStorage {
             int gid = SqlStorage.getGroup(groupWorld, groupName);
             parentAddStmt.setInt(1, uid);
             parentAddStmt.setInt(2, gid);
-            parentAddStmt.executeUpdate();
+            System.out.println(parentAddStmt.executeUpdate());
         } catch (SQLException e) {
             e.printStackTrace();
         }
@@ -200,12 +168,7 @@ public class SqlUserStorage implements UserStorage {
 
     @Override
     public void removeParent(String name, String groupWorld, String groupName) {
-        if (userParents.get(name) == null)
-            userParents.put(name, new LinkedHashSet<GroupWorld>());
-        Set<GroupWorld> parents = userParents.get(name);
-        if (parents.contains(groupWorld))
-            return;
-        parents.remove(new GroupWorld(groupWorld, groupName));
+        System.out.println("Removing parent " + groupName + " in "+ groupWorld);
         try {
             parentRemStmt.clearParameters();
             int uid = 0;
@@ -258,25 +221,21 @@ public class SqlUserStorage implements UserStorage {
 
     @Override
     public void reload() {
-        userPermissions.clear();
-        userParents.clear();
         userIds.clear();
-        userData.clear();
         try {
-            close();
+//            close();
+            Dbms dbms = SqlStorage.getDbms();
             worldId = SqlStorage.getWorld(userWorld);
             dbConn = SqlStorage.getConnection();
             permGetStmt = dbConn.prepareStatement(permGetText);
             parentGetStmt = dbConn.prepareStatement(parentGetText);
-            permAddStmt = dbConn.prepareStatement(permAddText);
+            permAddStmt = dbConn.prepareStatement((dbms==Dbms.SQLITE ? permAddText.replace("IGNORE", "OR IGNORE") : permAddText));
             permRemStmt = dbConn.prepareStatement(permRemText);
-            parentAddStmt = dbConn.prepareStatement(parentAddText);
-            parentAddStmt = dbConn.prepareStatement(parentRemText);
+            parentAddStmt = dbConn.prepareStatement((dbms==Dbms.SQLITE ? parentAddText.replace("IGNORE", "OR IGNORE") : parentAddText));
+            parentRemStmt = dbConn.prepareStatement(parentRemText);
             userListStmt = dbConn.prepareStatement(userListText);
-            userAddStmt = dbConn.prepareStatement(userAddText);
-            dataAddStmt = dbConn.prepareStatement(dataAddText);
+            dataModStmt = dbConn.prepareStatement(dataModText);
             dataDelStmt = dbConn.prepareStatement(dataDelText);
-            dataEditStmt = dbConn.prepareStatement(dataEditText);
             dataGetStmt = dbConn.prepareStatement(dataGetText);
         } catch (SQLException e) {
             e.printStackTrace();
@@ -310,9 +269,7 @@ public class SqlUserStorage implements UserStorage {
 
     @Override
     public String getString(String name, String path, String def) {
-        if(userData.get(name)==null)userData.put(name, new HashMap<String, String>());
-        String data = userData.get(name).get(path);
-        if(data != null) return data;
+        String data = def;
         try {
             int uid = 0;
             if(userIds.containsKey(name)) uid = userIds.get(name);
@@ -333,7 +290,6 @@ public class SqlUserStorage implements UserStorage {
             data = def;
         }
         if(data == null) data = def;
-        userData.get(name).put(path, data);
         return data;
     }
 
@@ -387,8 +343,6 @@ public class SqlUserStorage implements UserStorage {
         } else {
             throw new IllegalArgumentException("Only ints, bools, doubles and Strings are allowed!");
         }
-        if(userData.get(name)==null)userData.put(name, new HashMap<String, String>());
-        userData.get(name).put(path, szForm);
 
         try {
             int uid = 0;
@@ -397,17 +351,11 @@ public class SqlUserStorage implements UserStorage {
                 uid = SqlStorage.getUser(userWorld, name);
                 userIds.put(name, uid);
             }
-            dataGetStmt.clearParameters();
-            dataGetStmt.setInt(1, uid);
-            dataGetStmt.setString(2, path);
-            PreparedStatement addEdit;
-            if(dataGetStmt.executeQuery().next()) addEdit = dataEditStmt;
-            else addEdit = dataAddStmt;
-            addEdit.clearParameters();
-            addEdit.setString(1, szForm);
-            addEdit.setInt(2, uid);
-            addEdit.setString(3, path);
-            addEdit.executeUpdate();
+            dataModStmt.clearParameters();
+            dataModStmt.setString(1, szForm);
+            dataModStmt.setInt(2, uid);
+            dataModStmt.setString(3, path);
+            dataModStmt.executeUpdate();
         } catch (SQLException e) {
             e.printStackTrace();
             data = "";
@@ -416,10 +364,7 @@ public class SqlUserStorage implements UserStorage {
     }
 
     @Override
-    public void removeData(String name, String path) {
-        if(userData.get(name)==null)userData.put(name, new HashMap<String, String>());
-        userData.get(name).remove(path);
-        
+    public void removeData(String name, String path) {        
         try {
             int uid = 0;
             if(userIds.containsKey(name)) uid = userIds.get(name);
@@ -444,11 +389,9 @@ public class SqlUserStorage implements UserStorage {
         if(permAddStmt!=null)permAddStmt.close();
         if(permRemStmt!=null)permRemStmt.close();
         if(dataGetStmt!=null)dataGetStmt.close();
-        if(dataAddStmt!=null)dataAddStmt.close();
+        if(dataModStmt!=null)dataModStmt.close();
         if(dataDelStmt!=null)dataDelStmt.close();
-        if(dataEditStmt!=null)dataEditStmt.close();
         if(userListStmt!=null)userListStmt.close();
-        if(userAddStmt!=null)userAddStmt.close();
         if(dbConn!=null)dbConn.close();
     }
 

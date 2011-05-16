@@ -17,6 +17,7 @@ import com.nijikokun.bukkit.Permissions.Permissions;
 
 public abstract class SqlStorage {
 
+    private static Dbms dbms;
     private static DataSource dbSource;
     private static int reloadId;
     private static boolean init = false;
@@ -27,12 +28,12 @@ public abstract class SqlStorage {
     static final String getWorld = "SELECT PrWorlds.worldid FROM PrWorlds WHERE PrWorlds.worldname = '?';";
     static final String getUser = "SELECT uid FROM PrUsers WHERE PrUsers.worldid = ? AND PrUsers.username = '?';";
     static final String getGroup = "SELECT gid FROM PrGroups WHERE PrGroups.worldid = ? AND PrGroups.groupname = '?';";
-    static final String createWorld = "INSERT INTO PrWorlds (worldname) VALUES ('?');";
-    static final String createUser = "INSERT INTO PrUsers (worldid,username) VALUES (?,'?');";
-    static final String createGroup = "INSERT INTO PrGroups (worldid, groupname, prefix, suffix, build, weight) VALUES (?,'?', '','', 0,0);";
+    static final String createWorld = "INSERT IGNORE INTO PrWorlds (worldname) VALUES ('?');";
+    static final String createUser = "INSERT IGNORE INTO PrUsers (worldid,username) VALUES (?,'?');";
+    static final String createGroup = "INSERT IGNORE INTO PrGroups (worldid, groupname, prefix, suffix, build, weight) VALUES (?,'?', '','', 0,0);";
     static final String getWorldName = "SELECT worldname FROM PrWorlds WHERE worldid = ?;";
-    static final String getUserName = "SELECT username FROM PrUsers WHERE PrUsers.worldid = ? AND PrUsers.uid = ?;";
-    static final String getGroupName = "SELECT groupname FROM PrGroups WHERE PrGroups.worldid = ? AND PrGroups.gid = ?;";
+    static final String getUserName = "SELECT username, worldid FROM PrUsers WHERE uid = ?;";
+    static final String getGroupName = "SELECT groupname, worldid FROM PrGroups WHERE gid = ?;";
 
     static {
         create.add("CREATE TABLE IF NOT EXISTS PrWorlds (" + " worldid INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT," + " worldname VARCHAR(32) NOT NULL UNIQUE" + ")");
@@ -49,12 +50,14 @@ public abstract class SqlStorage {
         create.add("CREATE TABLE IF NOT EXISTS PrTrackGroups (" + " trackgroupid INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT," + " trackid INTEGER NOT NULL," + " gid INTEGER NOT NULL," + " groupOrder INTEGER NOT NULL," + " CONSTRAINT TrackGroupsUnique UNIQUE (trackid, gid)," + "FOREIGN KEY(trackid) REFERENCES PrTracks(trackid)," + "FOREIGN KEY(gid) REFERENCES PrGroups(gid)" + ")");
     }
 
+    static Dbms getDbms() {
+        return dbms;
+    }
     public static void init(String dbmsName, String uri, String username, String password, int reloadDelay) throws Exception {
         if (init) {
             return;
         }
         // SqlStorage.reloadDelay = reloadDelay;
-        Dbms dbms = null;
         try {
             dbms = Dbms.valueOf(dbmsName);
         } catch (IllegalArgumentException e) {
@@ -67,7 +70,7 @@ public abstract class SqlStorage {
             throw new Exception("Unable to load SQL driver!", e);
         }
         dbSource = dbms.getSource(username, password, uri);
-        verifyAndCreateTables(dbms);
+        verifyAndCreateTables();
         reloadId = Permissions.instance.getServer().getScheduler().scheduleAsyncRepeatingTask(Permissions.instance, new Runnable() {
 
             @Override
@@ -90,7 +93,7 @@ public abstract class SqlStorage {
         }
     }
 
-    private static void verifyAndCreateTables(Dbms dbms) throws SQLException {
+    private static void verifyAndCreateTables() throws SQLException {
         Connection dbConn = SqlStorage.dbSource.getConnection();
         Statement s = dbConn.createStatement();
         // Verify stuff
@@ -123,7 +126,7 @@ public abstract class SqlStorage {
         ResultSet rs = stmt.executeQuery(query);
         if (!rs.next()) {
             System.out.println("[Permissions] Creating world '" + name + "'.");
-            String addQuery = createWorld.replace("?", name);
+            String addQuery = (dbms==Dbms.SQLITE ? createWorld.replace("IGNORE", "OR IGNORE") : createWorld).replace("?", name);
             stmt.executeUpdate(addQuery);
             rs = stmt.executeQuery(query);
             rs.next();
@@ -152,7 +155,7 @@ public abstract class SqlStorage {
         ResultSet rs = stmt.executeQuery(query);
         if (!rs.next()) {
             System.out.println("[Permissions] Creating user '" + name + "' in world '" + world + "'.");
-            String addQuery = createUser.replaceFirst("\\?", String.valueOf(worldId)).replaceFirst("\\?", name);
+            String addQuery = (dbms==Dbms.SQLITE ? createUser.replace("IGNORE", "OR IGNORE") : createUser).replaceFirst("\\?", String.valueOf(worldId)).replaceFirst("\\?", name);
             stmt.executeUpdate(addQuery);
             rs = stmt.executeQuery(query);
             rs.next();
@@ -180,7 +183,7 @@ public abstract class SqlStorage {
         ResultSet rs = stmt.executeQuery(query);
         if (!rs.next()) {
             System.out.println("[Permissions] Creating group '" + name + "' in world '" + world + "'.");
-            String addQuery = createGroup.replaceFirst("\\?", String.valueOf(worldId)).replaceFirst("\\?", name);
+            String addQuery = (dbms==Dbms.SQLITE ? createGroup.replace("IGNORE", "OR IGNORE") : createGroup).replaceFirst("\\?", String.valueOf(worldId)).replaceFirst("\\?", name);
             stmt.executeUpdate(addQuery);
             rs = stmt.executeQuery(query);
             rs.next();
@@ -197,7 +200,9 @@ public abstract class SqlStorage {
         Statement stmt = dbConn.createStatement();
         String query = getWorldName.replace("?", String.valueOf(id));
         ResultSet rs = stmt.executeQuery(query);
-        rs.next(); //TODO: What if there are no results? Same for getUserName and getGroupName
+        if(!rs.next()) {
+            return "Error";
+        }
         String name = rs.getString(1);
         worldMap.put(name, id);
         rs.close();
@@ -206,31 +211,45 @@ public abstract class SqlStorage {
         return name;
     }
 
-    static String getUserName(int worldid, int uid) throws SQLException {
+    static NameWorldId getUserName(int uid) throws SQLException {
         Connection dbConn = getConnection();
         Statement stmt = dbConn.createStatement();
-        String query = getUserName.replaceFirst("\\?", String.valueOf(worldid));
-        query = query.replaceFirst("\\?", String.valueOf(uid));
+        String query = getUserName.replace("?", String.valueOf(uid));
         ResultSet rs = stmt.executeQuery(query);
-        rs.next();
+        NameWorldId nw = new NameWorldId();
+        if(!rs.next()) {
+            nw.name = "Error";
+            nw.worldid = -1;
+            return nw;
+        }
         String name = rs.getString(1);
+        int worldid = rs.getInt(2);
+        nw.name = name;
+        nw.worldid = worldid;
         rs.close();
         stmt.close();
         dbConn.close();
-        return name;
+        return nw;
     }
-    static String getGroupName(int worldid, int gid) throws SQLException {
+    static NameWorldId getGroupName(int gid) throws SQLException {
         Connection dbConn = getConnection();
         Statement stmt = dbConn.createStatement();
-        String query = getGroupName.replaceFirst("\\?", String.valueOf(worldid));
-        query = query.replaceFirst("\\?", String.valueOf(gid));
+        String query = getGroupName.replace("?", String.valueOf(gid));
         ResultSet rs = stmt.executeQuery(query);
-        rs.next();
+        NameWorldId nw = new NameWorldId();
+        if(!rs.next()) {
+            nw.name = "Error";
+            nw.worldid = -1;
+            return nw;
+        }
         String name = rs.getString(1);
+        int worldid = rs.getInt(2);
+        nw.name = name;
+        nw.worldid = worldid;
         rs.close();
         stmt.close();
         dbConn.close();
-        return name;
+        return nw;
     }
     static SqlUserStorage getUserStorage(String world) throws SQLException {
         if (userStores.containsKey(world)) {
@@ -264,6 +283,10 @@ public abstract class SqlStorage {
 
     static Connection getConnection() throws SQLException {
         return dbSource.getConnection();
+    }
+    public static class NameWorldId {
+        public int worldid;
+        public String name;
     }
 }
 

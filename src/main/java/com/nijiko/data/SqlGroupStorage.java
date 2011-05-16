@@ -11,6 +11,8 @@ import java.util.LinkedList;
 import java.util.Map;
 import java.util.Set;
 
+import com.nijiko.data.SqlStorage.NameWorldId;
+
 public class SqlGroupStorage implements GroupStorage {
 
     private int worldId;
@@ -18,14 +20,6 @@ public class SqlGroupStorage implements GroupStorage {
     private String baseGroup = null;
     private Map<String, Integer> groupIds = new HashMap<String, Integer>();
     private Set<String> buildGroups = new HashSet<String>();
-    private Map<String, Integer> groupWeights = new HashMap<String, Integer>();
-    private Map<String, String> groupPrefixes = new HashMap<String, String>();
-    private Map<String, String> groupSuffixes = new HashMap<String, String>();
-    private Map<String, Set<String>> groupPermissions = new HashMap<String, Set<String>>();
-    private Map<String, LinkedHashSet<GroupWorld>> groupParents = new HashMap<String, LinkedHashSet<GroupWorld>>();
-    private Set<String> trackSet = new HashSet<String>();
-    private HashMap<String, LinkedList<GroupWorld>> tracks = new HashMap<String, LinkedList<GroupWorld>>();
-    private Map<String, Map<String, String>> groupData = new HashMap<String, Map<String, String>>();
     private Connection dbConn;
 
     private static final String permGetText = "SELECT PrGroupPermissions.permstring FROM PrGroupPermissions WHERE PrGroupPermissions.gid = ?;";
@@ -40,26 +34,22 @@ public class SqlGroupStorage implements GroupStorage {
     private static final String getBaseText = "SELECT PrGroups.groupname FROM PrWorldBase, PrGroups WHERE PrWorldBase.worldid = ? AND PrGroups.worldid = ? AND PrWorldBase.defaultid = PrGroups.gid;";
     PreparedStatement getBaseStmt;
 
-    private static final String permAddText = "INSERT INTO PrGroupPermissions (gid, permstring) VALUES (?,?);";
+    private static final String permAddText = "INSERT IGNORE INTO PrGroupPermissions (gid, permstring) VALUES (?,?);";
     PreparedStatement permAddStmt;
     private static final String permRemText = "DELETE FROM PrGroupPermissions WHERE gid = ? AND permstring = ?;";
     PreparedStatement permRemStmt;
-    private static final String parentAddText = "INSERT INTO PrGroupInheritance (childid, parentid) VALUES (?,?);";
+    private static final String parentAddText = "INSERT IGNORE INTO PrGroupInheritance (childid, parentid) VALUES (?,?);";
     PreparedStatement parentAddStmt;
     private static final String parentRemText = "DELETE FROM PrGroupInheritance WHERE childid = ? AND parentid = ?;";
     PreparedStatement parentRemStmt;
 
     private static final String groupListText = "SELECT groupname, gid FROM PrGroups WHERE worldid = ?;";
     PreparedStatement groupListStmt;
-    private static final String groupAddText = "INSERT INTO PrGroups (worldid,groupname) VALUES (?,?);";
-    PreparedStatement groupAddStmt;
 
     private static final String dataGetText = "SELECT * FROM PrGroupData WHERE gid = ? AND path = ?;";
     PreparedStatement dataGetStmt;
-    private static final String dataAddText = "INSERT INTO PrGroupData (data, gid, path) VALUES (?,?,?);";
-    PreparedStatement dataAddStmt;
-    private static final String dataEditText = "UPDATE PrGroupData SET data = ? WHERE gid = ? AND path = ?;";
-    PreparedStatement dataEditStmt;
+    private static final String dataModText = "REPLACE INTO PrGroupData (data, gid, path) VALUES (?,?,?);";
+    PreparedStatement dataModStmt;
     private static final String dataDelText = "DELETE FROM PrGroupData WHERE gid = ? AND path = ?;";
     PreparedStatement dataDelStmt;
 
@@ -119,9 +109,6 @@ public class SqlGroupStorage implements GroupStorage {
 
     @Override
     public String getPrefix(String name) {
-        if (groupPrefixes.containsKey(name))
-            return groupPrefixes.get(name);
-
         String prefix = "";
         try {
             getGroupStmt.clearParameters();
@@ -136,16 +123,11 @@ public class SqlGroupStorage implements GroupStorage {
         } catch (SQLException e) {
             e.printStackTrace();
         }
-
-        groupPrefixes.put(name, prefix);
         return prefix;
     }
 
     @Override
     public String getSuffix(String name) {
-        if (groupSuffixes.containsKey(name))
-            return groupSuffixes.get(name);
-
         String suffix = "";
         try {
             getGroupStmt.clearParameters();
@@ -160,8 +142,6 @@ public class SqlGroupStorage implements GroupStorage {
         } catch (SQLException e) {
             e.printStackTrace();
         }
-
-        groupSuffixes.put(name, suffix);
         return suffix;
     }
 
@@ -169,10 +149,7 @@ public class SqlGroupStorage implements GroupStorage {
     public Set<String> getPermissions(String name) {
         if (name == null)
             return new HashSet<String>();
-        Set<String> permissions = groupPermissions.get(name);
-        if (permissions != null)
-            return permissions;
-        permissions = new HashSet<String>();
+        Set<String> permissions = new HashSet<String>();
 
         try {
             permGetStmt.clearParameters();
@@ -188,8 +165,6 @@ public class SqlGroupStorage implements GroupStorage {
             e.printStackTrace();
             return new HashSet<String>();
         }
-
-        groupPermissions.put(name, permissions);
         return permissions;
     }
 
@@ -197,10 +172,7 @@ public class SqlGroupStorage implements GroupStorage {
     public LinkedHashSet<GroupWorld> getParents(String name) {
         if (name == null)
             return new LinkedHashSet<GroupWorld>();
-        LinkedHashSet<GroupWorld> parents = groupParents.get(name);
-        if (parents != null)
-            return parents;
-        parents = new LinkedHashSet<GroupWorld>();
+        LinkedHashSet<GroupWorld> parents = new LinkedHashSet<GroupWorld>();
 
         try {
             parentGetStmt.clearParameters();
@@ -210,18 +182,16 @@ public class SqlGroupStorage implements GroupStorage {
             parentGetStmt.setInt(1, gid);
             ResultSet rs = parentGetStmt.executeQuery();
             while (rs.next()) {
-                int worldid = rs.getInt(1);
                 int groupid = rs.getInt(2);
-                String worldName = SqlStorage.getWorldName(worldid);
-                String groupName = SqlStorage.getGroupName(worldid, groupid);
-                GroupWorld gw = new GroupWorld(worldName, groupName);
+                NameWorldId nw = SqlStorage.getGroupName(groupid);
+                String worldName = SqlStorage.getWorldName(nw.worldid);
+                GroupWorld gw = new GroupWorld(worldName, nw.name);
                 parents.add(gw);
             }
         } catch (SQLException e) {
             e.printStackTrace();
             return new LinkedHashSet<GroupWorld>();
         }
-        groupParents.put(name, parents);
         return parents;
     }
 
@@ -248,8 +218,6 @@ public class SqlGroupStorage implements GroupStorage {
 
     @Override
     public void setPrefix(String name, String prefix) {
-        groupPrefixes.put(name, prefix);
-
         try {
             prefixSetStmt.clearParameters();
             int gid = SqlStorage.getGroup(groupWorld, name);
@@ -266,8 +234,6 @@ public class SqlGroupStorage implements GroupStorage {
 
     @Override
     public void setSuffix(String name, String suffix) {
-        groupSuffixes.put(name, suffix);
-
         try {
             suffixSetStmt.clearParameters();
             int gid = SqlStorage.getGroup(groupWorld, name);
@@ -284,13 +250,6 @@ public class SqlGroupStorage implements GroupStorage {
 
     @Override
     public void addPermission(String name, String permission) {
-        if (groupPermissions.get(name) == null)
-            groupPermissions.put(name, new HashSet<String>());
-        Set<String> perms = groupPermissions.get(name);
-        if (perms.contains(permission))
-            return;
-        perms.add(permission);
-
         try {
             permAddStmt.clearParameters();
             int gid = SqlStorage.getGroup(groupWorld, name);
@@ -306,12 +265,6 @@ public class SqlGroupStorage implements GroupStorage {
 
     @Override
     public void removePermission(String name, String permission) {
-        if (groupPermissions.get(name) == null)
-            groupPermissions.put(name, new LinkedHashSet<String>());
-        Set<String> perms = groupPermissions.get(name);
-        if (!perms.contains(permission))
-            return;
-        perms.remove(permission);
         try {
             permRemStmt.clearParameters();
             int gid = SqlStorage.getGroup(groupWorld, name);
@@ -328,12 +281,6 @@ public class SqlGroupStorage implements GroupStorage {
 
     @Override
     public void addParent(String name, String groupWorld, String groupName) {
-        if (groupParents.get(name) == null)
-            groupParents.put(name, new LinkedHashSet<GroupWorld>());
-        Set<GroupWorld> parents = groupParents.get(name);
-        if (parents.contains(groupWorld))
-            return;
-        parents.add(new GroupWorld(groupWorld, groupName));
         try {
             parentAddStmt.clearParameters();
             int gid = SqlStorage.getGroup(groupWorld, name);
@@ -350,12 +297,6 @@ public class SqlGroupStorage implements GroupStorage {
 
     @Override
     public void removeParent(String name, String groupWorld, String groupName) {
-        if (groupParents.get(name) == null)
-            groupParents.put(name, new LinkedHashSet<GroupWorld>());
-        Set<GroupWorld> parents = groupParents.get(name);
-        if (parents.contains(groupWorld))
-            return;
-        parents.remove(new GroupWorld(groupWorld, groupName));
         try {
             parentRemStmt.clearParameters();
             int gid = SqlStorage.getGroup(groupWorld, name);
@@ -404,29 +345,22 @@ public class SqlGroupStorage implements GroupStorage {
 
     @Override
     public void reload() {
-        groupWeights.clear();
         baseGroup = null;
         buildGroups.clear();
-        groupPrefixes.clear();
-        groupSuffixes.clear();
-        groupPermissions.clear();
-        tracks.clear();
-        groupParents.clear();
         try {
-            close();
+//            close();
+            Dbms dbms = SqlStorage.getDbms();
             worldId = SqlStorage.getWorld(groupWorld);
             dbConn = SqlStorage.getConnection();
             permGetStmt = dbConn.prepareStatement(permGetText);
             parentGetStmt = dbConn.prepareStatement(parentGetText);
-            permAddStmt = dbConn.prepareStatement(permAddText);
+            permAddStmt = dbConn.prepareStatement((dbms==Dbms.SQLITE ? permAddText.replace("IGNORE", "OR IGNORE") : permAddText));
             permRemStmt = dbConn.prepareStatement(permRemText);
-            parentAddStmt = dbConn.prepareStatement(parentAddText);
-            parentAddStmt = dbConn.prepareStatement(parentRemText);
+            parentAddStmt = dbConn.prepareStatement((dbms==Dbms.SQLITE ? parentAddText.replace("IGNORE", "OR IGNORE") : parentAddText));
+            parentRemStmt = dbConn.prepareStatement(parentRemText);
             groupListStmt = dbConn.prepareStatement(groupListText);
-            groupAddStmt = dbConn.prepareStatement(groupAddText);
-            dataAddStmt = dbConn.prepareStatement(dataAddText);
+            dataModStmt = dbConn.prepareStatement(dataModText);
             dataDelStmt = dbConn.prepareStatement(dataDelText);
-            dataEditStmt = dbConn.prepareStatement(dataEditText);
             dataGetStmt = dbConn.prepareStatement(dataGetText);
             getGroupStmt = dbConn.prepareStatement(getGroupText);
             getGroupsStmt = dbConn.prepareStatement(getGroupsText);
@@ -449,16 +383,10 @@ public class SqlGroupStorage implements GroupStorage {
                 int gid = rs.getInt(1);
                 String groupName = rs.getString(2);
                 // Skip worldId
-                String prefix = rs.getString(4);
-                String suffix = rs.getString(5);
                 boolean build = (rs.getByte(6) != 0);
-                int weight = rs.getInt(7);
                 groupIds.put(groupName, gid);
-                groupPrefixes.put(groupName, prefix);
-                groupSuffixes.put(groupName, suffix);
                 if (build)
-                    buildGroups.add(prefix);
-                groupWeights.put(groupName, weight);
+                    buildGroups.add(groupName);
             }
         } catch (SQLException e) {
             e.printStackTrace();
@@ -473,9 +401,8 @@ public class SqlGroupStorage implements GroupStorage {
         if(permAddStmt!=null)permAddStmt.close();
         if(permRemStmt!=null)permRemStmt.close();
         if(dataGetStmt!=null)dataGetStmt.close();
-        if(dataAddStmt!=null)dataAddStmt.close();
+        if(dataModStmt!=null)dataModStmt.close();
         if(dataDelStmt!=null)dataDelStmt.close();
-        if(dataEditStmt!=null)dataEditStmt.close();
         if(getGroupStmt!=null)getGroupStmt.close();
         if(getGroupsStmt!=null)getGroupsStmt.close();
         if(getBaseStmt!=null)getBaseStmt.close();
@@ -514,11 +441,6 @@ public class SqlGroupStorage implements GroupStorage {
 
     @Override
     public int getWeight(String name) {
-        if (groupWeights.containsKey(name)) {
-            Integer weight = groupWeights.get(name);;
-            return weight == null ? 0 : weight;
-        }
-
         int weight = 0;
         try {
             permGetStmt.clearParameters();
@@ -534,13 +456,12 @@ public class SqlGroupStorage implements GroupStorage {
             e.printStackTrace();
         }
 
-        groupWeights.put(name, weight);
         return weight;
     }
 
     @Override
     public Set<String> getTracks() {
-        if(this.trackSet.isEmpty()) {
+        Set<String> trackSet = new LinkedHashSet<String>();
             try {
                 trackListStmt.clearParameters();
                 trackListStmt.setInt(1, worldId);
@@ -551,13 +472,11 @@ public class SqlGroupStorage implements GroupStorage {
             } catch (SQLException e) {
                 e.printStackTrace();
             }
-        }
         return trackSet;
     }
 
     @Override
     public LinkedList<GroupWorld> getTrack(String track) {
-        if(this.tracks.containsKey(track)) return tracks.get(track);
         LinkedList<GroupWorld> trackGroups = new LinkedList<GroupWorld>();
         try {
             trackGetStmt.clearParameters();
@@ -570,17 +489,12 @@ public class SqlGroupStorage implements GroupStorage {
         } catch (SQLException e) {
             e.printStackTrace();
         }
-        tracks.put(track, trackGroups);
         return trackGroups;
     }
 
     @Override
     public String getString(String name, String path, String def) {
-        if (groupData.get(name) == null)
-            groupData.put(name, new HashMap<String, String>());
-        String data = groupData.get(name).get(path);
-        if (data != null)
-            return data;
+        String data = def;
         try {
             int gid = SqlStorage.getGroup(groupWorld, name);
             if (!groupIds.containsKey(name))
@@ -600,7 +514,6 @@ public class SqlGroupStorage implements GroupStorage {
         }
         if (data == null)
             data = def;
-        groupData.get(name).put(path, data);
         return data;
     }
 
@@ -654,27 +567,15 @@ public class SqlGroupStorage implements GroupStorage {
         } else {
             throw new IllegalArgumentException("Only ints, bools, doubles and Strings are allowed!");
         }
-        if (groupData.get(name) == null)
-            groupData.put(name, new HashMap<String, String>());
-        groupData.get(name).put(path, szForm);
-
         try {
             int gid = SqlStorage.getGroup(groupWorld, name);
             if (!groupIds.containsKey(name))
                 groupIds.put(name, gid);
-            dataGetStmt.clearParameters();
-            dataGetStmt.setInt(1, gid);
-            dataGetStmt.setString(2, path);
-            PreparedStatement addEdit;
-            if (dataGetStmt.executeQuery().next())
-                addEdit = dataEditStmt;
-            else
-                addEdit = dataAddStmt;
-            addEdit.clearParameters();
-            addEdit.setString(1, szForm);
-            addEdit.setInt(2, gid);
-            addEdit.setString(3, path);
-            addEdit.executeUpdate();
+            dataModStmt.clearParameters();
+            dataModStmt.setString(1, szForm);
+            dataModStmt.setInt(2, gid);
+            dataModStmt.setString(3, path);
+            dataModStmt.executeUpdate();
         } catch (SQLException e) {
             e.printStackTrace();
             data = "";
@@ -683,10 +584,6 @@ public class SqlGroupStorage implements GroupStorage {
 
     @Override
     public void removeData(String name, String path) {
-        if (groupData.get(name) == null)
-            groupData.put(name, new HashMap<String, String>());
-        groupData.get(name).remove(path);
-
         try {
             int gid = SqlStorage.getGroup(groupWorld, name);
             if (!groupIds.containsKey(name))
