@@ -1,11 +1,11 @@
 package com.nijiko.permissions;
 
 //import java.util.Arrays;
+import java.util.ArrayDeque;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
-import java.util.LinkedList;
 import java.util.Queue;
 import java.util.Set;
 
@@ -63,9 +63,9 @@ public abstract class Entry {
         String[] nodeHierachy = permission.split("\\.");
         // nodeHierachy = Arrays.copyOfRange(nodeHierachy, 0,
         // nodeHierachy.length);
-        String nextNode = "";
-        String wild = "";
-        String negated = "";
+        StringBuilder nextNode = new StringBuilder(permission.length() + 1);
+        StringBuilder wild = new StringBuilder(permission.length() + 2);
+        StringBuilder negated = new StringBuilder(permission.length() + 3).append("-");
         String relevantNode = "";
         if (!permissions.isEmpty()) {
             if (permissions.contains("-*")) {
@@ -79,19 +79,21 @@ public abstract class Entry {
         // System.out.println("Relevant node: " +relevantNode);
 
         for (String nextLevel : nodeHierachy) {
-            nextNode += nextLevel + ".";
-            wild = nextNode + "*";
-            negated = "-" + wild;
+            nextNode.append(nextLevel).append(".");
+            wild.append(nextLevel).append(".*");
+            negated.append(nextLevel).append(".*");
 
             if (!permissions.isEmpty()) {
-                if (permissions.contains(wild)) {
-                    relevantNode = wild;
+                String wildString = wild.toString();
+                String negString = negated.toString();
+                if (permissions.contains(wildString)) {
+                    relevantNode = wildString;
                     // System.out.println("Relevant node: " +relevantNode);
                     continue;
                 }
 
-                if (permissions.contains(negated)) {
-                    relevantNode = negated;
+                if (permissions.contains(negString)) {
+                    relevantNode = negString;
                     // System.out.println("Relevant node: " +relevantNode);
                     continue;
                 }
@@ -154,9 +156,14 @@ public abstract class Entry {
 
     public LinkedHashSet<Entry> getParents() {
         LinkedHashSet<Group> groupParents = controller.stringToGroups(getRawParents());
-        Entry global = this.getType() == EntryType.USER ? controller.getUserObject("*", name) : controller.getGroupObject("*", name);
         LinkedHashSet<Entry> parents = new LinkedHashSet<Entry>();
+        Entry global = this.getType() == EntryType.USER ? controller.getUserObject("*", name) : controller.getGroupObject("*", name);
         if(global != null) parents.add(global);
+        String parentWorld = controller.getWorldParent(world, this.getType() == EntryType.USER);
+        if(parentWorld != null) {
+            Entry inherited = this.getType() == EntryType.USER ? controller.getUserObject(parentWorld, name) : controller.getGroupObject(parentWorld, name);
+            if(inherited != null) parents.add(inherited);
+        }
         parents.addAll(groupParents);
         return parents;
     }
@@ -175,7 +182,7 @@ public abstract class Entry {
 
     public Set<Entry> getAncestors() {
         Set<Entry> parentSet = new HashSet<Entry>();
-        Queue<Entry> queue = new LinkedList<Entry>();
+        Queue<Entry> queue = new ArrayDeque<Entry>();
 
         // Start with the direct ancestors or the default group
         LinkedHashSet<Entry> parents = getParents();

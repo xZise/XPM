@@ -224,6 +224,42 @@ public class Permissions extends JavaPlugin {
             }
             String world = tempWorld;
             return reload(sender, world);
+        } else if (args[0].equalsIgnoreCase("-load")) {
+            String tempWorld = args[1];
+            int currentArg = 1;
+            if(tempWorld.startsWith("\"")) {
+                boolean closed = false;
+                tempWorld = tempWorld.substring(1);
+                if(tempWorld.endsWith("\"")) {
+                    tempWorld = tempWorld.substring(0, tempWorld.length() - 1);                    
+                } else {
+                    currentArg++;
+                    while (args.length > currentArg) {
+                        String part = args[currentArg];
+                        closed = part.endsWith("\"");
+                        if(closed) {
+                            part = part.substring(0, part.length() - 1);
+                        }
+                        tempWorld = tempWorld + " " + part;
+                        if(closed) break;
+                        currentArg++;
+                    }
+                    if(!closed) {
+                        Messaging.send("&4[Permissions] No ending quote found for world string.");
+                        return true;
+                    }
+                }
+            }
+            String world = tempWorld;
+            try {
+                Security.forceLoadWorld(world);
+            } catch (Exception e) {
+                Messaging.send("&4[Permissions] Error occured while loading world.");
+                e.printStackTrace();
+                return true;
+            }
+            Messaging.send("&7[Permissions] World loaded.");
+            return true;
         } else if (args[0].equalsIgnoreCase("-list")) {
             if (args.length > 1) {
                 if (args[1].equalsIgnoreCase("worlds")) {
@@ -372,6 +408,8 @@ public class Permissions extends JavaPlugin {
                     Messaging.send("&7[Permissions]&b User/Group " + (has ? "has" : "does not have") + " that permission.");
                     return true;
                 }
+                Messaging.send("&7[Permissions] Syntax: /pr (g:)<target> (w:<world>) has <permission>");
+                return true;
             } else if (args[currentArg].equalsIgnoreCase("perms")) {
                 currentArg++;
                 if (args.length > currentArg) {
@@ -427,12 +465,13 @@ public class Permissions extends JavaPlugin {
                             Messaging.send("&4[Permissions] You do not have permissions to use this command.");
                             return true;
                         }
-                        LinkedHashSet<GroupWorld> parents = entry.getRawParents();
+//                        LinkedHashSet<GroupWorld> parents = entry.getRawParents();
+                        LinkedHashSet<Entry> parents = entry.getParents();
                         String text = "&7[Permissions]&b Parents: &c";
                         if (parents == null || parents.isEmpty()) {
                             text = "&4[Permissions] User/Group has no parents.";
                         } else {
-                            for (GroupWorld parent : parents) {
+                            for (Entry parent : parents) {
                                 text = text + parent.toString() + "&b,&c ";
                             }
                             text = text.substring(0, text.length() - 6);

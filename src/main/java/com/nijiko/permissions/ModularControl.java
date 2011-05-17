@@ -18,15 +18,18 @@ import com.nijiko.data.StorageFactory;
 import com.nijiko.data.UserStorage;
 
 public class ModularControl extends PermissionHandler {
-    private Map<String, UserStorage> WorldUserStorage = new HashMap<String, UserStorage>();
-    private Map<String, GroupStorage> WorldGroupStorage = new HashMap<String, GroupStorage>();
-    private Map<String, String> WorldUserStorageCopy = new HashMap<String, String>();
-    private Map<String, String> WorldGroupStorageCopy = new HashMap<String, String>();
+    private Map<String, UserStorage> userStores = new HashMap<String, UserStorage>();
+    private Map<String, GroupStorage> groupStores = new HashMap<String, GroupStorage>();
+    private Map<String, String> userStorageMirrorings = new HashMap<String, String>();
+    private Map<String, String> groupStorageMirrorings = new HashMap<String, String>();
 
-    private Map<String, Map<String, Group>> WorldGroups = new HashMap<String, Map<String, Group>>();
-    private Map<String, Map<String, User>> WorldUsers = new HashMap<String, Map<String, User>>();
-    private Map<String, Group> WorldBase = new HashMap<String, Group>();
-    // private Configuration storageConfig;
+    private Map<String, String> userStorageInheritance = new HashMap<String, String>();
+    private Map<String, String> groupStorageInheritance = new HashMap<String, String>();
+
+    private Map<String, Map<String, Group>> worldGroups = new HashMap<String, Map<String, Group>>();
+    private Map<String, Map<String, User>> worldUsers = new HashMap<String, Map<String, User>>();
+    private Map<String, Group> defaultGroups = new HashMap<String, Group>();
+    private Configuration storageConfig;
     private String defaultWorld = "";
 
     @Override
@@ -34,9 +37,51 @@ public class ModularControl extends PermissionHandler {
         this.saveAll();
         SqlStorage.closeAll();
     }
+
     public ModularControl(Configuration storageConfig) {
-        // this.storageConfig = storageConfig;
+        this.storageConfig = storageConfig;
         StorageFactory.setConfig(storageConfig);
+        loadWorldInheritance();
+    }
+
+    private void loadWorldInheritance() {
+        userStorageInheritance.clear();
+        groupStorageInheritance.clear();
+        storageConfig.load();
+        List<String> worlds = storageConfig.getKeys("permissions.storage.world-inheritance");
+        Map<String, String> worldInheritance = new HashMap<String, String>();
+        for (String world : worlds) {
+            String parentWorld = storageConfig.getString("permissions.storage.world-inheritance." + world);
+            if (parentWorld != null && !world.equals("*"))
+                worldInheritance.put(world, parentWorld);
+        }
+        List<String> userWorlds = storageConfig.getKeys("permissions.storage.user.world-inheritance");
+        if(userWorlds != null) {
+            for (String userWorld : userWorlds) {
+                String parentWorld = storageConfig.getString("permissions.storage.user.world-inheritance.users" + userWorld);
+                if (parentWorld != null && !userWorld.equals("*"))
+                    userStorageInheritance.put(userWorld, parentWorld);
+            }
+        }
+        for (Map.Entry<String, String> inherit : worldInheritance.entrySet()) {
+            if (!userStorageInheritance.containsKey(inherit.getKey())) {
+                userStorageInheritance.put(inherit.getKey(), inherit.getValue());
+            }
+        }
+
+        List<String> groupWorlds = storageConfig.getKeys("permissions.storage.group.world-inheritance");
+        if(groupWorlds != null) {
+            for (String groupWorld : groupWorlds) {
+                String parentWorld = storageConfig.getString("permissions.storage.group.world-inheritance." + groupWorld);
+                if (parentWorld != null && !groupWorld.equals("*"))
+                    userStorageInheritance.put(groupWorld, parentWorld);
+            }
+        }
+        for (Map.Entry<String, String> inherit : worldInheritance.entrySet()) {
+            if (!groupStorageInheritance.containsKey(inherit.getKey())) {
+                groupStorageInheritance.put(inherit.getKey(), inherit.getValue());
+            }
+        }
     }
 
     @Override
@@ -62,26 +107,26 @@ public class ModularControl extends PermissionHandler {
 
     @Override
     public boolean checkWorld(String world) {
-        return ((WorldUserStorage.get(world) == null) && (WorldUserStorageCopy.get(world) == null)) || (((WorldGroupStorage.get(world) == null) && (WorldGroupStorageCopy.get(world) == null)));
+        return ((userStores.get(world) == null) && (userStorageMirrorings.get(world) == null)) || (((groupStores.get(world) == null) && (groupStorageMirrorings.get(world) == null)));
     }
 
     @Override
     public void load() throws Exception {
+        this.loadWorld("*"); // Global permissions
         this.loadWorld(defaultWorld);
-        this.loadWorld("*"); //Global permissions
     }
 
     @Override
     public void reload() {
-        for (UserStorage store : WorldUserStorage.values()) {
+        for (UserStorage store : userStores.values()) {
             store.reload();
         }
-        for (GroupStorage store : WorldGroupStorage.values()) {
+        for (GroupStorage store : groupStores.values()) {
             store.reload();
         }
-        WorldBase.clear();
-        WorldUsers.clear();
-        WorldGroups.clear();
+        defaultGroups.clear();
+        worldUsers.clear();
+        worldGroups.clear();
         Set<String> worlds = this.getWorlds();
         for (String world : worlds) {
             load(world, getUserStorage(world), getGroupStorage(world));
@@ -92,13 +137,13 @@ public class ModularControl extends PermissionHandler {
     private UserStorage getUserStorage(String world) {
         if (world == null)
             return null;
-        return this.WorldUserStorage.get(getParentWorldUser(world));
+        return this.userStores.get(getParentWorldUser(world));
     }
 
     private GroupStorage getGroupStorage(String world) {
         if (world == null)
             return null;
-        return this.WorldGroupStorage.get(getParentWorldGroup(world));
+        return this.groupStores.get(getParentWorldGroup(world));
     }
 
     @Override
@@ -111,9 +156,9 @@ public class ModularControl extends PermissionHandler {
             userStore.reload();
         if (groupStore != null)
             groupStore.reload();
-        WorldBase.remove(world);
-        WorldUsers.remove(world);
-        WorldGroups.remove(world);
+        defaultGroups.remove(world);
+        worldUsers.remove(world);
+        worldGroups.remove(world);
         load(world, userStore, groupStore);
         return true;
     }
@@ -149,7 +194,7 @@ public class ModularControl extends PermissionHandler {
     @Override
     public String getGroupName(String world, String name) {
         world = getParentWorldGroup(world);
-        Map<String, Group> groups = this.WorldGroups.get(world);
+        Map<String, Group> groups = this.worldGroups.get(world);
         if (groups == null)
             return null;
         Group g = groups.get(name.toLowerCase());
@@ -253,11 +298,11 @@ public class ModularControl extends PermissionHandler {
 
     @Override
     public void saveAll() {
-        Collection<UserStorage> userStores = this.WorldUserStorage.values();
+        Collection<UserStorage> userStores = this.userStores.values();
         for (UserStorage userStore : userStores) {
             userStore.save();
         }
-        Collection<GroupStorage> groupStores = this.WorldGroupStorage.values();
+        Collection<GroupStorage> groupStores = this.groupStores.values();
         for (GroupStorage groupStore : groupStores) {
             groupStore.save();
         }
@@ -267,7 +312,7 @@ public class ModularControl extends PermissionHandler {
         LinkedHashSet<Group> groupSet = new LinkedHashSet<Group>();
         for (GroupWorld raw : raws) {
             String world = getParentWorldGroup(raw.getWorld());
-            Map<String, Group> gMap = this.WorldGroups.get(world);
+            Map<String, Group> gMap = this.worldGroups.get(world);
             if (gMap != null) {
                 Group g = gMap.get(raw.getName().toLowerCase());
                 if (g != null)
@@ -285,11 +330,11 @@ public class ModularControl extends PermissionHandler {
             throw new Exception("Error creating user " + name + " in world " + world + " due to storage problems!", e);
         }
         world = getParentWorldUser(world);
-        if (this.WorldUsers.get(world) == null)
-            this.WorldUsers.put(world, new HashMap<String, User>());
-        if (this.WorldUsers.get(world).get(name.toLowerCase()) == null)
-            this.WorldUsers.get(world).put(name.toLowerCase(), new User(this, getUserStorage(world), name, world, true));
-        return this.WorldUsers.get(world).get(name.toLowerCase());
+        if (this.worldUsers.get(world) == null)
+            this.worldUsers.put(world, new HashMap<String, User>());
+        if (this.worldUsers.get(world).get(name.toLowerCase()) == null)
+            this.worldUsers.get(world).put(name.toLowerCase(), new User(this, getUserStorage(world), name, world, true));
+        return this.worldUsers.get(world).get(name.toLowerCase());
     }
 
     @Override
@@ -300,51 +345,51 @@ public class ModularControl extends PermissionHandler {
             throw new Exception("Error creating group " + name + " in world " + world + " due to storage problems!", e);
         }
         world = getParentWorldGroup(world);
-        if (WorldGroupStorageCopy.get(world) != null)
-            world = WorldGroupStorageCopy.get(world);
-        if (this.WorldGroups.get(world) == null)
-            this.WorldGroups.put(world, new HashMap<String, Group>());
-        if (this.WorldGroups.get(world).get(name.toLowerCase()) == null)
-            this.WorldGroups.get(world).put(name.toLowerCase(), new Group(this, getGroupStorage(world), name, world, true));
-        return this.WorldGroups.get(world).get(name.toLowerCase());
+        if (groupStorageMirrorings.get(world) != null)
+            world = groupStorageMirrorings.get(world);
+        if (this.worldGroups.get(world) == null)
+            this.worldGroups.put(world, new HashMap<String, Group>());
+        if (this.worldGroups.get(world).get(name.toLowerCase()) == null)
+            this.worldGroups.get(world).put(name.toLowerCase(), new Group(this, getGroupStorage(world), name, world, true));
+        return this.worldGroups.get(world).get(name.toLowerCase());
     }
 
     @Override
     public Group getDefaultGroup(String world) {
         world = getParentWorldGroup(world);
-        return this.WorldBase.get(world);
+        return this.defaultGroups.get(world);
     }
 
     @Override
     public Collection<User> getUsers(String world) {
         world = getParentWorldUser(world);
-        if (WorldUsers.get(world) == null)
+        if (worldUsers.get(world) == null)
             return null;
-        return WorldUsers.get(world).values();
+        return worldUsers.get(world).values();
     }
 
     @Override
     public Collection<Group> getGroups(String world) {
         world = getParentWorldGroup(world);
-        if (WorldGroups.get(world.toLowerCase()) == null)
+        if (worldGroups.get(world.toLowerCase()) == null)
             return null;
-        return WorldGroups.get(world).values();
+        return worldGroups.get(world).values();
     }
 
     @Override
     public User getUserObject(String world, String name) {
         world = getParentWorldUser(world);
-        if (WorldUsers.get(world) == null)
+        if (worldUsers.get(world) == null)
             return world.equals("*") ? null : getUserObject("*", name);
-        return WorldUsers.get(world).get(name.toLowerCase());
+        return worldUsers.get(world).get(name.toLowerCase());
     }
 
     @Override
     public Group getGroupObject(String world, String name) {
         world = getParentWorldGroup(world);
-        if (WorldGroups.get(world) == null)
+        if (worldGroups.get(world) == null)
             return world.equals("*") ? null : getGroupObject("*", name);
-        return WorldGroups.get(world).get(name.toLowerCase());
+        return worldGroups.get(world).get(name.toLowerCase());
     }
 
     @Override
@@ -406,12 +451,12 @@ public class ModularControl extends PermissionHandler {
             return;
         String userWorld = userStore.getWorld();
         if (!world.equalsIgnoreCase(userWorld))
-            this.WorldUserStorageCopy.put(world, userWorld);
+            this.userStorageMirrorings.put(world, userWorld);
         String groupWorld = groupStore.getWorld();
         if (!world.equalsIgnoreCase(groupWorld))
-            this.WorldGroupStorageCopy.put(world, groupWorld);
-        this.WorldUserStorage.put(userStore.getWorld(), userStore);
-        this.WorldGroupStorage.put(groupStore.getWorld(), groupStore);
+            this.groupStorageMirrorings.put(world, groupWorld);
+        this.userStores.put(userStore.getWorld(), userStore);
+        this.groupStores.put(groupStore.getWorld(), groupStore);
 
         Map<String, User> users = new HashMap<String, User>();
         Set<String> userNames = userStore.getUsers();
@@ -419,17 +464,17 @@ public class ModularControl extends PermissionHandler {
             User user = new User(this, userStore, userName, userWorld, false);
             users.put(userName.toLowerCase(), user);
         }
-        WorldUsers.put(world, users);
+        worldUsers.put(world, users);
 
         HashMap<String, Group> groups = new HashMap<String, Group>();
         Set<String> groupNames = groupStore.getGroups();
         for (String groupName : groupNames) {
             Group group = new Group(this, groupStore, groupName, groupWorld, false);
             groups.put(groupName.toLowerCase(), group);
-            if (group.isDefault() && WorldBase.get(world) == null)
-                WorldBase.put(groupWorld, group);
+            if (group.isDefault() && defaultGroups.get(world) == null)
+                defaultGroups.put(groupWorld, group);
         }
-        WorldGroups.put(world, groups);
+        worldGroups.put(world, groups);
     }
 
     @Override
@@ -498,7 +543,6 @@ public class ModularControl extends PermissionHandler {
 
     @Override
     public String getPermissionString(String world, String name, String path) {
-        //TODO: Make algorithm recursive and allow overrides
         User u = this.getUserObject(world, name);
         if (u == null)
             return null;
@@ -546,39 +590,39 @@ public class ModularControl extends PermissionHandler {
     }
 
     public String getParentWorldGroup(String world) {
-        if (!world.equals("*")&&WorldGroupStorageCopy.get(world) != null)
-            return WorldGroupStorageCopy.get(world);
+        if (!world.equals("*") && groupStorageMirrorings.get(world) != null)
+            return groupStorageMirrorings.get(world);
         return world;
     }
 
     public String getParentWorldUser(String world) {
-        if (!world.equals("*")&&WorldUserStorageCopy.get(world) != null)
-            world = WorldUserStorageCopy.get(world);
+        if (!world.equals("*") && userStorageMirrorings.get(world) != null)
+            world = userStorageMirrorings.get(world);
         return world;
     }
 
     @Override
     public Set<String> getWorlds() {
         Set<String> worlds = new HashSet<String>();
-        worlds.addAll(this.WorldUserStorageCopy.keySet());
-        worlds.addAll(this.WorldUserStorage.keySet());
+        worlds.addAll(this.userStorageMirrorings.keySet());
+        worlds.addAll(this.userStores.keySet());
         return worlds;
     }
 
     @Override
     public boolean userExists(String world, String name) {
         world = getParentWorldUser(world);
-        if (WorldUsers.get(world) == null)
+        if (worldUsers.get(world) == null)
             return false;
-        return WorldUsers.get(world).get(name.toLowerCase()) != null;
+        return worldUsers.get(world).get(name.toLowerCase()) != null;
     }
 
     @Override
     public boolean groupExists(String world, String name) {
         world = getParentWorldUser(world);
-        if (WorldGroups.get(world) == null)
+        if (worldGroups.get(world) == null)
             return false;
-        return WorldGroups.get(world).get(name.toLowerCase()) != null;
+        return worldGroups.get(world).get(name.toLowerCase()) != null;
     }
 
     @Override
@@ -599,5 +643,9 @@ public class ModularControl extends PermissionHandler {
         if (secondUser == null)
             return 1;
         return Integer.signum(((Integer) firstUser.getWeight()).compareTo(secondUser.getWeight()));
+    }
+    
+    String getWorldParent(String world, boolean user) {
+        return user ? userStorageInheritance.containsKey(world) ? userStorageInheritance.get(world) : null : groupStorageInheritance.containsKey(world) ? groupStorageInheritance.get(world) : null;
     }
 }

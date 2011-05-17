@@ -22,7 +22,7 @@ public class SqlUserStorage implements UserStorage {
 
     private static final String permGetText = "SELECT PrUserPermissions.permstring FROM PrUserPermissions WHERE PrUserPermissions.uid = ?;";
     PreparedStatement permGetStmt;
-    private static final String parentGetText = "SELECT * FROM PrUserInheritance WHERE PrUserInheritance.childid = ?;";
+    private static final String parentGetText = "SELECT parentid FROM PrUserInheritance WHERE PrUserInheritance.childid = ?;";
     PreparedStatement parentGetStmt;
 
 
@@ -96,7 +96,7 @@ public class SqlUserStorage implements UserStorage {
             parentGetStmt.setInt(1, uid);
             ResultSet rs = parentGetStmt.executeQuery();
             while (rs.next()) {
-                int groupid = rs.getInt(2);
+                int groupid = rs.getInt(1);
                 NameWorldId nw = SqlStorage.getGroupName(groupid);
                 String worldName = SqlStorage.getWorldName(nw.worldid);
                 GroupWorld gw = new GroupWorld(worldName, nw.name);
@@ -159,6 +159,7 @@ public class SqlUserStorage implements UserStorage {
             int gid = SqlStorage.getGroup(groupWorld, groupName);
             parentAddStmt.setInt(1, uid);
             parentAddStmt.setInt(2, gid);
+            parentAddStmt.executeUpdate();
         } catch (SQLException e) {
             e.printStackTrace();
         }
