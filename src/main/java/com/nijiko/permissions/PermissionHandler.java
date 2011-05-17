@@ -1,12 +1,13 @@
 package com.nijiko.permissions;
 
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.Set;
 
 import org.bukkit.entity.Player;
 
 /**
- * Permissions 2.x
+ * Permissions 3.0
  * Copyright (C) 2011  Matt 'The Yeti' Burnett <admin@theyeticave.net>
  * Original Credit & Copyright (C) 2010 Nijikokun <nijikokun@gmail.com>
  *
@@ -357,6 +358,8 @@ public abstract class PermissionHandler {
     public abstract String getGroupPermissionString(String world, String group,
             String permission);
 
+    public abstract String getGroupPermissionString(String world, String group, String path, String def);
+    public abstract String getGroupPermissionString(String world, String group, String path, String def, Comparator<String> comparator);
     /**
      * Get permission nodes from a group that contain values. <br />
      * <br />
@@ -370,6 +373,9 @@ public abstract class PermissionHandler {
     public abstract int getGroupPermissionInteger(String world, String group,
             String permission);
 
+    public abstract String getGroupPermissionInteger(String world, String group, String path, int def);
+    public abstract String getGroupPermissionInteger(String world, String group, String path, int def, Comparator<Integer> comparator);
+    
     /**
      * Get permission nodes from a group that contain values. <br />
      * <br />
@@ -382,6 +388,8 @@ public abstract class PermissionHandler {
     public abstract boolean getGroupPermissionBoolean(String world,
             String group, String permission);
 
+    public abstract String getGroupPermissionBoolean(String world, String group, String path, boolean def);
+    public abstract String getGroupPermissionBoolean(String world, String group, String path, boolean def, Comparator<Boolean> comparator);
     /**
      * Get permission nodes from a group that contain values. <br />
      * <br />
@@ -395,6 +403,8 @@ public abstract class PermissionHandler {
     public abstract double getGroupPermissionDouble(String world, String group,
             String permission);
 
+    public abstract String getGroupPermissionDouble(String world, String group, String path, double def);
+    public abstract String getGroupPermissionDouble(String world, String group, String path, double def, Comparator<Double> comparator);
     /**
      * Get permission nodes from a specific user that contain values. <br />
      * <br />
@@ -408,6 +418,8 @@ public abstract class PermissionHandler {
     public abstract String getUserPermissionString(String world, String name,
             String permission);
 
+    public abstract String getUserPermissionString(String world, String group, String path, String def);
+    public abstract String getUserPermissionString(String world, String group, String path, String def, Comparator<String> comparator);
     /**
      * Get permission nodes from a specific user that contain values. <br />
      * <br />
@@ -421,6 +433,8 @@ public abstract class PermissionHandler {
     public abstract int getUserPermissionInteger(String world, String name,
             String permission);
 
+    public abstract String getUserPermissionInteger(String world, String group, String path, int def);
+    public abstract String getUserPermissionInteger(String world, String group, String path, int def, Comparator<Integer> comparator);
     /**
      * Get permission nodes from a specific user that contain values. <br />
      * <br />
@@ -434,6 +448,8 @@ public abstract class PermissionHandler {
     public abstract boolean getUserPermissionBoolean(String world, String name,
             String permission);
 
+    public abstract String getUserPermissionBoolean(String world, String group, String path, boolean def);
+    public abstract String getUserPermissionBoolean(String world, String group, String path, boolean def, Comparator<Boolean> comparator);
     /**
      * Get permission nodes from a specific user that contain values. <br />
      * <br />
@@ -447,6 +463,9 @@ public abstract class PermissionHandler {
     public abstract double getUserPermissionDouble(String world, String name,
             String permission);
 
+    public abstract String getUserPermissionDouble(String world, String group, String path, double def  );
+    public abstract String getUserPermissionDouble(String world, String group, String path, double def, Comparator<Double> comparator);
+    
     /**
      * Get permission nodes from a user / group that contain values. <br />
      * <br />
@@ -460,6 +479,8 @@ public abstract class PermissionHandler {
     public abstract String getPermissionString(String world, String name,
             String permission);
 
+    public abstract String getPermissionString(String world, String group, String path, String def);
+    public abstract String getPermissionString(String world, String group, String path, String def, Comparator<String> comparator);
     /**
      * Get permission nodes from a user / group that contain values. <br />
      * <br />
@@ -473,6 +494,8 @@ public abstract class PermissionHandler {
     public abstract int getPermissionInteger(String world, String name,
             String permission);
 
+    public abstract String getPermissionInteger(String world, String group, String path, int def);
+    public abstract String getPermissionInteger(String world, String group, String path, int def, Comparator<Integer> comparator);
     /**
      * Get permission nodes from a user / group that contain values. <br />
      * <br />
@@ -486,6 +509,8 @@ public abstract class PermissionHandler {
     public abstract boolean getPermissionBoolean(String world, String name,
             String permission);
 
+    public abstract String getPermissionBoolean(String world, String group, String path, boolean def);
+    public abstract String getPermissionBoolean(String world, String group, String path, boolean def, Comparator<Boolean> comparator);
     /**
      * Get permission nodes from a user / group that contain values. <br />
      * <br />
@@ -499,6 +524,9 @@ public abstract class PermissionHandler {
     public abstract double getPermissionDouble(String world, String name,
             String permission);
 
+    public abstract String getPermissionDouble(String world, String group, String path, double def  );
+    public abstract String getPermissionDouble(String world, String group, String path, double def, Comparator<Double> comparator);
+    
     public abstract void addGroupInfo(String world, String group, String node,
             Object data);
 

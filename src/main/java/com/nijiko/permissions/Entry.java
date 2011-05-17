@@ -169,12 +169,15 @@ public abstract class Entry {
     }
 
     public int getWeight() {
-        Set<Entry> checked = new HashSet<Entry>();
-        Integer value = this.recursiveCheck(checked, new GroupValue<Integer>() {
+        Integer value = this.recursiveCheck(new EntryVisitor<Integer>() {
             @Override
-            public Integer value(Group g) {
-                int val = g.getRawWeight();
-                return val == -1 ? null : val;
+            public Integer value(Entry e) {
+                if(e instanceof Group) {
+                    Group g = (Group) e;
+                    int val = g.getRawWeight();
+                    return val == -1 ? null : val;
+                }
+                return null;
             }
         });
         return value == null ? -1 : value;
@@ -208,8 +211,7 @@ public abstract class Entry {
     public boolean inGroup(String world, String group) {
         if (this.getType() == EntryType.GROUP && this.world.equalsIgnoreCase(world) && this.name.equalsIgnoreCase(group))
             return true;
-        Set<Entry> checked = new HashSet<Entry>();
-        class GroupChecker implements GroupValue<Boolean> {
+        class GroupChecker implements EntryVisitor<Boolean> {
             protected final String world;
             protected final String group;
 
@@ -219,74 +221,93 @@ public abstract class Entry {
             }
 
             @Override
-            public Boolean value(Group g) {
-                if (g.world != null && g.name != null && g.world.equals(world) && g.name.equalsIgnoreCase(group))
-                    return true;
+            public Boolean value(Entry e) {
+                if(e instanceof Group) {
+                    Group g = (Group) e;
+                    if (g.world != null && g.name != null && g.world.equals(world) && g.name.equalsIgnoreCase(group))
+                        return true;
+                }
                 return null;
             }
         }
-        Boolean val = this.recursiveCheck(checked, new GroupChecker(world, group));
+        Boolean val = this.recursiveCheck(new GroupChecker(world, group));
         return val == null ? false : val;
     }
 
     public boolean canBuild() {
-        Set<Entry> checked = new HashSet<Entry>();
-        Boolean value = this.recursiveCheck(checked, new GroupValue<Boolean>() {
+        Boolean value = this.recursiveCheck(new EntryVisitor<Boolean>() {
             @Override
-            public Boolean value(Group g) {
-                if (g.canSelfBuild())
-                    return true;
+            public Boolean value(Entry e) {
+                if(e instanceof Group) {
+                    Group g = (Group) e;
+                    if (g.canSelfBuild())
+                        return true;
+                }
                 return null;
             }
         });
         return value == null ? false : value;
     }
 
-    protected <T> T recursiveCheck(Set<Entry> checked, GroupValue<T> checker) {
-        LinkedHashSet<Entry> parents = getParents();
-        if (this instanceof Group) {
-            Group g = (Group) this;
-            T result = checker.value(g);
+    public <T> T recursiveCheck(EntryVisitor<T> visitor) {
+        return recursiveCheck(new HashSet<Entry>(), visitor);
+    }
+    protected <T> T recursiveCheck(Set<Entry> checked, EntryVisitor<T> visitor) {
+        if(checked.contains(this)) return null;
+        
+        T result = visitor.value(this);
+        if (result != null)
             return result;
-        }
+        
+        LinkedHashSet<Entry> parents = getParents();
         if (parents == null || parents.isEmpty())
             return null;
+        
+        checked.add(this);
+        
         for (Entry entry : parents) {
             if (checked.contains(entry))
                 continue;
             checked.add(entry);
-            if(entry instanceof Group) {
-                Group grp = (Group) entry;
-                T result = grp.recursiveCheck(checked, checker);
-                if (result != null)
-                    return result;
-            }
+            result = entry.recursiveCheck(checked, visitor);
+            checked.remove(entry);
+            if (result != null)
+                return result;
         }
+        
+        checked.remove(this);
         return null;
     }
 
-    protected <T> T recursiveCheck(Set<Entry> checked, GroupValue<T> checker, Comparator<T> comparator) {
-        Set<Entry> parents = getParents();
-        if (this instanceof Group) {
-            Group g = (Group) this;
-            T result = checker.value(g);
+    public <T> T recursiveCompare(EntryVisitor<T> visitor, Comparator<T> comparator) {
+        return recursiveCompare(new HashSet<Entry>(), visitor, comparator);
+    }
+    protected <T> T recursiveCompare(Set<Entry> checked, EntryVisitor<T> visitor, Comparator<T> comparator) {
+        if(checked.contains(this)) return null;
+        
+        T result = visitor.value(this);
+        if (result != null)
             return result;
-        }
+        
+        Set<Entry> parents = getParents();
         if (parents == null || parents.isEmpty())
             return null;
+        
+        checked.add(this);
         T currentValue = null;
+        
         for (Entry e : parents) {
             if (checked.contains(e))
                 continue;
             checked.add(e);
-            if(e instanceof Group) {
-                Group grp = (Group) e;
-                T result = grp.recursiveCheck(checked, checker);
-                if (result != null) {
-                    if(comparator.compare(result ,currentValue)==1)  currentValue = result;
-                }
+            result = e.recursiveCompare(checked, visitor, comparator);
+            checked.remove(e);
+            if (result != null) {
+                if(comparator.compare(result ,currentValue)==1)  currentValue = result;
             }
         }
+        
+        checked.remove(this);
         return currentValue;
     }
 
@@ -317,14 +338,15 @@ public abstract class Entry {
 
     public abstract void removeData(String path);
 
-    public interface GroupValue<T> {
+    public interface EntryVisitor<T> {
         /**
-         * Checks for appropriate conditions
+         * This is the method called by the recursive checker when searching for a value.
+         * If the recursion is to be stopped, return a non-null value.
          * 
          * @param g Group to test
-         * @return Null if check fails, any applicable value otherwise
+         * @return Null if recursion should continue, any applicable value otherwise
          */
-        T value(Group g);
+        T value(Entry e);
     }
 
     public int getInt(String path) {
@@ -335,10 +357,10 @@ public abstract class Entry {
         return getInt(path,comparator,-1);
     }
     public int getInt(final String path, Comparator<Integer> comparator, final int def) {
-        Integer value = this.recursiveCheck(new HashSet<Entry>(), new GroupValue<Integer>(){
+        Integer value = this.recursiveCompare(new EntryVisitor<Integer>(){
             @Override
-            public Integer value(Group g) {
-                int value = g.getRawInt(path, def);
+            public Integer value(Entry e) {
+                int value = e.getRawInt(path, def);
                 if(value != -1) return value;
                 return null;
             }}, comparator);
@@ -355,10 +377,10 @@ public abstract class Entry {
         return getDouble(path,comparator,-1.0d);
     }
     public double getDouble(final String path, Comparator<Double> comparator, final double def) {
-        Double value = this.recursiveCheck(new HashSet<Entry>(), new GroupValue<Double>(){
+        Double value = this.recursiveCompare(new EntryVisitor<Double>(){
             @Override
-            public Double value(Group g) {
-                double value = g.getRawDouble(path, def);
+            public Double value(Entry e) {
+                double value = e.getRawDouble(path, def);
                 if(value != -1.0D) return value;
                 return null;
             }}, comparator);
@@ -374,10 +396,10 @@ public abstract class Entry {
     }
 
     public boolean getBool(final String path, Comparator<Boolean> comparator, final boolean def) {
-        Boolean value = this.recursiveCheck(new HashSet<Entry>(), new GroupValue<Boolean>(){
+        Boolean value = this.recursiveCompare(new EntryVisitor<Boolean>(){
             @Override
-            public Boolean value(Group g) {
-                boolean value = g.getRawBool(path, def);
+            public Boolean value(Entry e) {
+                boolean value = e.getRawBool(path, def);
                 if(value) return value;
                 return null;
             }}, comparator);
@@ -393,10 +415,10 @@ public abstract class Entry {
     }
 
     public String getString(final String path, Comparator<String> comparator, final String def) {
-        String value = this.recursiveCheck(new HashSet<Entry>(), new GroupValue<String>(){
+        String value = this.recursiveCompare(new EntryVisitor<String>(){
             @Override
-            public String value(Group g) {
-                String value = g.getRawString(path, def);
+            public String value(Entry e) {
+                String value = e.getRawString(path, def);
                 if(!value.isEmpty()) return value;
                 return null;
             }}, comparator);
@@ -404,6 +426,9 @@ public abstract class Entry {
     }
     
     //And now to showcase how insane Java generics can get
+    /**
+     * Simple comparator to order objects by natural ordering
+     */
     public static class SimpleComparator<T extends Comparable<T>> implements Comparator<T> {
         @Override
         public int compare(T o1, T o2) {

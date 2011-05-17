@@ -2,6 +2,7 @@ package com.nijiko.permissions;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
@@ -647,5 +648,149 @@ public class ModularControl extends PermissionHandler {
     
     String getWorldParent(String world, boolean user) {
         return user ? userStorageInheritance.containsKey(world) ? userStorageInheritance.get(world) : null : groupStorageInheritance.containsKey(world) ? groupStorageInheritance.get(world) : null;
+    }
+
+    @Override
+    public String getGroupPermissionString(String world, String group, String path, String def) {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public String getGroupPermissionString(String world, String group, String path, String def, Comparator<String> comparator) {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public String getGroupPermissionInteger(String world, String group, String path, int def) {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public String getGroupPermissionInteger(String world, String group, String path, int def, Comparator<Integer> comparator) {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public String getGroupPermissionBoolean(String world, String group, String path, boolean def) {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public String getGroupPermissionBoolean(String world, String group, String path, boolean def, Comparator<Boolean> comparator) {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public String getGroupPermissionDouble(String world, String group, String path, double def) {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public String getGroupPermissionDouble(String world, String group, String path, double def, Comparator<Double> comparator) {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public String getUserPermissionString(String world, String group, String path, String def) {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public String getUserPermissionString(String world, String group, String path, String def, Comparator<String> comparator) {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public String getUserPermissionInteger(String world, String group, String path, int def) {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public String getUserPermissionInteger(String world, String group, String path, int def, Comparator<Integer> comparator) {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public String getUserPermissionBoolean(String world, String group, String path, boolean def) {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public String getUserPermissionBoolean(String world, String group, String path, boolean def, Comparator<Boolean> comparator) {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public String getUserPermissionDouble(String world, String group, String path, double def) {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public String getUserPermissionDouble(String world, String group, String path, double def, Comparator<Double> comparator) {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public String getPermissionString(String world, String group, String path, String def) {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public String getPermissionString(String world, String group, String path, String def, Comparator<String> comparator) {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public String getPermissionInteger(String world, String group, String path, int def) {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public String getPermissionInteger(String world, String group, String path, int def, Comparator<Integer> comparator) {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public String getPermissionBoolean(String world, String group, String path, boolean def) {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public String getPermissionBoolean(String world, String group, String path, boolean def, Comparator<Boolean> comparator) {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public String getPermissionDouble(String world, String group, String path, double def) {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public String getPermissionDouble(String world, String group, String path, double def, Comparator<Double> comparator) {
+        // TODO Auto-generated method stub
+        return null;
     }
 }
