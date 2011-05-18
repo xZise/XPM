@@ -51,10 +51,12 @@ public class ModularControl extends PermissionHandler {
         storageConfig.load();
         List<String> worlds = storageConfig.getKeys("permissions.storage.world-inheritance");
         Map<String, String> worldInheritance = new HashMap<String, String>();
-        for (String world : worlds) {
-            String parentWorld = storageConfig.getString("permissions.storage.world-inheritance." + world);
-            if (parentWorld != null && !world.equals("*"))
-                worldInheritance.put(world, parentWorld);
+        if(worlds != null) {
+            for (String world : worlds) {
+                String parentWorld = storageConfig.getString("permissions.storage.world-inheritance." + world);
+                if (parentWorld != null && !world.equals("*"))
+                    worldInheritance.put(world, parentWorld);
+            }
         }
         List<String> userWorlds = storageConfig.getKeys("permissions.storage.user.world-inheritance");
         if(userWorlds != null) {
