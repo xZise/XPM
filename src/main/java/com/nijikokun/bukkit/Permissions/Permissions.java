@@ -197,7 +197,11 @@ public class Permissions extends JavaPlugin {
         }
 
         if (args[0].equalsIgnoreCase("-reload")) {
-            String tempWorld = args[1];
+            String tempWorld = "";
+
+            if(args.length > 1)
+                tempWorld = args[1];
+
             int currentArg = 1;
             if(tempWorld.startsWith("\"")) {
                 boolean closed = false;
