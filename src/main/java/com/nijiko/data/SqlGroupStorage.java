@@ -348,7 +348,7 @@ public class SqlGroupStorage implements GroupStorage {
         baseGroup = null;
         buildGroups.clear();
         try {
-//            close();
+            close();
             Dbms dbms = SqlStorage.getDbms();
             worldId = SqlStorage.getWorld(groupWorld);
             dbConn = SqlStorage.getConnection();

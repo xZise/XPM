@@ -223,7 +223,7 @@ public class SqlUserStorage implements UserStorage {
     public void reload() {
         userIds.clear();
         try {
-//            close();
+            close();
             Dbms dbms = SqlStorage.getDbms();
             worldId = SqlStorage.getWorld(userWorld);
             dbConn = SqlStorage.getConnection();
