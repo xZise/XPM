@@ -50,14 +50,15 @@ public interface GroupStorage {
     public Set<String> getTracks();
     public LinkedList<GroupWorld> getTrack(String track);
     
-    public int getWeight(String name);
-    public String getString(String name, String path, String def);
+    public int getWeight(String name);    
     
-    public int getInt(String name, String path, int def);
+    public String getString(String name, String path);
     
-    public double getDouble(String name, String path, double def);
+    public Integer getInt(String name, String path);
     
-    public boolean getBool(String name, String path, boolean def);
+    public Double getDouble(String name, String path);
+    
+    public Boolean getBool(String name, String path);
     
     public void setData(String name, String path, Object data);
     public void removeData(String name, String path);

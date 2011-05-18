@@ -80,40 +80,32 @@ public abstract class PermissionHandler { //Name will be changed
     public abstract boolean inSingleGroup(String world, String user, String groupWorld, String group);
 
     public abstract String[] getGroups(String world, String name);
-    public abstract Map<String, String[]> getAllGroups(String world, String name);
+    public abstract Map<String, Set<String>> getAllGroups(String world, String name);
     //Weight-related methods
     public abstract int compareWeights(String firstWorld, String first, String secondWorld, String second);
     public abstract int compareWeights(String world, String first, String second);
     
     //Data-related methods
     public abstract String getRawInfoString(String world, String entryName, String path,boolean isGroup);
-    public abstract String getRawInfoString(String world, String entryName, String path, boolean isGroup, String def);
     
     public abstract Integer getRawInfoInteger(String world, String entryName, String path, boolean isGroup);
-    public abstract Integer getRawInfoInteger(String world, String entryName, String path, boolean isGroup, int def);
     
     public abstract Double getRawInfoDouble(String world, String entryName, String path, boolean isGroup);
-    public abstract String getRawInfoDouble(String world, String entryName, String path, boolean isGroup, double def);
     
     public abstract Boolean getRawInfoBoolean(String world, String entryName, String path, boolean isGroup);
-    public abstract String getRawInfoBoolean(String world, String entryName, String path, boolean isGroup, boolean def);
 
 
     public abstract String getInfoString(String world, String entryName, String path,boolean isGroup);
-    public abstract String getInfoString(String world, String entryName, String path, boolean isGroup, String def);
-    public abstract String getInfoString(String world, String entryName, String path, boolean isGroup, String def, Comparator<String> comparator);
+    public abstract String getInfoString(String world, String entryName, String path, boolean isGroup, Comparator<String> comparator);
     
     public abstract Integer getInfoInteger(String world, String entryName, String path, boolean isGroup);
-    public abstract Integer getInfoInteger(String world, String entryName, String path, boolean isGroup, int def);
-    public abstract String getInfoInteger(String world, String entryName, String path, boolean isGroup, int def, Comparator<Integer> comparator);
+    public abstract Integer getInfoInteger(String world, String entryName, String path, boolean isGroup, Comparator<Integer> comparator);
     
     public abstract Double getInfoDouble(String world, String entryName, String path, boolean isGroup);
-    public abstract String getInfoDouble(String world, String entryName, String path, boolean isGroup, double def);
-    public abstract String getInfoDouble(String world, String entryName, String path, boolean isGroup, double def, Comparator<Double> comparator);
+    public abstract Double getInfoDouble(String world, String entryName, String path, boolean isGroup, Comparator<Double> comparator);
     
     public abstract Boolean getInfoBoolean(String world, String entryName, String path, boolean isGroup);
-    public abstract String getInfoBoolean(String world, String entryName, String path, boolean isGroup, boolean def);
-    public abstract String getInfoBoolean(String world, String entryName, String path, boolean isGroup, boolean def, Comparator<Boolean> comparator);
+    public abstract Boolean getInfoBoolean(String world, String entryName, String path, boolean isGroup, Comparator<Boolean> comparator);
     
     
     public abstract void addUserInfo(String world, String name, String path, Object data);

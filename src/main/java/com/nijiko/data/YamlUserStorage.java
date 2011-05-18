@@ -227,15 +227,6 @@ public class YamlUserStorage implements UserStorage {
     }
 
     @Override
-    public String getString(String name, String path, String def) {
-        rwl.readLock().lock();
-        String data = userConfig.getString("users."+name+".info."+path, def);
-        userConfig.save();
-        rwl.readLock().unlock();
-        return data;
-    }
-
-    @Override
     public void removeData(String name, String path) {
         rwl.writeLock().lock();
         userConfig.removeProperty("users."+name+".info."+path);
@@ -254,30 +245,38 @@ public class YamlUserStorage implements UserStorage {
     }
 
     @Override
-    public int getInt(String name, String path, int def) {
-        rwl.readLock().lock();
-        int data = userConfig.getInt("users."+name+".info."+path , def);
-        userConfig.save();
-        rwl.readLock().unlock();
-        return data;
+    public String getString(String name, String path) {
+        Object raw = getObj(name, path);
+        if(raw instanceof String) return (String) raw;
+        return null;
     }
 
     @Override
-    public double getDouble(String name, String path, double def) {
-        rwl.readLock().lock();
-        double data = userConfig.getDouble("users."+name+".info."+path , def);
-        userConfig.save();
-        rwl.readLock().unlock();
-        return data;
+    public Integer getInt(String name, String path) {
+        Object raw = getObj(name, path);
+        if(raw instanceof Integer) return (Integer) raw;
+        return null;
     }
 
     @Override
-    public boolean getBool(String name, String path, boolean def) {
+    public Double getDouble(String name, String path) {
+        Object raw = getObj(name, path);
+        if(raw instanceof Double) return (Double) raw;
+        return null;
+    }
+
+    @Override
+    public Boolean getBool(String name, String path) {
+        Object raw = getObj(name, path);
+        if(raw instanceof Boolean) return (Boolean) raw;
+        return null;
+    }
+    
+    private Object getObj(String name, String path) {
         rwl.readLock().lock();
-        boolean data = userConfig.getBoolean("users."+name+".info."+path , def);
-        userConfig.save();
+        Object data = userConfig.getProperty("users."+name+".info."+path);
         rwl.readLock().unlock();
-        return data;
+        return data;        
     }
     
 }

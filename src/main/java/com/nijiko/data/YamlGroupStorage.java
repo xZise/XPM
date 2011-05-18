@@ -271,16 +271,7 @@ public class YamlGroupStorage implements GroupStorage {
     }
     //TODO: Add setWeight()
     
-    @Override
-    public String getString(String name, String path, String def) {
-        if(path.equalsIgnoreCase("prefix")||path.equalsIgnoreCase("suffix")||path.equalsIgnoreCase("build"))
-            throw new IllegalArgumentException("No reading of prefixes/suffixes/build values allowed via this method!");
-        rwl.readLock().lock();
-        String data = groupConfig.getString("groups."+name+".info."+path, def);
-        groupConfig.save();
-        rwl.readLock().unlock();
-        return data;
-    }
+
 
     @Override
     public void setData(String name, String path, Object data) {
@@ -334,38 +325,40 @@ public class YamlGroupStorage implements GroupStorage {
         return;        
     }
     
-
-
     @Override
-    public int getInt(String name, String path, int def) {
-        if(path.equalsIgnoreCase("prefix")||path.equalsIgnoreCase("suffix")||path.equalsIgnoreCase("build"))
-            throw new IllegalArgumentException("No reading of prefixes/suffixes/build values allowed via this method!");
-        rwl.readLock().lock();
-        int data = groupConfig.getInt("groups."+name+".info."+path , def);
-        groupConfig.save();
-        rwl.readLock().unlock();
-        return data;
+    public String getString(String name, String path) {
+        Object raw = getObj(name, path);
+        if(raw instanceof String) return (String) raw;
+        return null;
     }
 
     @Override
-    public double getDouble(String name, String path, double def) {
-        if(path.equalsIgnoreCase("prefix")||path.equalsIgnoreCase("suffix")||path.equalsIgnoreCase("build"))
-            throw new IllegalArgumentException("No reading of prefixes/suffixes/build values allowed via this method!");
-        rwl.readLock().lock();
-        double data = groupConfig.getDouble("groups."+name+".info."+path , def);
-        groupConfig.save();
-        rwl.readLock().unlock();
-        return data;
+    public Integer getInt(String name, String path) {
+        Object raw = getObj(name, path);
+        if(raw instanceof Integer) return (Integer) raw;
+        return null;
     }
 
     @Override
-    public boolean getBool(String name, String path, boolean def) {
+    public Double getDouble(String name, String path) {
+        Object raw = getObj(name, path);
+        if(raw instanceof Double) return (Double) raw;
+        return null;
+    }
+
+    @Override
+    public Boolean getBool(String name, String path) {
+        Object raw = getObj(name, path);
+        if(raw instanceof Boolean) return (Boolean) raw;
+        return null;
+    }
+    
+    private Object getObj(String name, String path) {
         if(path.equalsIgnoreCase("prefix")||path.equalsIgnoreCase("suffix")||path.equalsIgnoreCase("build"))
             throw new IllegalArgumentException("No reading of prefixes/suffixes/build values allowed via this method!");
         rwl.readLock().lock();
-        boolean data = groupConfig.getBoolean("groups."+name+".info."+path , def);
-        groupConfig.save();
+        Object data = groupConfig.getProperty("groups."+name+".info."+path);
         rwl.readLock().unlock();
-        return data;
+        return data;        
     }
 }

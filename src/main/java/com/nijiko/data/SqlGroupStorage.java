@@ -493,8 +493,8 @@ public class SqlGroupStorage implements GroupStorage {
     }
 
     @Override
-    public String getString(String name, String path, String def) {
-        String data = def;
+    public String getString(String name, String path) {
+        String data = null;
         try {
             int gid = SqlStorage.getGroup(groupWorld, name);
             if (!groupIds.containsKey(name))
@@ -503,52 +503,47 @@ public class SqlGroupStorage implements GroupStorage {
             dataGetStmt.setInt(1, gid);
             dataGetStmt.setString(2, path);
             ResultSet rs = dataGetStmt.executeQuery();
-            if (!rs.next())
-                data = def;
-            else {
+            if (rs.next()) {
                 data = rs.getString(1);
             }
         } catch (SQLException e) {
             e.printStackTrace();
-            data = def;
         }
-        if (data == null)
-            data = def;
         return data;
     }
 
     @Override
-    public int getInt(String name, String path, int def) {
-        String raw = getString(name, path, String.valueOf(def));
-        int value;
+    public Integer getInt(String name, String path) {
+        String raw = getString(name, path);
+        Integer value;
         try {
             value = Integer.valueOf(raw);
         } catch (NumberFormatException e) {
-            value = def;
+            value = null;
         }
         return value;
     }
 
     @Override
-    public double getDouble(String name, String path, double def) {
-        String raw = getString(name, path, String.valueOf(def));
-        double value;
+    public Double getDouble(String name, String path) {
+        String raw = getString(name, path);
+        Double value;
         try {
             value = Double.valueOf(raw);
         } catch (NumberFormatException e) {
-            value = def;
+            value = null;
         }
         return value;
     }
 
     @Override
-    public boolean getBool(String name, String path, boolean def) {
-        String raw = getString(name, path,String.valueOf(def));
-        boolean value;
+    public Boolean getBool(String name, String path) {
+        String raw = getString(name, path);
+        Boolean value;
         try {
             value = Boolean.valueOf(raw);
         } catch (NumberFormatException e) {
-            value = false;
+            value = null;
         }
         return value;
     }

@@ -328,13 +328,13 @@ public abstract class Entry {
 
     public abstract void setData(String path, Object data);
 
-    public abstract String getRawString(String path, String def);
+    public abstract String getRawString(String path);
 
-    public abstract int getRawInt(String path, int def);
+    public abstract Integer getRawInt(String path);
 
-    public abstract boolean getRawBool(String path, boolean def);
+    public abstract Boolean getRawBool(String path);
 
-    public abstract double getRawDouble(String path, double def);
+    public abstract Double getRawDouble(String path);
 
     public abstract void removeData(String path);
 
@@ -354,17 +354,12 @@ public abstract class Entry {
     }
 
     public int getInt(final String path, Comparator<Integer> comparator) {
-        return getInt(path,comparator,-1);
-    }
-    public int getInt(final String path, Comparator<Integer> comparator, final int def) {
         Integer value = this.recursiveCompare(new EntryVisitor<Integer>(){
             @Override
             public Integer value(Entry e) {
-                int value = e.getRawInt(path, def);
-                if(value != -1) return value;
-                return null;
+                return e.getRawInt(path);
             }}, comparator);
-        return value == null ? def : value;
+        return value;
     }
     
 
@@ -374,17 +369,12 @@ public abstract class Entry {
     }
 
     public double getDouble(final String path, Comparator<Double> comparator) {
-        return getDouble(path,comparator,-1.0d);
-    }
-    public double getDouble(final String path, Comparator<Double> comparator, final double def) {
         Double value = this.recursiveCompare(new EntryVisitor<Double>(){
             @Override
             public Double value(Entry e) {
-                double value = e.getRawDouble(path, def);
-                if(value != -1.0D) return value;
-                return null;
+                return e.getRawDouble(path);
             }}, comparator);
-        return value == null ? def : value;
+        return value;
     }
     
     public boolean getBool(String path) {
@@ -392,18 +382,12 @@ public abstract class Entry {
     }
 
     public boolean getBool(final String path, Comparator<Boolean> comparator) {
-        return getBool(path,comparator,false);
-    }
-
-    public boolean getBool(final String path, Comparator<Boolean> comparator, final boolean def) {
         Boolean value = this.recursiveCompare(new EntryVisitor<Boolean>(){
             @Override
             public Boolean value(Entry e) {
-                boolean value = e.getRawBool(path, def);
-                if(value) return value;
-                return null;
+                return e.getRawBool(path);
             }}, comparator);
-        return value == null ? def : value;
+        return value;
     }
 
     public String getString(String path) {
@@ -411,18 +395,12 @@ public abstract class Entry {
     }
 
     public String getString(final String path, Comparator<String> comparator) {
-        return getString(path,comparator,"");
-    }
-
-    public String getString(final String path, Comparator<String> comparator, final String def) {
         String value = this.recursiveCompare(new EntryVisitor<String>(){
             @Override
             public String value(Entry e) {
-                String value = e.getRawString(path, def);
-                if(!value.isEmpty()) return value;
-                return null;
+                return e.getRawString(path);
             }}, comparator);
-        return value == null ? def : value;
+        return value;
     }
     
     //And now to showcase how insane Java generics can get
