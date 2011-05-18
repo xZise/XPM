@@ -2,6 +2,7 @@ package com.nijiko.permissions;
 
 import java.util.Collection;
 import java.util.Comparator;
+import java.util.Map;
 import java.util.Set;
 
 import org.bukkit.entity.Player;
@@ -25,532 +26,127 @@ import org.bukkit.entity.Player;
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-/**
- * Interface for multiple permission handlers
- * 
- * @author Nijiko
- */
-public abstract class PermissionHandler {
-
+public abstract class PermissionHandler { //Name will be changed
+    //World config manipulation methods
     public abstract void setDefaultWorld(String world);
-
-    /**
-     * This function attempts to load a world, creating the files if necessary.
-     * @param world Name of world
-     * @return True if the world is not already loaded, false otherwise
-     * @throws Exception Exception thrown by the world loader
-     */
-    public abstract boolean loadWorld(String world) throws Exception;
-    
-    /**
-     * This function forces the load of a world, even if the world is already loaded, creating the files if necessary.
-     * @param world Name of world
-     * @throws Exception Exception thrown by the world loader
-     */
-    public abstract void forceLoadWorld(String world) throws Exception;
-
-    /**
-     * Check if world is loaded.
-     * @param world Name of world
-     * @return True if the world is loaded, false otherwise.
-     */
     public abstract boolean checkWorld(String world);
-
-    /**
-     * Get a set of the names of loaded worlds.
-     * @return Set of the names of loaded worlds
-     */
+    public abstract boolean loadWorld(String world) throws Exception;
+    public abstract void forceLoadWorld(String world) throws Exception;
     public abstract Set<String> getWorlds();
-    
-    /**
-     * Loads the default world
-     * @throws Exception Exception thrown by the world loader
-     */
     public abstract void load() throws Exception;
-
-    /**
-     * Reloads every world
-     */
     public abstract void reload();
-
-    /**
-     * Reloads the specified world
-     * @param world Name of world
-     * @return True if the world is loaded, false otherwise.
-     */
     public abstract boolean reload(String world);
-    
-    /**
-     * Forces a save of the specified world
-     * @param world Name of world
-     */
-    public abstract void save(String world);
-
-    /**
-     * Forces a save of all worlds
-     */
     public abstract void saveAll();
-
+    public abstract void save(String world);
+    
+    public abstract void closeAll();
     
     //Permission-checking methods
-    /**
-     * Simple alias for permission method. Easier to understand / recognize what
-     * it does and is checking for.
-     * 
-     * @param player
-     * @param permission
-     * @return boolean
-     */
-//    @Deprecated
-    public abstract boolean has(Player player, String permission);
-    /**
-     * Redirects to permission(String,String,String)
-     * @param player
-     * @param permission
-     * @return
-     */
-//    @Deprecated
-    public abstract boolean permission(Player player, String permission);
-
-    /**
-     * Checks to see if a player has permission to a specific tree node. <br />
-     * <br />
-     * Example usage: <blockquote>
-     * 
-     * <pre>
-     * boolean canReload = Plugin.Permissions.Security.permission(playerWorld, playerName,
-     *         &quot;permission.reload&quot;);
-     * if (canReload) {
-     *     System.out.println(&quot;The user can reload!&quot;);
-     * } else {
-     *     System.out.println(&quot;The user has no such permission!&quot;);
-     * }
-     * </pre>
-     * 
-     * </blockquote>
-     * 
-     * @param world
-     * @param name
-     * @param permission
-     * @return boolean
-     */
-    public abstract boolean permission(String world, String name, String permission);
-    /**
-     * Simple alias for permission method. Easier to understand / recognize what
-     * it does and is checking for.
-     * 
-     * @param player
-     * @param permission
-     * @return boolean
-     */
-    public abstract boolean has(String world, String name, String permission);
-  
+    public abstract boolean has(Player player, String node);
+    public abstract boolean has(String worldName, String playerName, String node);
+    public abstract boolean permission(Player player, String node);
+    public abstract boolean permission(String worldName, String playerName, String node);
     
-    //Group-related methods
-    /**
-     * Grabs group prefix, line that comes before the group. <br />
-     * <br />
-     * Namespace: groups.name.info.prefix
-     * 
-     * @param world
-     * @param group
-     * @return String
-     */
-    public abstract String getGroupPrefix(String world, String group);
-
-    /**
-     * Grabs group suffix, line that comes after the group. <br />
-     * <br />
-     * Namespace: groups.name.info.suffix
-     * 
-     * @param world
-     * @param group
-     * @return String
-     */
-    public abstract String getGroupSuffix(String world, String group);
-
-    /**
-     * Checks to see if the group has build permission. <br />
-     * <br />
-     * Namespace: groups.name.info.build
-     * 
-     * @param world
-     * @param group
-     * @return String
-     */
-    public abstract boolean canGroupBuild(String world, String group);
+    //Permission-manipulation methods
+    public abstract void addUserPermission(String world, String user, String node);
+    public abstract void removeUserPermission(String world, String user, String node);
+    public abstract void addGroupPermission(String world, String user, String node);
+    public abstract void removeGroupPermission(String world, String user, String node);
     
-
-    //User&Group object related methods
-    /**
-     * This method returns the specified user, creating the user if necessary. Never returns null.
-     * @param world
-     * @param name
-     * @return
-     * @throws Exception
-     */
-    public abstract User safeGetUser(String world, String name)
-            throws Exception;
-    /**
-     * This method returns the specified group, creating it if necessary. Never returns null.
-     * @param world
-     * @param name
-     * @return
-     * @throws Exception
-     */
-    public abstract Group safeGetGroup(String world, String name)
-            throws Exception;
-
-    public abstract Collection<User> getUsers(String world);
-
-    public abstract Collection<Group> getGroups(String world);
-
-    /**
-     * This method returns the specified user, and returns null if no such user exists.
-     * @param world
-     * @param name
-     * @return
-     * @throws Exception
-     */
+    //Prefix, suffix, build methods
+    public abstract String getUserPrefix(String world, String user);
+    public abstract String getUserSuffix(String world, String user);
+    public abstract String canUserBuild(String world, String user);
+    
+    public abstract String getGroupRawPrefix(String world, String group);
+    public abstract String getGroupRawSuffix(String world, String group);
+    public abstract boolean canGroupRawBuild(String world, String group);
+    
+    //Entry methods
+    public abstract User safeGetUser(String world, String name) throws Exception;
+    public abstract Group safeGetGroup(String world, String name) throws Exception;
     public abstract User getUserObject(String world, String name);
-
-    /**
-     * This method returns the specified group, and returns null if no such group exists.
-     * @param world
-     * @param name
-     * @return
-     * @throws Exception
-     */
     public abstract Group getGroupObject(String world, String name);
-
-    /**
-     * This method returns the default group for the specified world.
-     * @param world
-     * @param name
-     * @return
-     * @throws Exception
-     */
+    
     public abstract Group getDefaultGroup(String world);
+    
+    public abstract Collection<User> getUsers(String world);
+    public abstract Collection<Group> getGroups(String world);
+    
+    //Parent-related methods
+    public abstract boolean inGroup(String world, String user, String group);
+    public abstract boolean inGroup(String world, String user, String groupWorld, String group);
+    public abstract boolean inSingleGroup(String world, String user, String group);
+    public abstract boolean inSingleGroup(String world, String user, String groupWorld, String group);
 
-    /**
-     * This retrieves the parent/ancestor groups for the specified user.
-     * @param world
-     * @param name
-     * @param ancestors If true, ancestors(parents of parents) will also be returned.
-     * @return
-     */
-    public abstract Set<Entry> getUserParentGroups(String world, String name, boolean ancestors);
-    
-
-
-    /**
-     * This retrieves the parent/ancestor groups for the specified group.
-     * @param world
-     * @param name
-     * @param ancestors If true, ancestors(parents of parents) will also be returned.
-     * @return
-     */
-    public abstract Set<Entry> getGroupParentGroups(String world, String name, boolean ancestors);
-    
-    /**
-     * Check if specified user exists.
-     * @param world
-     * @param name
-     * @return
-     */
-    public abstract boolean userExists(String world, String name);
-
-    /**
-     * Check if specified group exists.
-     * @param world
-     * @param name
-     * @return
-     */
-    public abstract boolean groupExists(String world, String name);
-    
-    /**
-     * Depreciated alias for getGroupName()
-     * @param world
-     * @param name
-     * @return
-     */
-    @Deprecated
-    public abstract String getGroup(String world, String name);
-    
-    /**
-     * Grabs group's name (i.e the name in the config file) with proper capitali[zs]ation. <br />
-     * <br />
-     * Namespace: groups.name
-     * 
-     * @param group
-     * @return String
-     */
-    public abstract String getGroupName(String world, String name);
-    
-    /**
-     * Grabs users groups in the same world. <br />
-     * <br />
-     * 
-     * @param group
-     * @return Array
-     */
     public abstract String[] getGroups(String world, String name);
-
-
-    /**
-     * Checks to see if the player is in the requested group.
-     * 
-     * @param world
-     * @param name
-     *            - Player
-     * @param group
-     *            - Group to be checked upon.
-     * @return boolean
-     */
-    public abstract boolean inGroup(String world, String name, String group);
-    /**
-     * Checks to see if the player is in the requested group.
-     * @param world User's world
-     * @param name User's name
-     * @param groupWorld Group's world
-     * @param group Group's name
-     * @return
-     */
-    public abstract boolean inGroup(String world, String name, String groupWorld,
-            String group);
-    /**
-     * Checks to see if a player is in a single group. This does not check
-     * inheritance.
-     * 
-     * @param world
-     * @param name
-     *            - Player
-     * @param group
-     *            - Group to be checked
-     * @return boolean
-     */
-    public abstract boolean inSingleGroup(String world, String name,
-            String group);
-
-    /** 
-     * Checks to see if a player is in a single group. This does not check
-     * inheritance.
-     * @param world User's world
-     * @param name User's name
-     * @param groupWorld Group's world
-     * @param group Group's name
-     * @return
-     */
-    public abstract boolean inSingleGroup(String world, String name, String groupWorld,
-            String group);
-
-
-    /**
-     * Get info nodes from a group that contain values. <br />
-     * <br />
-     * Grab Group Permission String values.
-     * 
-     * @param world
-     * @param group
-     * @param permission
-     * @return String. If no string found return "".
-     */
-    public abstract String getGroupPermissionString(String world, String group,
-            String permission);
-
-    public abstract String getGroupPermissionString(String world, String group, String path, String def);
-    public abstract String getGroupPermissionString(String world, String group, String path, String def, Comparator<String> comparator);
-    /**
-     * Get permission nodes from a group that contain values. <br />
-     * <br />
-     * Grab Group Permission Integer values.
-     * 
-     * @param world
-     * @param group
-     * @param permission
-     * @return Integer. No integer found return -1.
-     */
-    public abstract int getGroupPermissionInteger(String world, String group,
-            String permission);
-
-    public abstract String getGroupPermissionInteger(String world, String group, String path, int def);
-    public abstract String getGroupPermissionInteger(String world, String group, String path, int def, Comparator<Integer> comparator);
-    
-    /**
-     * Get permission nodes from a group that contain values. <br />
-     * <br />
-     * Grab Group Permission String values.
-     * 
-     * @param group
-     * @param permission
-     * @return Boolean. No boolean found return false.
-     */
-    public abstract boolean getGroupPermissionBoolean(String world,
-            String group, String permission);
-
-    public abstract String getGroupPermissionBoolean(String world, String group, String path, boolean def);
-    public abstract String getGroupPermissionBoolean(String world, String group, String path, boolean def, Comparator<Boolean> comparator);
-    /**
-     * Get permission nodes from a group that contain values. <br />
-     * <br />
-     * Grab Group Permission Double values.
-     * 
-     * @param world
-     * @param group
-     * @param permission
-     * @return Double. No value found return -1.0
-     */
-    public abstract double getGroupPermissionDouble(String world, String group,
-            String permission);
-
-    public abstract String getGroupPermissionDouble(String world, String group, String path, double def);
-    public abstract String getGroupPermissionDouble(String world, String group, String path, double def, Comparator<Double> comparator);
-    /**
-     * Get permission nodes from a specific user that contain values. <br />
-     * <br />
-     * Grab User Permission String values.
-     * 
-     * @param world
-     * @param group
-     * @param permission
-     * @return String. If no string found return "".
-     */
-    public abstract String getUserPermissionString(String world, String name,
-            String permission);
-
-    public abstract String getUserPermissionString(String world, String group, String path, String def);
-    public abstract String getUserPermissionString(String world, String group, String path, String def, Comparator<String> comparator);
-    /**
-     * Get permission nodes from a specific user that contain values. <br />
-     * <br />
-     * Grab User Permission Integer values.
-     * 
-     * @param world
-     * @param group
-     * @param permission
-     * @return Integer. No integer found return -1.
-     */
-    public abstract int getUserPermissionInteger(String world, String name,
-            String permission);
-
-    public abstract String getUserPermissionInteger(String world, String group, String path, int def);
-    public abstract String getUserPermissionInteger(String world, String group, String path, int def, Comparator<Integer> comparator);
-    /**
-     * Get permission nodes from a specific user that contain values. <br />
-     * <br />
-     * Grab User Permission Boolean values.
-     * 
-     * @param world
-     * @param group
-     * @param permission
-     * @return Boolean. No boolean found return false.
-     */
-    public abstract boolean getUserPermissionBoolean(String world, String name,
-            String permission);
-
-    public abstract String getUserPermissionBoolean(String world, String group, String path, boolean def);
-    public abstract String getUserPermissionBoolean(String world, String group, String path, boolean def, Comparator<Boolean> comparator);
-    /**
-     * Get permission nodes from a specific user that contain values. <br />
-     * <br />
-     * Grab User Permission Double values.
-     * 
-     * @param world
-     * @param group
-     * @param permission
-     * @return Double. No value found return -1.0
-     */
-    public abstract double getUserPermissionDouble(String world, String name,
-            String permission);
-
-    public abstract String getUserPermissionDouble(String world, String group, String path, double def  );
-    public abstract String getUserPermissionDouble(String world, String group, String path, double def, Comparator<Double> comparator);
-    
-    /**
-     * Get permission nodes from a user / group that contain values. <br />
-     * <br />
-     * Grab User Permission String values.
-     * 
-     * @param world
-     * @param group
-     * @param permission
-     * @return String. If no string found return "".
-     */
-    public abstract String getPermissionString(String world, String name,
-            String permission);
-
-    public abstract String getPermissionString(String world, String group, String path, String def);
-    public abstract String getPermissionString(String world, String group, String path, String def, Comparator<String> comparator);
-    /**
-     * Get permission nodes from a user / group that contain values. <br />
-     * <br />
-     * Grab User Permission Integer values.
-     * 
-     * @param world
-     * @param group
-     * @param permission
-     * @return Integer. No integer found return -1.
-     */
-    public abstract int getPermissionInteger(String world, String name,
-            String permission);
-
-    public abstract String getPermissionInteger(String world, String group, String path, int def);
-    public abstract String getPermissionInteger(String world, String group, String path, int def, Comparator<Integer> comparator);
-    /**
-     * Get permission nodes from a user / group that contain values. <br />
-     * <br />
-     * Grab User Permission Boolean values.
-     * 
-     * @param world
-     * @param group
-     * @param permission
-     * @return Boolean. No boolean found return false.
-     */
-    public abstract boolean getPermissionBoolean(String world, String name,
-            String permission);
-
-    public abstract String getPermissionBoolean(String world, String group, String path, boolean def);
-    public abstract String getPermissionBoolean(String world, String group, String path, boolean def, Comparator<Boolean> comparator);
-    /**
-     * Get permission nodes from a user / group that contain values. <br />
-     * <br />
-     * Grab User Permission Double values.
-     * 
-     * @param world
-     * @param group
-     * @param permission
-     * @return Double. No value found return -1.0
-     */
-    public abstract double getPermissionDouble(String world, String name,
-            String permission);
-
-    public abstract String getPermissionDouble(String world, String group, String path, double def  );
-    public abstract String getPermissionDouble(String world, String group, String path, double def, Comparator<Double> comparator);
-    
-    public abstract void addGroupInfo(String world, String group, String node,
-            Object data);
-
-    public abstract void removeGroupInfo(String world, String group, String node);
-
-    public abstract void addUserPermission(String world, String user,
-            String node);
-
-    public abstract void removeUserPermission(String world, String user,
-            String node);
-    /**
-     * Compares the weights of two different users
-     * @param firstWorld World of first user
-     * @param first Name of first user
-     * @param secondWorld World of second user
-     * @param second Name of second user
-     * @return -1 if the second user's weight is higher than the first, 1 if vice versa, 0 if equal.
-     */
+    public abstract Map<String, String[]> getAllGroups(String world, String name);
+    //Weight-related methods
     public abstract int compareWeights(String firstWorld, String first, String secondWorld, String second);
-
     public abstract int compareWeights(String world, String first, String second);
+    
+    //Data-related methods
+    public abstract String getRawInfoString(String world, String entryName, String path,boolean isGroup);
+    public abstract String getRawInfoString(String world, String entryName, String path, boolean isGroup, String def);
+    
+    public abstract Integer getRawInfoInteger(String world, String entryName, String path, boolean isGroup);
+    public abstract Integer getRawInfoInteger(String world, String entryName, String path, boolean isGroup, int def);
+    
+    public abstract Double getRawInfoDouble(String world, String entryName, String path, boolean isGroup);
+    public abstract String getRawInfoDouble(String world, String entryName, String path, boolean isGroup, double def);
+    
+    public abstract Boolean getRawInfoBoolean(String world, String entryName, String path, boolean isGroup);
+    public abstract String getRawInfoBoolean(String world, String entryName, String path, boolean isGroup, boolean def);
 
-    public abstract void closeAll();
 
-
+    public abstract String getInfoString(String world, String entryName, String path,boolean isGroup);
+    public abstract String getInfoString(String world, String entryName, String path, boolean isGroup, String def);
+    public abstract String getInfoString(String world, String entryName, String path, boolean isGroup, String def, Comparator<String> comparator);
+    
+    public abstract Integer getInfoInteger(String world, String entryName, String path, boolean isGroup);
+    public abstract Integer getInfoInteger(String world, String entryName, String path, boolean isGroup, int def);
+    public abstract String getInfoInteger(String world, String entryName, String path, boolean isGroup, int def, Comparator<Integer> comparator);
+    
+    public abstract Double getInfoDouble(String world, String entryName, String path, boolean isGroup);
+    public abstract String getInfoDouble(String world, String entryName, String path, boolean isGroup, double def);
+    public abstract String getInfoDouble(String world, String entryName, String path, boolean isGroup, double def, Comparator<Double> comparator);
+    
+    public abstract Boolean getInfoBoolean(String world, String entryName, String path, boolean isGroup);
+    public abstract String getInfoBoolean(String world, String entryName, String path, boolean isGroup, boolean def);
+    public abstract String getInfoBoolean(String world, String entryName, String path, boolean isGroup, boolean def, Comparator<Boolean> comparator);
+    
+    
+    public abstract void addUserInfo(String world, String name, String path, Object data);
+    public abstract void removeUserInfo(String world, String name, String path);
+    public abstract void addGroupInfo(String world, String name, String path, Object data);
+    public abstract void removeGroupInfo(String world, String name, String path);
+    
+    //Legacy methods
+    @Deprecated
+    public abstract String getGroupPermissionString(String world, String group, String path);
+    @Deprecated
+    public abstract int getGroupPermissionInteger(String world, String group, String path);
+    @Deprecated
+    public abstract boolean getGroupPermissionBoolean(String world, String group, String path);
+    @Deprecated
+    public abstract double getGroupPermissionDouble(String world, String group, String path);
+    
+    @Deprecated
+    public abstract String getUserPermissionString(String world, String group, String path);
+    @Deprecated
+    public abstract int getUserPermissionInteger(String world, String group, String path);
+    @Deprecated
+    public abstract boolean getUserPermissionBoolean(String world, String group, String path);
+    @Deprecated
+    public abstract double getUserPermissionDouble(String world, String group, String path);
+    
+    @Deprecated
+    public abstract String getPermissionString(String world, String group, String path);
+    @Deprecated
+    public abstract int getPermissionInteger(String world, String group, String path);
+    @Deprecated
+    public abstract boolean getPermissionBoolean(String world, String group, String path);
+    @Deprecated
+    public abstract double getPermissionDouble(String world, String group, String path);
 
 }

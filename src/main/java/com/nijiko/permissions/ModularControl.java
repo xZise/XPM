@@ -193,44 +193,6 @@ public class ModularControl extends PermissionHandler {
     }
 
     @Override
-    public String getGroupName(String world, String name) {
-        world = getParentWorldGroup(world);
-        Map<String, Group> groups = this.worldGroups.get(world);
-        if (groups == null)
-            return null;
-        Group g = groups.get(name.toLowerCase());
-        if (g == null)
-            return null;
-        return g.getName();
-    }
-
-    @Override
-    public Set<Entry> getUserParentGroups(String world, String name, boolean ancestors) {
-        world = getParentWorldUser(world);
-        User u = this.getUserObject(world, name);
-        if (u == null) {
-            Set<Entry> groups = new HashSet<Entry>();
-            Group defaultGroup = this.getDefaultGroup(world);
-            if (defaultGroup == null)
-                return groups;
-            groups.add(defaultGroup);
-            groups.addAll(defaultGroup.getAncestors());
-            return groups;
-        }
-        return ancestors ? u.getAncestors() : u.getParents();
-    }
-
-    @Override
-    public Set<Entry> getGroupParentGroups(String world, String name, boolean ancestors) {
-        world = getParentWorldUser(world);
-        Group g = this.getGroupObject(world, name);
-        if (g == null) {
-            return new HashSet<Entry>();
-        }
-        return ancestors ? g.getAncestors() : g.getParents();
-    }
-
-    @Override
     public boolean inGroup(String world, String name, String groupWorld, String group) {
         world = getParentWorldUser(world);
         groupWorld = getParentWorldGroup(groupWorld);
@@ -259,7 +221,7 @@ public class ModularControl extends PermissionHandler {
     }
 
     @Override
-    public String getGroupPrefix(String world, String group) {
+    public String getGroupRawPrefix(String world, String group) {
         world = getParentWorldGroup(world);
         Group g = this.getGroupObject(world, group);
         if (g == null)
@@ -269,7 +231,7 @@ public class ModularControl extends PermissionHandler {
     }
 
     @Override
-    public String getGroupSuffix(String world, String group) {
+    public String getGroupRawSuffix(String world, String group) {
         world = getParentWorldGroup(world);
         Group g = this.getGroupObject(world, group);
         if (g == null)
@@ -279,7 +241,7 @@ public class ModularControl extends PermissionHandler {
     }
 
     @Override
-    public boolean canGroupBuild(String world, String group) {
+    public boolean canGroupRawBuild(String world, String group) {
         world = getParentWorldGroup(world);
         Group g = this.getGroupObject(world, group);
         if (g == null)
@@ -393,10 +355,6 @@ public class ModularControl extends PermissionHandler {
         return worldGroups.get(world).get(name.toLowerCase());
     }
 
-    @Override
-    public String getGroup(String world, String name) {
-        return this.getGroupName(world, name);
-    }
 
     @Override
     public String[] getGroups(String world, String name) {
@@ -611,22 +569,6 @@ public class ModularControl extends PermissionHandler {
     }
 
     @Override
-    public boolean userExists(String world, String name) {
-        world = getParentWorldUser(world);
-        if (worldUsers.get(world) == null)
-            return false;
-        return worldUsers.get(world).get(name.toLowerCase()) != null;
-    }
-
-    @Override
-    public boolean groupExists(String world, String name) {
-        world = getParentWorldUser(world);
-        if (worldGroups.get(world) == null)
-            return false;
-        return worldGroups.get(world).get(name.toLowerCase()) != null;
-    }
-
-    @Override
     public int compareWeights(String world, String first, String second) {
         return compareWeights(world, first, world, second);
     }
@@ -651,146 +593,170 @@ public class ModularControl extends PermissionHandler {
     }
 
     @Override
-    public String getGroupPermissionString(String world, String group, String path, String def) {
+    public void addGroupPermission(String world, String user, String node) {
+        // TODO Auto-generated method stub
+        
+    }
+
+    @Override
+    public void removeGroupPermission(String world, String user, String node) {
+        // TODO Auto-generated method stub
+        
+    }
+
+    @Override
+    public String getUserPrefix(String world, String user) {
         // TODO Auto-generated method stub
         return null;
     }
 
     @Override
-    public String getGroupPermissionString(String world, String group, String path, String def, Comparator<String> comparator) {
+    public String getUserSuffix(String world, String user) {
         // TODO Auto-generated method stub
         return null;
     }
 
     @Override
-    public String getGroupPermissionInteger(String world, String group, String path, int def) {
+    public String canUserBuild(String world, String user) {
         // TODO Auto-generated method stub
         return null;
     }
 
     @Override
-    public String getGroupPermissionInteger(String world, String group, String path, int def, Comparator<Integer> comparator) {
+    public Map<String, String[]> getAllGroups(String world, String name) {
         // TODO Auto-generated method stub
         return null;
     }
 
     @Override
-    public String getGroupPermissionBoolean(String world, String group, String path, boolean def) {
+    public String getRawInfoString(String world, String entryName, String path, boolean isGroup) {
         // TODO Auto-generated method stub
         return null;
     }
 
     @Override
-    public String getGroupPermissionBoolean(String world, String group, String path, boolean def, Comparator<Boolean> comparator) {
+    public String getRawInfoString(String world, String entryName, String path, boolean isGroup, String def) {
         // TODO Auto-generated method stub
         return null;
     }
 
     @Override
-    public String getGroupPermissionDouble(String world, String group, String path, double def) {
+    public Integer getRawInfoInteger(String world, String entryName, String path, boolean isGroup) {
         // TODO Auto-generated method stub
         return null;
     }
 
     @Override
-    public String getGroupPermissionDouble(String world, String group, String path, double def, Comparator<Double> comparator) {
+    public Integer getRawInfoInteger(String world, String entryName, String path, boolean isGroup, int def) {
         // TODO Auto-generated method stub
         return null;
     }
 
     @Override
-    public String getUserPermissionString(String world, String group, String path, String def) {
+    public Double getRawInfoDouble(String world, String entryName, String path, boolean isGroup) {
         // TODO Auto-generated method stub
         return null;
     }
 
     @Override
-    public String getUserPermissionString(String world, String group, String path, String def, Comparator<String> comparator) {
+    public String getRawInfoDouble(String world, String entryName, String path, boolean isGroup, double def) {
         // TODO Auto-generated method stub
         return null;
     }
 
     @Override
-    public String getUserPermissionInteger(String world, String group, String path, int def) {
+    public Boolean getRawInfoBoolean(String world, String entryName, String path, boolean isGroup) {
         // TODO Auto-generated method stub
         return null;
     }
 
     @Override
-    public String getUserPermissionInteger(String world, String group, String path, int def, Comparator<Integer> comparator) {
+    public String getRawInfoBoolean(String world, String entryName, String path, boolean isGroup, boolean def) {
         // TODO Auto-generated method stub
         return null;
     }
 
     @Override
-    public String getUserPermissionBoolean(String world, String group, String path, boolean def) {
+    public String getInfoString(String world, String entryName, String path, boolean isGroup) {
         // TODO Auto-generated method stub
         return null;
     }
 
     @Override
-    public String getUserPermissionBoolean(String world, String group, String path, boolean def, Comparator<Boolean> comparator) {
+    public String getInfoString(String world, String entryName, String path, boolean isGroup, String def) {
         // TODO Auto-generated method stub
         return null;
     }
 
     @Override
-    public String getUserPermissionDouble(String world, String group, String path, double def) {
+    public String getInfoString(String world, String entryName, String path, boolean isGroup, String def, Comparator<String> comparator) {
         // TODO Auto-generated method stub
         return null;
     }
 
     @Override
-    public String getUserPermissionDouble(String world, String group, String path, double def, Comparator<Double> comparator) {
+    public Integer getInfoInteger(String world, String entryName, String path, boolean isGroup) {
         // TODO Auto-generated method stub
         return null;
     }
 
     @Override
-    public String getPermissionString(String world, String group, String path, String def) {
+    public Integer getInfoInteger(String world, String entryName, String path, boolean isGroup, int def) {
         // TODO Auto-generated method stub
         return null;
     }
 
     @Override
-    public String getPermissionString(String world, String group, String path, String def, Comparator<String> comparator) {
+    public String getInfoInteger(String world, String entryName, String path, boolean isGroup, int def, Comparator<Integer> comparator) {
         // TODO Auto-generated method stub
         return null;
     }
 
     @Override
-    public String getPermissionInteger(String world, String group, String path, int def) {
+    public Double getInfoDouble(String world, String entryName, String path, boolean isGroup) {
         // TODO Auto-generated method stub
         return null;
     }
 
     @Override
-    public String getPermissionInteger(String world, String group, String path, int def, Comparator<Integer> comparator) {
+    public String getInfoDouble(String world, String entryName, String path, boolean isGroup, double def) {
         // TODO Auto-generated method stub
         return null;
     }
 
     @Override
-    public String getPermissionBoolean(String world, String group, String path, boolean def) {
+    public String getInfoDouble(String world, String entryName, String path, boolean isGroup, double def, Comparator<Double> comparator) {
         // TODO Auto-generated method stub
         return null;
     }
 
     @Override
-    public String getPermissionBoolean(String world, String group, String path, boolean def, Comparator<Boolean> comparator) {
+    public Boolean getInfoBoolean(String world, String entryName, String path, boolean isGroup) {
         // TODO Auto-generated method stub
         return null;
     }
 
     @Override
-    public String getPermissionDouble(String world, String group, String path, double def) {
+    public String getInfoBoolean(String world, String entryName, String path, boolean isGroup, boolean def) {
         // TODO Auto-generated method stub
         return null;
     }
 
     @Override
-    public String getPermissionDouble(String world, String group, String path, double def, Comparator<Double> comparator) {
+    public String getInfoBoolean(String world, String entryName, String path, boolean isGroup, boolean def, Comparator<Boolean> comparator) {
         // TODO Auto-generated method stub
         return null;
+    }
+
+    @Override
+    public void addUserInfo(String world, String name, String path, Object data) {
+        // TODO Auto-generated method stub
+        
+    }
+
+    @Override
+    public void removeUserInfo(String world, String name, String path) {
+        // TODO Auto-generated method stub
+        
     }
 }

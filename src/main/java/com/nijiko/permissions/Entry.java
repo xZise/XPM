@@ -143,7 +143,7 @@ public abstract class Entry {
                 wild = null;
                 for (Iterator<String> itr = perms.iterator(); itr.hasNext();) {
                     String candidate = itr.next();
-                    if (candidate.startsWith(oppWild))
+                    if (candidate.startsWith(oppWild) || candidate.startsWith(wild))
                         itr.remove();
                 }
             }

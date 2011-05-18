@@ -273,6 +273,8 @@ public class YamlGroupStorage implements GroupStorage {
     
     @Override
     public String getString(String name, String path, String def) {
+        if(path.equalsIgnoreCase("prefix")||path.equalsIgnoreCase("suffix")||path.equalsIgnoreCase("build"))
+            throw new IllegalArgumentException("No reading of prefixes/suffixes/build values allowed via this method!");
         rwl.readLock().lock();
         String data = groupConfig.getString("groups."+name+".info."+path, def);
         groupConfig.save();
@@ -282,6 +284,8 @@ public class YamlGroupStorage implements GroupStorage {
 
     @Override
     public void setData(String name, String path, Object data) {
+        if(path.equalsIgnoreCase("prefix")||path.equalsIgnoreCase("suffix")||path.equalsIgnoreCase("build"))
+            throw new IllegalArgumentException("No modification of prefixes/suffixes/build values allowed via this method!");
         rwl.writeLock().lock();
         groupConfig.setProperty("groups."+name+".info."+path, data);
         groupConfig.save();
@@ -321,6 +325,8 @@ public class YamlGroupStorage implements GroupStorage {
 
     @Override
     public void removeData(String name, String path) {
+        if(path.equalsIgnoreCase("prefix")||path.equalsIgnoreCase("suffix")||path.equalsIgnoreCase("build"))
+            throw new IllegalArgumentException("No removal of prefixes/suffixes/build values allowed via this method!");
         rwl.writeLock().lock();
         groupConfig.removeProperty("groups."+name+".info."+path);
         groupConfig.save();
@@ -332,6 +338,8 @@ public class YamlGroupStorage implements GroupStorage {
 
     @Override
     public int getInt(String name, String path, int def) {
+        if(path.equalsIgnoreCase("prefix")||path.equalsIgnoreCase("suffix")||path.equalsIgnoreCase("build"))
+            throw new IllegalArgumentException("No reading of prefixes/suffixes/build values allowed via this method!");
         rwl.readLock().lock();
         int data = groupConfig.getInt("groups."+name+".info."+path , def);
         groupConfig.save();
@@ -341,6 +349,8 @@ public class YamlGroupStorage implements GroupStorage {
 
     @Override
     public double getDouble(String name, String path, double def) {
+        if(path.equalsIgnoreCase("prefix")||path.equalsIgnoreCase("suffix")||path.equalsIgnoreCase("build"))
+            throw new IllegalArgumentException("No reading of prefixes/suffixes/build values allowed via this method!");
         rwl.readLock().lock();
         double data = groupConfig.getDouble("groups."+name+".info."+path , def);
         groupConfig.save();
@@ -350,6 +360,8 @@ public class YamlGroupStorage implements GroupStorage {
 
     @Override
     public boolean getBool(String name, String path, boolean def) {
+        if(path.equalsIgnoreCase("prefix")||path.equalsIgnoreCase("suffix")||path.equalsIgnoreCase("build"))
+            throw new IllegalArgumentException("No reading of prefixes/suffixes/build values allowed via this method!");
         rwl.readLock().lock();
         boolean data = groupConfig.getBoolean("groups."+name+".info."+path , def);
         groupConfig.save();
