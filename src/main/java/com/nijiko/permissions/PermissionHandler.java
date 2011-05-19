@@ -53,7 +53,9 @@ public abstract class PermissionHandler { //Name will be changed
     public abstract void addGroupPermission(String world, String user, String node);
     public abstract void removeGroupPermission(String world, String user, String node);
     
-    //Prefix, suffix, build methods
+    //Chat, prefix, suffix, build methods
+    public abstract String getGroupProperName(String world, String group);
+    
     public abstract String getUserPrefix(String world, String user);
     public abstract String getUserSuffix(String world, String user);
     public abstract boolean canUserBuild(String world, String user);
@@ -140,5 +142,9 @@ public abstract class PermissionHandler { //Name will be changed
     public abstract boolean getPermissionBoolean(String world, String group, String path);
     @Deprecated
     public abstract double getPermissionDouble(String world, String group, String path);
+    
+
+    @Deprecated
+    public abstract String getGroup(String world, String group);
 
 }

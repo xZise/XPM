@@ -310,6 +310,16 @@ public class ModularControl extends PermissionHandler {
 
     //Prefix, suffix, build methods
     @Override
+    public String getGroupProperName(String world, String group) {
+        Group g = getGroupObject(world, group);
+        if(g == null) {
+            g = getDefaultGroup(world);
+            if(g == null) return "";
+        }
+        return g.getName();
+    }
+    
+    @Override
     public String getUserPrefix(String world, String user) {
         User u = getUserObject(world, user);
         if(u == null)
@@ -731,6 +741,11 @@ public class ModularControl extends PermissionHandler {
     public double getPermissionDouble(String world, String name, String path) {
         Double value = getInfoDouble(world, name, path, false);
         return value == null ? -1.0d : value;
+    }
+
+    @Override
+    public String getGroup(String world, String group) {
+        return getGroupProperName(world, group);
     }
 
 }
