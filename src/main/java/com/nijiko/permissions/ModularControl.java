@@ -291,34 +291,48 @@ public class ModularControl extends PermissionHandler {
     }
 
     @Override
-    public void addGroupPermission(String world, String user, String node) {
-        // TODO Auto-generated method stub
-        
+    public void addGroupPermission(String world, String group, String node) {
+        try {
+            safeGetGroup(world, group).addPermission(node);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     @Override
-    public void removeGroupPermission(String world, String user, String node) {
-        // TODO Auto-generated method stub
-        
+    public void removeGroupPermission(String world, String group, String node) {
+        try {
+            safeGetGroup(world, group).removePermission(node);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     //Prefix, suffix, build methods
     @Override
     public String getUserPrefix(String world, String user) {
-        // TODO Auto-generated method stub
-        return null;
+        User u = getUserObject(world, user);
+        if(u == null)
+            return "";
+        String prefix = u.getPrefix();
+        return prefix == null ? "" : prefix;
     }
 
     @Override
     public String getUserSuffix(String world, String user) {
-        // TODO Auto-generated method stub
-        return null;
+        User u = getUserObject(world, user);
+        if(u == null)
+            return "";
+        String suffix = u.getSuffix();
+        return suffix == null ? "" : suffix;
     }
 
     @Override
-    public String canUserBuild(String world, String user) {
-        // TODO Auto-generated method stub
-        return null;
+    public boolean canUserBuild(String world, String user) {
+        User u = getUserObject(world, user);
+        if(u == null)
+            return false;
+        return u.canBuild();
     }
     
     @Override
@@ -327,7 +341,7 @@ public class ModularControl extends PermissionHandler {
         Group g = this.getGroupObject(world, group);
         if (g == null)
             return "";
-        String prefix = g.getPrefix();
+        String prefix = g.getRawPrefix();
         return prefix == null ? "" : prefix;
     }
 
@@ -337,7 +351,7 @@ public class ModularControl extends PermissionHandler {
         Group g = this.getGroupObject(world, group);
         if (g == null)
             return "";
-        String suffix = g.getSuffix();
+        String suffix = g.getRawSuffix();
         return suffix == null ? "" : suffix;
     }
 

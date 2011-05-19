@@ -56,7 +56,7 @@ public abstract class PermissionHandler { //Name will be changed
     //Prefix, suffix, build methods
     public abstract String getUserPrefix(String world, String user);
     public abstract String getUserSuffix(String world, String user);
-    public abstract String canUserBuild(String world, String user);
+    public abstract boolean canUserBuild(String world, String user);
     
     public abstract String getGroupRawPrefix(String world, String group);
     public abstract String getGroupRawSuffix(String world, String group);

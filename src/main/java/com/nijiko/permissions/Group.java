@@ -28,11 +28,11 @@ public class Group extends Entry {
         return EntryType.GROUP;
     }
 
-    public String getPrefix() {
+    public String getRawPrefix() {
         return data.getPrefix(name);
     }
 
-    public String getSuffix() {
+    public String getRawSuffix() {
         return data.getSuffix(name);
     }
 

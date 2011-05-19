@@ -418,4 +418,28 @@ public abstract class Entry {
             return o1.compareTo(o2);
         }
     }
+
+    public String getPrefix() {
+        String value = this.recursiveCheck(new EntryVisitor<String>(){
+            @Override
+            public String value(Entry e) {
+                if(e instanceof Group) {
+                    return ((Group)e).getRawPrefix();
+                }
+                return null;
+            }});
+        return value;
+    }
+    
+    public String getSuffix() {
+        String value = this.recursiveCheck(new EntryVisitor<String>(){
+            @Override
+            public String value(Entry e) {
+                if(e instanceof Group) {
+                    return ((Group)e).getRawSuffix();
+                }
+                return null;
+            }});
+        return value;
+    }
 }

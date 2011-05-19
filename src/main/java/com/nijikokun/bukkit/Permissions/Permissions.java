@@ -17,6 +17,7 @@ import org.bukkit.event.Event;
 import org.bukkit.event.Event.Priority;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.PluginDescriptionFile;
+import org.bukkit.plugin.ServicePriority;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.util.config.Configuration;
 
@@ -33,9 +34,8 @@ import com.nijiko.permissions.PermissionHandler;
 import com.nijiko.permissions.User;
 
 /**
- * Permissions 2.x Copyright (C) 2011 Matt 'The Yeti' Burnett
- * <admin@theyeticave.net> Original Credit & Copyright (C) 2010 Nijikokun
- * <nijikokun@gmail.com>
+ * Permissions 3.x Copyright (C) 2011 Matt 'The Yeti' Burnett <admin@theyeticave.net> 
+ * Original Credit & Copyright (C) 2010 Nijikokun <nijikokun@gmail.com>
  * 
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU Permissions Public License as published by the Free
@@ -151,6 +151,7 @@ public class Permissions extends JavaPlugin {
             e.printStackTrace();
             getServer().getPluginManager().disablePlugin(this);
         }
+        getServer().getServicesManager().register(PermissionHandler.class, Security, this, ServicePriority.Normal);
     }
 
     @Override
@@ -627,7 +628,7 @@ public class Permissions extends JavaPlugin {
                             }
                             String text = isPrefix ? "&7[Permissions]&b " + group.getName() + "'s prefix:" : "&7[Permissions]&b " + group.getName() + "'s suffix:";
                             Messaging.send(text);
-                            text = isPrefix ? group.getPrefix() : group.getSuffix();
+                            text = isPrefix ? group.getRawPrefix() : group.getRawSuffix();
                             Messaging.send("\"" + text + "\"");
                             return true;
                         } else if (args[currentArg].equalsIgnoreCase("set")) {
