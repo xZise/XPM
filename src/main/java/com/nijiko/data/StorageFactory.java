@@ -31,7 +31,7 @@ public abstract class StorageFactory {
             userWorld = world;
         parent = null;
         String typename = config.getString("permissions.storage.type", StorageType.YAML.toString());
-        String userWorldtype = config.getString("permissions.storage.user.worldtype." + userWorld);
+        String userWorldtype = config.getString("permissions.storage.worldtype." + userWorld);
         if (userWorldtype == null || userWorldtype.isEmpty())
             userWorldtype = typename;
 
@@ -100,7 +100,7 @@ public abstract class StorageFactory {
             groupWorld = world;
         parent = null;
         String typename = config.getString("permissions.storage.type", StorageType.YAML.toString());
-        String groupWorldtype = config.getString("permissions.storage.group.worldtype." + groupWorld);
+        String groupWorldtype = config.getString("permissions.storage.worldtype." + groupWorld);
         if (groupWorldtype == null || groupWorldtype.isEmpty())
             groupWorldtype = typename;
 

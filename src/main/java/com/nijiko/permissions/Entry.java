@@ -104,10 +104,10 @@ public abstract class Entry {
     }
 
     public Set<String> getAllPermissions() {
-        return getAllPermissions(new LinkedHashSet<Entry>());
+        return getAllPermissions(new LinkedHashSet<Entry>(), world);
     }
 
-    protected Set<String> getAllPermissions(LinkedHashSet<Entry> chain) {
+    protected Set<String> getAllPermissions(LinkedHashSet<Entry> chain, String world) {
         Set<String> perms = new HashSet<String>();
         if (chain == null)
             return perms;
@@ -115,7 +115,7 @@ public abstract class Entry {
             return perms;
         else
             chain.add(this);
-        LinkedHashSet<Entry> rawParents = getParents();
+        LinkedHashSet<Entry> rawParents = getParents(world);
         LinkedHashSet<Entry> parents = new LinkedHashSet<Entry>();
         for (Entry e : rawParents)
             if (!chain.contains(e))
@@ -123,7 +123,7 @@ public abstract class Entry {
         rawParents = null;
 
         for (Entry e : parents) {
-            perms = resolvePerms(perms, e.getAllPermissions(chain));
+            perms = resolvePerms(perms, e.getAllPermissions(chain, world));
         }
         if (chain.contains(this))
             chain.remove(this);
@@ -140,7 +140,6 @@ public abstract class Entry {
             {
                 String wild = perm.substring(0, perm.length() - 1);
                 String oppWild = perm.startsWith("-") ? wild.substring(1) : "-" + wild;
-                wild = null;
                 for (Iterator<String> itr = perms.iterator(); itr.hasNext();) {
                     String candidate = itr.next();
                     if (candidate.startsWith(oppWild) || candidate.startsWith(wild))
@@ -155,7 +154,11 @@ public abstract class Entry {
     }
 
     public LinkedHashSet<Entry> getParents() {
-        LinkedHashSet<Group> groupParents = controller.stringToGroups(getRawParents());
+        return getParents(world);
+    }
+    
+    public LinkedHashSet<Entry> getParents(String world) {
+        LinkedHashSet<Group> groupParents = controller.stringToGroups(getRawParents(), world);
         LinkedHashSet<Entry> parents = new LinkedHashSet<Entry>();
         Entry global = this.getType() == EntryType.USER ? controller.getUserObject("*", name) : controller.getGroupObject("*", name);
         if(global != null) parents.add(global);
@@ -199,7 +202,7 @@ public abstract class Entry {
             Entry entry = queue.poll();
             if (parentSet.contains(entry))
                 continue;
-            parents = entry.getParents();
+            parents = entry.getParents(world);
             if (parents != null && parents.size() > 0)
                 queue.addAll(parents);
             parentSet.add(entry);
@@ -240,8 +243,9 @@ public abstract class Entry {
             public Boolean value(Entry e) {
                 if(e instanceof Group) {
                     Group g = (Group) e;
-                    if (g.canSelfBuild())
+                    if (g.canSelfBuild()) {
                         return true;
+                    }
                 }
                 return null;
             }
@@ -250,16 +254,16 @@ public abstract class Entry {
     }
 
     public <T> T recursiveCheck(EntryVisitor<T> visitor) {
-        return recursiveCheck(new HashSet<Entry>(), visitor);
+        return recursiveCheck(new LinkedHashSet<Entry>(), visitor, world);
     }
-    protected <T> T recursiveCheck(Set<Entry> checked, EntryVisitor<T> visitor) {
+    protected <T> T recursiveCheck(LinkedHashSet<Entry> checked, EntryVisitor<T> visitor, String overrideWorld) {
         if(checked.contains(this)) return null;
-        
+
         T result = visitor.value(this);
         if (result != null)
             return result;
         
-        LinkedHashSet<Entry> parents = getParents();
+        LinkedHashSet<Entry> parents = getParents(overrideWorld);
         if (parents == null || parents.isEmpty())
             return null;
         
@@ -268,9 +272,7 @@ public abstract class Entry {
         for (Entry entry : parents) {
             if (checked.contains(entry))
                 continue;
-            checked.add(entry);
-            result = entry.recursiveCheck(checked, visitor);
-            checked.remove(entry);
+            result = entry.recursiveCheck(checked, visitor, overrideWorld);
             if (result != null)
                 return result;
         }
@@ -280,16 +282,16 @@ public abstract class Entry {
     }
 
     public <T> T recursiveCompare(EntryVisitor<T> visitor, Comparator<T> comparator) {
-        return recursiveCompare(new HashSet<Entry>(), visitor, comparator);
+        return recursiveCompare(new LinkedHashSet<Entry>(), visitor, comparator, world);
     }
-    protected <T> T recursiveCompare(Set<Entry> checked, EntryVisitor<T> visitor, Comparator<T> comparator) {
+    protected <T> T recursiveCompare(LinkedHashSet<Entry> checked, EntryVisitor<T> visitor, Comparator<T> comparator, String overrideWorld) {
         if(checked.contains(this)) return null;
         
         T result = visitor.value(this);
         if (result != null)
             return result;
         
-        Set<Entry> parents = getParents();
+        Set<Entry> parents = getParents(overrideWorld);
         if (parents == null || parents.isEmpty())
             return null;
         
@@ -299,9 +301,7 @@ public abstract class Entry {
         for (Entry e : parents) {
             if (checked.contains(e))
                 continue;
-            checked.add(e);
-            result = e.recursiveCompare(checked, visitor, comparator);
-            checked.remove(e);
+            result = e.recursiveCompare(checked, visitor, comparator, overrideWorld);
             if (result != null) {
                 if(comparator.compare(result ,currentValue)==1)  currentValue = result;
             }

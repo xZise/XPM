@@ -48,7 +48,27 @@ public class SqlUserStorage implements UserStorage {
     public SqlUserStorage(String userWorld, int id) {
         worldId = id;
         this.userWorld = userWorld;
+
         reload();
+        
+        try {
+            Dbms dbms = SqlStorage.getDbms();
+            worldId = SqlStorage.getWorld(userWorld);
+            dbConn = SqlStorage.getConnection();
+            permGetStmt = dbConn.prepareStatement(permGetText);
+            parentGetStmt = dbConn.prepareStatement(parentGetText);
+            permAddStmt = dbConn.prepareStatement((dbms==Dbms.SQLITE ? permAddText.replace("IGNORE", "OR IGNORE") : permAddText));
+            permRemStmt = dbConn.prepareStatement(permRemText);
+            parentAddStmt = dbConn.prepareStatement((dbms==Dbms.SQLITE ? parentAddText.replace("IGNORE", "OR IGNORE") : parentAddText));
+            parentRemStmt = dbConn.prepareStatement(parentRemText);
+            userListStmt = dbConn.prepareStatement(userListText);
+            dataModStmt = dbConn.prepareStatement(dataModText);
+            dataDelStmt = dbConn.prepareStatement(dataDelText);
+            dataGetStmt = dbConn.prepareStatement(dataGetText);
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        
     }
 
     @Override
@@ -70,6 +90,7 @@ public class SqlUserStorage implements UserStorage {
             ResultSet rs = permGetStmt.executeQuery();
             while (rs.next()) {
                 permissions.add(rs.getString(1));
+                if(SqlStorage.getDbms()==Dbms.MYSQL && rs.isClosed()) break; //Temp fix for MySQL's stupid implementation of next()
             }
         } catch (SQLException e) {
             e.printStackTrace();
@@ -101,6 +122,7 @@ public class SqlUserStorage implements UserStorage {
                 String worldName = SqlStorage.getWorldName(nw.worldid);
                 GroupWorld gw = new GroupWorld(worldName, nw.name);
                 parents.add(gw);
+                if(SqlStorage.getDbms()==Dbms.MYSQL && rs.isClosed()) break; //Temp fix for MySQL's stupid implementation of next()
             }
         } catch (SQLException e) {
             e.printStackTrace();
@@ -196,6 +218,7 @@ public class SqlUserStorage implements UserStorage {
                 ResultSet rs = userListStmt.executeQuery();
                 while(rs.next()) {
                     userIds.put(rs.getString(1), rs.getInt(2));
+                    if(SqlStorage.getDbms()==Dbms.MYSQL && rs.isClosed()) break; //Temp fix for MySQL's stupid implementation of next()
                 }
             } catch(SQLException e) {
                 e.printStackTrace();
@@ -222,24 +245,24 @@ public class SqlUserStorage implements UserStorage {
     @Override
     public void reload() {
         userIds.clear();
-        try {
-            close();
-            Dbms dbms = SqlStorage.getDbms();
-            worldId = SqlStorage.getWorld(userWorld);
-            dbConn = SqlStorage.getConnection();
-            permGetStmt = dbConn.prepareStatement(permGetText);
-            parentGetStmt = dbConn.prepareStatement(parentGetText);
-            permAddStmt = dbConn.prepareStatement((dbms==Dbms.SQLITE ? permAddText.replace("IGNORE", "OR IGNORE") : permAddText));
-            permRemStmt = dbConn.prepareStatement(permRemText);
-            parentAddStmt = dbConn.prepareStatement((dbms==Dbms.SQLITE ? parentAddText.replace("IGNORE", "OR IGNORE") : parentAddText));
-            parentRemStmt = dbConn.prepareStatement(parentRemText);
-            userListStmt = dbConn.prepareStatement(userListText);
-            dataModStmt = dbConn.prepareStatement(dataModText);
-            dataDelStmt = dbConn.prepareStatement(dataDelText);
-            dataGetStmt = dbConn.prepareStatement(dataGetText);
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
+//        try {
+//            close();
+//            Dbms dbms = SqlStorage.getDbms();
+//            worldId = SqlStorage.getWorld(userWorld);
+//            dbConn = SqlStorage.getConnection();
+//            permGetStmt = dbConn.prepareStatement(permGetText);
+//            parentGetStmt = dbConn.prepareStatement(parentGetText);
+//            permAddStmt = dbConn.prepareStatement((dbms==Dbms.SQLITE ? permAddText.replace("IGNORE", "OR IGNORE") : permAddText));
+//            permRemStmt = dbConn.prepareStatement(permRemText);
+//            parentAddStmt = dbConn.prepareStatement((dbms==Dbms.SQLITE ? parentAddText.replace("IGNORE", "OR IGNORE") : parentAddText));
+//            parentRemStmt = dbConn.prepareStatement(parentRemText);
+//            userListStmt = dbConn.prepareStatement(userListText);
+//            dataModStmt = dbConn.prepareStatement(dataModText);
+//            dataDelStmt = dbConn.prepareStatement(dataDelText);
+//            dataGetStmt = dbConn.prepareStatement(dataGetText);
+//        } catch (SQLException e) {
+//            e.printStackTrace();
+//        }
     }
 
     @Override

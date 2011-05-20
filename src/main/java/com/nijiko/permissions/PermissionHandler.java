@@ -35,8 +35,20 @@ public abstract class PermissionHandler { //Name will be changed
     public abstract Set<String> getWorlds();
     public abstract void load() throws Exception;
     public abstract void reload();
+    /**
+     * Reloads the specified world
+     * @param world Name of target world
+     * @return False if world is not loaded, true otherwise
+     */
     public abstract boolean reload(String world);
+    /**
+     * Forces all storages to save,
+     */
     public abstract void saveAll();
+    /**
+     * This method forces a save of the specified world
+     * @param world Name of target world
+     */
     public abstract void save(String world);
     
     public abstract void closeAll();
@@ -146,5 +158,12 @@ public abstract class PermissionHandler { //Name will be changed
 
     @Deprecated
     public abstract String getGroup(String world, String group);
+
+    @Deprecated
+    public abstract String getGroupPrefix(String world, String group);
+    @Deprecated
+    public abstract String getGroupSuffix(String world, String group);
+    @Deprecated
+    public abstract boolean canGroupBuild(String world, String group);
 
 }

@@ -375,10 +375,15 @@ public class ModularControl extends PermissionHandler {
     }
     
     //Entry methods
-    LinkedHashSet<Group> stringToGroups(LinkedHashSet<GroupWorld> raws) {
+    LinkedHashSet<Group> stringToGroups(LinkedHashSet<GroupWorld> raws, String overrideWorld) {
+        if(overrideWorld == null) overrideWorld = defaultWorld;
         LinkedHashSet<Group> groupSet = new LinkedHashSet<Group>();
         for (GroupWorld raw : raws) {
-            String world = getParentWorldGroup(raw.getWorld());
+            String rawWorld = raw.getWorld();
+            if(rawWorld.equals("?")) {
+                rawWorld = overrideWorld;
+            }
+            String world = getParentWorldGroup(rawWorld);
             Map<String, Group> gMap = this.worldGroups.get(world);
             if (gMap != null) {
                 Group g = gMap.get(raw.getName().toLowerCase());
@@ -746,6 +751,21 @@ public class ModularControl extends PermissionHandler {
     @Override
     public String getGroup(String world, String group) {
         return getGroupProperName(world, group);
+    }
+
+    @Override
+    public String getGroupPrefix(String world, String group) {
+        return getGroupRawPrefix(world, group);
+    }
+
+    @Override
+    public String getGroupSuffix(String world, String group) {
+        return getGroupRawSuffix(world, group);
+    }
+
+    @Override
+    public boolean canGroupBuild(String world, String group) {
+        return canGroupRawBuild(world, group);
     }
 
 }

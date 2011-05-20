@@ -27,7 +27,7 @@ public class SqlGroupStorage implements GroupStorage {
     private static final String parentGetText = "SELECT * FROM PrGroupInheritance WHERE PrGroupInheritance.childid = ?;";
     PreparedStatement parentGetStmt;
 
-    private static final String getGroupText = "SELECT * FROM PrGroups WHERE PrGroups.worldid = ? AND PrGroups.gid = ?;";
+    private static final String getGroupText = "SELECT * FROM PrGroups WHERE PrGroups.gid = ?;";
     PreparedStatement getGroupStmt;
     private static final String getGroupsText = "SELECT * FROM PrGroups WHERE PrGroups.worldid = ?;";
     PreparedStatement getGroupsStmt;
@@ -72,6 +72,52 @@ public class SqlGroupStorage implements GroupStorage {
         worldId = id;
         this.groupWorld = groupWorld;
         reload();
+        
+        try {
+            close();
+            Dbms dbms = SqlStorage.getDbms();
+            worldId = SqlStorage.getWorld(groupWorld);
+            dbConn = SqlStorage.getConnection();
+            permGetStmt = dbConn.prepareStatement(permGetText);
+            parentGetStmt = dbConn.prepareStatement(parentGetText);
+            permAddStmt = dbConn.prepareStatement((dbms==Dbms.SQLITE ? permAddText.replace("IGNORE", "OR IGNORE") : permAddText));
+            permRemStmt = dbConn.prepareStatement(permRemText);
+            parentAddStmt = dbConn.prepareStatement((dbms==Dbms.SQLITE ? parentAddText.replace("IGNORE", "OR IGNORE") : parentAddText));
+            parentRemStmt = dbConn.prepareStatement(parentRemText);
+            groupListStmt = dbConn.prepareStatement(groupListText);
+            dataModStmt = dbConn.prepareStatement(dataModText);
+            dataDelStmt = dbConn.prepareStatement(dataDelText);
+            dataGetStmt = dbConn.prepareStatement(dataGetText);
+            getGroupStmt = dbConn.prepareStatement(getGroupText);
+            getGroupsStmt = dbConn.prepareStatement(getGroupsText);
+            getBaseStmt = dbConn.prepareStatement(getBaseText);
+            buildSetStmt = dbConn.prepareStatement(buildSetText);
+            prefixSetStmt = dbConn.prepareStatement(prefixSetText);
+            suffixSetStmt = dbConn.prepareStatement(suffixSetText);
+            trackGetStmt = dbConn.prepareStatement(trackGetText);
+            trackListStmt = dbConn.prepareStatement(trackListText);
+            getBaseStmt.setInt(1, worldId);
+            getBaseStmt.setInt(2, worldId);
+            ResultSet rs = getBaseStmt.executeQuery();
+            if (rs.next()) {
+                baseGroup = rs.getString(1);
+            }
+
+            getGroupsStmt.setInt(1, worldId);
+            rs = getGroupsStmt.executeQuery();
+            while (rs.next()) {
+                int gid = rs.getInt(1);
+                String groupName = rs.getString(2);
+                // Skip worldId
+                boolean build = (rs.getByte(6) != 0);
+                groupIds.put(groupName, gid);
+                if (build)
+                    buildGroups.add(groupName);
+                if(SqlStorage.getDbms()==Dbms.MYSQL && rs.isClosed()) break; //Temp fix for MySQL's stupid implementation of next()
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
     }
 
     @Override
@@ -90,11 +136,11 @@ public class SqlGroupStorage implements GroupStorage {
             int gid = SqlStorage.getGroup(groupWorld, name);
             if (!groupIds.containsKey(name))
                 groupIds.put(name, gid);
-            getGroupStmt.setInt(1, worldId);
-            getGroupStmt.setInt(2, gid);
+            getGroupStmt.setInt(1, gid);
             ResultSet rs = getGroupStmt.executeQuery();
-            rs.next();
+            if(!rs.next()) return build;
             build = (rs.getByte(6) != 0);
+            System.out.println(build);
 
         } catch (SQLException e) {
             e.printStackTrace();
@@ -115,10 +161,9 @@ public class SqlGroupStorage implements GroupStorage {
             int gid = SqlStorage.getGroup(groupWorld, name);
             if (!groupIds.containsKey(name))
                 groupIds.put(name, gid);
-            getGroupStmt.setInt(1, worldId);
-            getGroupStmt.setInt(2, gid);
-            ResultSet rs = permGetStmt.executeQuery();
-            rs.next();
+            getGroupStmt.setInt(1, gid);
+            ResultSet rs = getGroupStmt.executeQuery();
+            if(!rs.next()) return "";
             prefix = rs.getString(4);
         } catch (SQLException e) {
             e.printStackTrace();
@@ -134,10 +179,9 @@ public class SqlGroupStorage implements GroupStorage {
             int gid = SqlStorage.getGroup(groupWorld, name);
             if (!groupIds.containsKey(name))
                 groupIds.put(name, gid);
-            getGroupStmt.setInt(1, worldId);
-            getGroupStmt.setInt(2, gid);
-            ResultSet rs = permGetStmt.executeQuery();
-            rs.next();
+            getGroupStmt.setInt(1, gid);
+            ResultSet rs = getGroupStmt.executeQuery();
+            if(!rs.next()) return suffix;
             suffix = rs.getString(5);
         } catch (SQLException e) {
             e.printStackTrace();
@@ -160,6 +204,7 @@ public class SqlGroupStorage implements GroupStorage {
             ResultSet rs = permGetStmt.executeQuery();
             while (rs.next()) {
                 permissions.add(rs.getString(1));
+                if(SqlStorage.getDbms()==Dbms.MYSQL && rs.isClosed()) break; //Temp fix for MySQL's stupid implementation of next()
             }
         } catch (SQLException e) {
             e.printStackTrace();
@@ -187,6 +232,7 @@ public class SqlGroupStorage implements GroupStorage {
                 String worldName = SqlStorage.getWorldName(nw.worldid);
                 GroupWorld gw = new GroupWorld(worldName, nw.name);
                 parents.add(gw);
+                if(SqlStorage.getDbms()==Dbms.MYSQL && rs.isClosed()) break; //Temp fix for MySQL's stupid implementation of next()
             }
         } catch (SQLException e) {
             e.printStackTrace();
@@ -320,6 +366,7 @@ public class SqlGroupStorage implements GroupStorage {
                 ResultSet rs = groupListStmt.executeQuery();
                 while (rs.next()) {
                     groupIds.put(rs.getString(1), rs.getInt(2));
+                    if(SqlStorage.getDbms()==Dbms.MYSQL && rs.isClosed()) break; //Temp fix for MySQL's stupid implementation of next()
                 }
             } catch (SQLException e) {
                 e.printStackTrace();
@@ -347,50 +394,50 @@ public class SqlGroupStorage implements GroupStorage {
     public void reload() {
         baseGroup = null;
         buildGroups.clear();
-        try {
-            close();
-            Dbms dbms = SqlStorage.getDbms();
-            worldId = SqlStorage.getWorld(groupWorld);
-            dbConn = SqlStorage.getConnection();
-            permGetStmt = dbConn.prepareStatement(permGetText);
-            parentGetStmt = dbConn.prepareStatement(parentGetText);
-            permAddStmt = dbConn.prepareStatement((dbms==Dbms.SQLITE ? permAddText.replace("IGNORE", "OR IGNORE") : permAddText));
-            permRemStmt = dbConn.prepareStatement(permRemText);
-            parentAddStmt = dbConn.prepareStatement((dbms==Dbms.SQLITE ? parentAddText.replace("IGNORE", "OR IGNORE") : parentAddText));
-            parentRemStmt = dbConn.prepareStatement(parentRemText);
-            groupListStmt = dbConn.prepareStatement(groupListText);
-            dataModStmt = dbConn.prepareStatement(dataModText);
-            dataDelStmt = dbConn.prepareStatement(dataDelText);
-            dataGetStmt = dbConn.prepareStatement(dataGetText);
-            getGroupStmt = dbConn.prepareStatement(getGroupText);
-            getGroupsStmt = dbConn.prepareStatement(getGroupsText);
-            getBaseStmt = dbConn.prepareStatement(getBaseText);
-            buildSetStmt = dbConn.prepareStatement(buildSetText);
-            prefixSetStmt = dbConn.prepareStatement(prefixSetText);
-            suffixSetStmt = dbConn.prepareStatement(suffixSetText);
-            trackGetStmt = dbConn.prepareStatement(trackGetText);
-            trackListStmt = dbConn.prepareStatement(trackListText);
-            getBaseStmt.setInt(1, worldId);
-            getBaseStmt.setInt(2, worldId);
-            ResultSet rs = getBaseStmt.executeQuery();
-            if (rs.next()) {
-                baseGroup = rs.getString(1);
-            }
-
-            getGroupsStmt.setInt(1, worldId);
-            rs = getGroupsStmt.executeQuery();
-            while (rs.next()) {
-                int gid = rs.getInt(1);
-                String groupName = rs.getString(2);
-                // Skip worldId
-                boolean build = (rs.getByte(6) != 0);
-                groupIds.put(groupName, gid);
-                if (build)
-                    buildGroups.add(groupName);
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
+//        try {
+//            close();
+//            Dbms dbms = SqlStorage.getDbms();
+//            worldId = SqlStorage.getWorld(groupWorld);
+//            dbConn = SqlStorage.getConnection();
+//            permGetStmt = dbConn.prepareStatement(permGetText);
+//            parentGetStmt = dbConn.prepareStatement(parentGetText);
+//            permAddStmt = dbConn.prepareStatement((dbms==Dbms.SQLITE ? permAddText.replace("IGNORE", "OR IGNORE") : permAddText));
+//            permRemStmt = dbConn.prepareStatement(permRemText);
+//            parentAddStmt = dbConn.prepareStatement((dbms==Dbms.SQLITE ? parentAddText.replace("IGNORE", "OR IGNORE") : parentAddText));
+//            parentRemStmt = dbConn.prepareStatement(parentRemText);
+//            groupListStmt = dbConn.prepareStatement(groupListText);
+//            dataModStmt = dbConn.prepareStatement(dataModText);
+//            dataDelStmt = dbConn.prepareStatement(dataDelText);
+//            dataGetStmt = dbConn.prepareStatement(dataGetText);
+//            getGroupStmt = dbConn.prepareStatement(getGroupText);
+//            getGroupsStmt = dbConn.prepareStatement(getGroupsText);
+//            getBaseStmt = dbConn.prepareStatement(getBaseText);
+//            buildSetStmt = dbConn.prepareStatement(buildSetText);
+//            prefixSetStmt = dbConn.prepareStatement(prefixSetText);
+//            suffixSetStmt = dbConn.prepareStatement(suffixSetText);
+//            trackGetStmt = dbConn.prepareStatement(trackGetText);
+//            trackListStmt = dbConn.prepareStatement(trackListText);
+//            getBaseStmt.setInt(1, worldId);
+//            getBaseStmt.setInt(2, worldId);
+//            ResultSet rs = getBaseStmt.executeQuery();
+//            if (rs.next()) {
+//                baseGroup = rs.getString(1);
+//            }
+//
+//            getGroupsStmt.setInt(1, worldId);
+//            rs = getGroupsStmt.executeQuery();
+//            while (rs.next()) {
+//                int gid = rs.getInt(1);
+//                String groupName = rs.getString(2);
+//                // Skip worldId
+//                boolean build = (rs.getByte(6) != 0);
+//                groupIds.put(groupName, gid);
+//                if (build)
+//                    buildGroups.add(groupName);
+//            }
+//        } catch (SQLException e) {
+//            e.printStackTrace();
+//        }
     }
 
     public void close() throws SQLException {
@@ -443,14 +490,13 @@ public class SqlGroupStorage implements GroupStorage {
     public int getWeight(String name) {
         int weight = 0;
         try {
-            permGetStmt.clearParameters();
+            getGroupStmt.clearParameters();
             int gid = SqlStorage.getGroup(groupWorld, name);
             if (!groupIds.containsKey(name))
                 groupIds.put(name, gid);
-            getGroupStmt.setInt(1, worldId);
-            getGroupStmt.setInt(2, gid);
-            ResultSet rs = permGetStmt.executeQuery();
-            rs.next();
+            getGroupStmt.setInt(1, gid);
+            ResultSet rs = getGroupStmt.executeQuery();
+            if(rs.next()) return weight;
             weight = rs.getInt(7);
         } catch (SQLException e) {
             e.printStackTrace();
@@ -468,6 +514,7 @@ public class SqlGroupStorage implements GroupStorage {
                 ResultSet rs = trackListStmt.executeQuery();
                 while(rs.next()) {
                     trackSet.add(rs.getString(2));
+                    if(SqlStorage.getDbms()==Dbms.MYSQL && rs.isClosed()) break; //Temp fix for MySQL's stupid implementation of next()
                 }
             } catch (SQLException e) {
                 e.printStackTrace();
@@ -485,6 +532,7 @@ public class SqlGroupStorage implements GroupStorage {
             ResultSet rs = trackGetStmt.executeQuery();
             while(rs.next()) {
                 trackGroups.add(new GroupWorld(rs.getString(1),rs.getString(2)));
+                if(SqlStorage.getDbms()==Dbms.MYSQL && rs.isClosed()) break; //Temp fix for MySQL's stupid implementation of next()
             }
         } catch (SQLException e) {
             e.printStackTrace();
