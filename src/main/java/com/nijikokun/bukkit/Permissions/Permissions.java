@@ -434,7 +434,24 @@ public class Permissions extends JavaPlugin {
                         }
                         msg.send(text);
                         return true;
-                    } else if (args[currentArg].equalsIgnoreCase("add") || args[currentArg].equalsIgnoreCase("remove")) {
+                    } else if (args[currentArg].equalsIgnoreCase("listall")) {
+                        if (player != null && !Security.has(player, "permissions.perms.listall")) {
+                            msg.send("&4[Permissions] You do not have permissions to use this command.");
+                            return true;
+                        }
+                        Set<String> perms = entry.getAllPermissions();
+                        String text = "&7[Permissions]&b Permissions: &c";
+                        if (perms == null || perms.isEmpty()) {
+                            text = "&4[Permissions] User/Group has no permissions.";
+                        } else {
+                            for (String perm : perms) {
+                                text = text + perm + "&b,&c ";
+                            }
+                            text = text.substring(0, text.length() - 6);
+                        }
+                        msg.send(text);
+                        return true;
+                    }  else if (args[currentArg].equalsIgnoreCase("add") || args[currentArg].equalsIgnoreCase("remove")) {
                         boolean add = args[currentArg].equalsIgnoreCase("add");
 
                         String permNode = add ? "permissions.perms.add" : "permissions.perms.remove";

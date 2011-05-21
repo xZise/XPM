@@ -227,7 +227,7 @@ public class SqlGroupStorage implements GroupStorage {
             parentGetStmt.setInt(1, gid);
             ResultSet rs = parentGetStmt.executeQuery();
             while (rs.next()) {
-                int groupid = rs.getInt(2);
+                int groupid = rs.getInt(3);
                 NameWorldId nw = SqlStorage.getGroupName(groupid);
                 String worldName = SqlStorage.getWorldName(nw.worldid);
                 GroupWorld gw = new GroupWorld(worldName, nw.name);
