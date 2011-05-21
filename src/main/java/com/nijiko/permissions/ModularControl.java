@@ -453,6 +453,11 @@ public class ModularControl extends PermissionHandler {
     @Override
     public User getUserObject(String world, String name) {
         world = getParentWorldUser(world);
+        try {
+            loadWorld(world);
+        } catch (Exception e) {
+            return null;
+        }
         if (worldUsers.get(world) == null)
             return world.equals("*") ? null : getUserObject("*", name);
         return worldUsers.get(world).get(name.toLowerCase());
@@ -461,6 +466,11 @@ public class ModularControl extends PermissionHandler {
     @Override
     public Group getGroupObject(String world, String name) {
         world = getParentWorldGroup(world);
+        try {
+            loadWorld(world);
+        } catch (Exception e) {
+            return null;
+        }
         if (worldGroups.get(world) == null)
             return world.equals("*") ? null : getGroupObject("*", name);
         return worldGroups.get(world).get(name.toLowerCase());
