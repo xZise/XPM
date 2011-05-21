@@ -194,7 +194,7 @@ public abstract class Entry {
         LinkedHashSet<Entry> parents = getParents();
         if (parents != null && parents.size() > 0)
             queue.addAll(parents);
-        else
+        else if(this instanceof User)
             queue.add(controller.getDefaultGroup(world));
 
         // Poll the queue

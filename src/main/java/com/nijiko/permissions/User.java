@@ -12,9 +12,6 @@ public class User extends Entry {
     User(ModularControl controller, UserStorage data, String name, String world, boolean create) {
         super(controller, name, world);
         this.data = data;
-        Group defaultGroup = controller.getDefaultGroup(world);
-        if (defaultGroup != null)
-            this.addParent(defaultGroup);
         if(create)data.createUser(name);
     }
 

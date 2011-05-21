@@ -233,13 +233,13 @@ public class ModularControl extends PermissionHandler {
     }
     
     public String getParentWorldGroup(String world) {
-        if (!world.equals("*") && groupStorageMirrorings.get(world) != null)
+        if (!world.equals("*") && !world.equals("?") && groupStorageMirrorings.get(world) != null)
             return groupStorageMirrorings.get(world);
         return world;
     }
 
     public String getParentWorldUser(String world) {
-        if (!world.equals("*") && userStorageMirrorings.get(world) != null)
+        if (!world.equals("*") && !world.equals("?") && userStorageMirrorings.get(world) != null)
             world = userStorageMirrorings.get(world);
         return world;
     }
