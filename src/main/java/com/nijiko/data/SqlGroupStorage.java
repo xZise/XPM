@@ -155,7 +155,7 @@ public class SqlGroupStorage implements GroupStorage {
 
     @Override
     public String getPrefix(String name) {
-        String prefix = "";
+        String prefix = null;
         try {
             getGroupStmt.clearParameters();
             int gid = SqlStorage.getGroup(groupWorld, name);
@@ -163,7 +163,7 @@ public class SqlGroupStorage implements GroupStorage {
                 groupIds.put(name, gid);
             getGroupStmt.setInt(1, gid);
             ResultSet rs = getGroupStmt.executeQuery();
-            if(!rs.next()) return "";
+            if(!rs.next()) return prefix;
             prefix = rs.getString(4);
         } catch (SQLException e) {
             e.printStackTrace();
@@ -173,7 +173,7 @@ public class SqlGroupStorage implements GroupStorage {
 
     @Override
     public String getSuffix(String name) {
-        String suffix = "";
+        String suffix = null;
         try {
             getGroupStmt.clearParameters();
             int gid = SqlStorage.getGroup(groupWorld, name);

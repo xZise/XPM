@@ -426,7 +426,7 @@ public abstract class Entry {
                 if(e instanceof Group) {
                     return ((Group)e).getRawPrefix();
                 }
-                return null;
+                return "";
             }});
         return value;
     }
@@ -438,7 +438,7 @@ public abstract class Entry {
                 if(e instanceof Group) {
                     return ((Group)e).getRawSuffix();
                 }
-                return null;
+                return "";
             }});
         return value;
     }

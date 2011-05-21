@@ -30,8 +30,11 @@ import org.bukkit.command.CommandSender;
  */
 public class Messaging {
 
-    public static CommandSender sender = null;
+    public final CommandSender sender;
 
+    public Messaging(CommandSender sender) {
+        this.sender = sender;
+    }
     /**
      * Converts a list of arguments into points.
      * 
@@ -130,25 +133,6 @@ public class Messaging {
     }
 
     /**
-     * Save the CommandSender to be sent messages later. Ease of use sending messages. <br />
-     * <br />
-     * Example: <blockquote>
-     * 
-     * <pre>
-     * Messaging.save(sender);
-     * Messaging.send(&quot;This will go to the sender saved.&quot;);
-     * </pre>
-     * 
-     * </blockquote>
-     * 
-     * @param sender
-     *            The CommandSender we wish to save for later.
-     */
-    public static void save(CommandSender sender) {
-        Messaging.sender = sender;
-    }
-
-    /**
      * Sends a message to a specific CommandSender. <br />
      * <br />
      * Example: <blockquote>
@@ -175,8 +159,8 @@ public class Messaging {
      *            The message to be sent.
      * @see Messaging#save(CommandSender)
      */
-    public static void send(String message) {
-        if (Messaging.sender != null)
+    public void send(String message) {
+        if (sender != null)
             sender.sendMessage(parse(message));
     }
 }

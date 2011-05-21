@@ -227,6 +227,8 @@ public class ModularControl extends PermissionHandler {
         Set<String> worlds = new HashSet<String>();
         worlds.addAll(this.userStorageMirrorings.keySet());
         worlds.addAll(this.userStores.keySet());
+        worlds.addAll(this.groupStorageMirrorings.keySet());
+        worlds.addAll(this.groupStores.keySet());
         return worlds;
     }
     
