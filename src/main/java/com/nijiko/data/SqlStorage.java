@@ -27,7 +27,7 @@ public abstract class SqlStorage {
     private static Map<String, SqlUserStorage> userStores = new HashMap<String, SqlUserStorage>();
     private static Map<String, SqlGroupStorage> groupStores = new HashMap<String, SqlGroupStorage>();
     private static Map<String, Integer> worldMap = new HashMap<String, Integer>();
-    private static List<String> create = new ArrayList<String>(8);
+    private static List<String> create = new ArrayList<String>(12);
     static final String getWorld = "SELECT PrWorlds.worldid FROM PrWorlds WHERE PrWorlds.worldname = ?;";
     private static PreparedStatementPool getWorldPool;
     static final String getUser = "SELECT uid FROM PrUsers WHERE PrUsers.worldid = ? AND PrUsers.username = ?;";
@@ -313,6 +313,7 @@ public abstract class SqlStorage {
             SqlUserStorage.close();
             SqlGroupStorage.close();
             dbConn.close();
+            dbSource = null;
             Permissions.instance.getServer().getScheduler().cancelTask(reloadId);
             init = false;
         } catch (SQLException e) {
