@@ -26,58 +26,53 @@ public class SqlGroupStorage implements GroupStorage {
     private static Connection dbConn;
 
     private static final String permGetText = "SELECT PrGroupPermissions.permstring FROM PrGroupPermissions WHERE PrGroupPermissions.gid = ?;";
-    private static final PreparedStatementPool permGetPool;
+    private static PreparedStatementPool permGetPool;
     private static final String parentGetText = "SELECT * FROM PrGroupInheritance WHERE PrGroupInheritance.childid = ?;";
-    private static final PreparedStatementPool parentGetPool;
+    private static PreparedStatementPool parentGetPool;
 
     private static final String getGroupText = "SELECT * FROM PrGroups WHERE PrGroups.gid = ?;";
-    private static final PreparedStatementPool getGroupPool;
+    private static PreparedStatementPool getGroupPool;
     private static final String getGroupsText = "SELECT * FROM PrGroups WHERE PrGroups.worldid = ?;";
     //No preparedstatement pool needed
     private static final String getBaseText = "SELECT PrGroups.groupname FROM PrWorldBase, PrGroups WHERE PrWorldBase.worldid = ? AND PrGroups.worldid = ? AND PrWorldBase.defaultid = PrGroups.gid;";
     //No preparedstatement pool needed
 
     private static final String permAddText = "INSERT IGNORE INTO PrGroupPermissions (gid, permstring) VALUES (?,?);";
-    private static final PreparedStatementPool permAddPool;
+    private static PreparedStatementPool permAddPool;
     private static final String permRemText = "DELETE FROM PrGroupPermissions WHERE gid = ? AND permstring = ?;";
-    private static final PreparedStatementPool permRemPool;
+    private static PreparedStatementPool permRemPool;
     private static final String parentAddText = "INSERT IGNORE INTO PrGroupInheritance (childid, parentid) VALUES (?,?);";
-    private static final PreparedStatementPool parentAddPool;
+    private static PreparedStatementPool parentAddPool;
     private static final String parentRemText = "DELETE FROM PrGroupInheritance WHERE childid = ? AND parentid = ?;";
-    private static final PreparedStatementPool parentRemPool;
+    private static PreparedStatementPool parentRemPool;
 
     private static final String groupListText = "SELECT groupname, gid FROM PrGroups WHERE worldid = ?;";
-    private static final PreparedStatementPool groupListPool;
+    private static PreparedStatementPool groupListPool;
 
     private static final String dataGetText = "SELECT * FROM PrGroupData WHERE gid = ? AND path = ?;";
-    private static final PreparedStatementPool dataGetPool;
+    private static PreparedStatementPool dataGetPool;
     private static final String dataModText = "REPLACE INTO PrGroupData (data, gid, path) VALUES (?,?,?);";
-    private static final PreparedStatementPool dataModPool;
+    private static PreparedStatementPool dataModPool;
     private static final String dataDelText = "DELETE FROM PrGroupData WHERE gid = ? AND path = ?;";
-    private static final PreparedStatementPool dataDelPool;
+    private static PreparedStatementPool dataDelPool;
 
     private static final String buildSetText = "UPDATE PrGroups SET build = ? WHERE gid = ?;";
-    private static final PreparedStatementPool buildSetPool;
+    private static PreparedStatementPool buildSetPool;
     private static final String prefixSetText = "UPDATE PrGroups SET prefix = ? WHERE gid = ?;";
-    private static final PreparedStatementPool prefixSetPool;
+    private static PreparedStatementPool prefixSetPool;
     private static final String suffixSetText = "UPDATE PrGroups SET suffix = ? WHERE gid = ?;";
-    private static final PreparedStatementPool suffixSetPool;
+    private static PreparedStatementPool suffixSetPool;
 
     private static final String trackListText = "SELECT * FROM PrTracks WHERE worldid = ?;";
-    private static final PreparedStatementPool trackListPool;
+    private static PreparedStatementPool trackListPool;
     private static final String trackGetText = "SELECT PrWorlds.worldname, PrGroups.groupname FROM PrWorlds, PrGroups, PrTracks, PrTrackGroups WHERE PrTrackGroups.trackid = PrTracks.trackid AND PrTracks.worldid = ? AND PrTracks.trackname = ? AND PrGroups.gid = PrTrackGroups.gid AND PrWorlds.worldid = PrGroups.worldid ORDER BY PrTrackGroups.groupOrder;";
-    private static final PreparedStatementPool trackGetPool;
+    private static PreparedStatementPool trackGetPool;
     // private static final String weightSetText =
     // "UPDATE Groups SET suffix = ? WHERE gid = ?;";
     // PreparedStatement weightSetStmt;
 
-    static {
-        try {
-            dbConn = SqlStorage.getConnection();
-        } catch (SQLException e) {
-            e.printStackTrace();
-            dbConn = null;
-        }
+    
+    static void reloadPools(Connection dbConn) {
         Dbms dbms = SqlStorage.getDbms();
         permGetPool = new PreparedStatementPool(dbConn, permGetText, max);
         parentGetPool = new PreparedStatementPool(dbConn, parentGetText, max);

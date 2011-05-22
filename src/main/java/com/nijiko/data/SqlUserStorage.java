@@ -20,40 +20,35 @@ public class SqlUserStorage implements UserStorage {
     private final String userWorld;
     private int worldId;
     private Map<String, Integer> userIds = new HashMap<String, Integer>();
-    private static Connection dbConn;
 
     private static final String permGetText = "SELECT PrUserPermissions.permstring FROM PrUserPermissions WHERE PrUserPermissions.uid = ?;";
-    private static final PreparedStatementPool permGetPool;
+    private static PreparedStatementPool permGetPool;
     private static final String parentGetText = "SELECT parentid FROM PrUserInheritance WHERE PrUserInheritance.childid = ?;";
-    private static final PreparedStatementPool parentGetPool;
+    private static PreparedStatementPool parentGetPool;
 
 
     private static final String permAddText = "INSERT IGNORE INTO PrUserPermissions (uid, permstring) VALUES (?,?);";
-    private static final PreparedStatementPool permAddPool;
+    private static PreparedStatementPool permAddPool;
     private static final String permRemText = "DELETE FROM PrUserPermissions WHERE uid = ? AND permstring = ?;";
-    private static final PreparedStatementPool permRemPool;
+    private static PreparedStatementPool permRemPool;
     private static final String parentAddText = "INSERT IGNORE INTO PrUserInheritance (childid, parentid) VALUES (?,?);";
-    private static final PreparedStatementPool parentAddPool;
+    private static PreparedStatementPool parentAddPool;
     private static final String parentRemText = "DELETE FROM PrUserInheritance WHERE childid = ? AND parentid = ?;";
-    private static final PreparedStatementPool parentRemPool;
+    private static PreparedStatementPool parentRemPool;
 
     private static final String userListText = "SELECT username, uid FROM PrUsers WHERE worldid = ?;";
-    private static final PreparedStatementPool userListPool;
+    private static PreparedStatementPool userListPool;
     
     private static final String dataGetText = "SELECT * FROM PrUserData WHERE uid = ? AND path = ?;";
-    private static final PreparedStatementPool dataGetPool;
+    private static PreparedStatementPool dataGetPool;
     private static final String dataModText = "REPLACE INTO PrUserData (data, uid, path) VALUES (?,?,?);";
-    private static final PreparedStatementPool dataModPool;
+    private static PreparedStatementPool dataModPool;
     private static final String dataDelText = "DELETE FROM PrUserData WHERE uid = ? AND path = ?;";
-    private static final PreparedStatementPool dataDelPool;
+    private static PreparedStatementPool dataDelPool;
     
-    static {
+
+    static void reloadPools(Connection dbConn) {
         Dbms dbms = SqlStorage.getDbms();
-        try {
-            dbConn = SqlStorage.getConnection();
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
         permGetPool = new PreparedStatementPool(dbConn, permGetText, max);
         parentGetPool = new PreparedStatementPool(dbConn, parentGetText, max);
         permAddPool = new PreparedStatementPool(dbConn, (dbms==Dbms.SQLITE ? permAddText.replace("IGNORE", "OR IGNORE") : permAddText), max);
@@ -433,7 +428,7 @@ public class SqlUserStorage implements UserStorage {
         }
 
     }
-    public static void close() throws SQLException {
+    public static void close() {
         parentGetPool.close();
         parentAddPool.close();
         parentRemPool.close();
@@ -444,7 +439,6 @@ public class SqlUserStorage implements UserStorage {
         dataModPool.close();
         dataDelPool.close();
         userListPool.close();
-        if(dbConn!=null)dbConn.close();
     }
 
     public Integer getUserId(String name) {

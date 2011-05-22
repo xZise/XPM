@@ -1,6 +1,7 @@
 package com.nijiko.data;
 
 import java.sql.Connection;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
@@ -13,10 +14,12 @@ import javax.sql.DataSource;
 import org.sqlite.SQLiteDataSource;
 
 import com.mysql.jdbc.jdbc2.optional.MysqlDataSource;
+import com.nijiko.data.PreparedStatementPool.PreparedStatementWrapper;
 import com.nijikokun.bukkit.Permissions.Permissions;
 
 public abstract class SqlStorage {
 
+    private static final int max = 10;
     private static Dbms dbms;
     private static DataSource dbSource;
     private static int reloadId;
@@ -25,15 +28,25 @@ public abstract class SqlStorage {
     private static Map<String, SqlGroupStorage> groupStores = new HashMap<String, SqlGroupStorage>();
     private static Map<String, Integer> worldMap = new HashMap<String, Integer>();
     private static List<String> create = new ArrayList<String>(8);
-    static final String getWorld = "SELECT PrWorlds.worldid FROM PrWorlds WHERE PrWorlds.worldname = '?';";
-    static final String getUser = "SELECT uid FROM PrUsers WHERE PrUsers.worldid = ? AND PrUsers.username = '?';";
-    static final String getGroup = "SELECT gid FROM PrGroups WHERE PrGroups.worldid = ? AND PrGroups.groupname = '?';";
-    static final String createWorld = "INSERT IGNORE INTO PrWorlds (worldname) VALUES ('?');";
-    static final String createUser = "INSERT IGNORE INTO PrUsers (worldid,username) VALUES (?,'?');";
-    static final String createGroup = "INSERT IGNORE INTO PrGroups (worldid, groupname, build, weight) VALUES (?,'?',0,0);";
+    static final String getWorld = "SELECT PrWorlds.worldid FROM PrWorlds WHERE PrWorlds.worldname = ?;";
+    private static PreparedStatementPool getWorldPool;
+    static final String getUser = "SELECT uid FROM PrUsers WHERE PrUsers.worldid = ? AND PrUsers.username = ?;";
+    private static PreparedStatementPool getUserPool;
+    static final String getGroup = "SELECT gid FROM PrGroups WHERE PrGroups.worldid = ? AND PrGroups.groupname = ?;";
+    private static PreparedStatementPool getGroupPool;
+    static final String createWorld = "INSERT IGNORE INTO PrWorlds (worldname) VALUES (?);";
+    private static PreparedStatementPool createWorldPool;
+    static final String createUser = "INSERT IGNORE INTO PrUsers (worldid,username) VALUES (?,?);";
+    private static PreparedStatementPool createUserPool;
+    static final String createGroup = "INSERT IGNORE INTO PrGroups (worldid, groupname, build, weight) VALUES (?,?,0,0);";
+    private static PreparedStatementPool createGroupPool;
     static final String getWorldName = "SELECT worldname FROM PrWorlds WHERE worldid = ?;";
+    private static PreparedStatementPool getWorldNamePool;
     static final String getUserName = "SELECT username, worldid FROM PrUsers WHERE uid = ?;";
+    private static PreparedStatementPool getUserNamePool;
     static final String getGroupName = "SELECT groupname, worldid FROM PrGroups WHERE gid = ?;";
+    private static PreparedStatementPool getGroupNamePool;
+    private static Connection dbConn;
 
     static {
         create.add("CREATE TABLE IF NOT EXISTS PrWorlds (" + " worldid INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT," + " worldname VARCHAR(32) NOT NULL UNIQUE" + ")");
@@ -57,6 +70,8 @@ public abstract class SqlStorage {
         if (init) {
             return;
         }
+        
+        System.out.println("[Permissions] Initializing Permissions 3 SQL interface.");
         // SqlStorage.reloadDelay = reloadDelay;
         try {
             dbms = Dbms.valueOf(dbmsName);
@@ -78,6 +93,18 @@ public abstract class SqlStorage {
                 refresh();
             }
         }, reloadDelay, reloadDelay);
+        dbConn = dbSource.getConnection();
+        getWorldPool = new PreparedStatementPool(dbConn, getWorld, max);
+        getUserPool = new PreparedStatementPool(dbConn, getUser, max);
+        getGroupPool = new PreparedStatementPool(dbConn, getGroup, max);
+        createWorldPool = new PreparedStatementPool(dbConn, (dbms==Dbms.SQLITE ? createWorld.replace("IGNORE", "OR IGNORE") : createWorld), max);
+        createUserPool = new PreparedStatementPool(dbConn, (dbms==Dbms.SQLITE ? createUser.replace("IGNORE", "OR IGNORE") : createUser), max);
+        createGroupPool = new PreparedStatementPool(dbConn, (dbms==Dbms.SQLITE ? createGroup.replace("IGNORE", "OR IGNORE") : createGroup), max);
+        getWorldNamePool = new PreparedStatementPool(dbConn, getWorldName, max);
+        getUserNamePool = new PreparedStatementPool(dbConn, getUserName, max);
+        getGroupNamePool = new PreparedStatementPool(dbConn, getGroupName, max);
+        SqlGroupStorage.reloadPools(dbConn);
+        SqlUserStorage.reloadPools(dbConn);
         init = true;
         refresh();
     }
@@ -120,24 +147,26 @@ public abstract class SqlStorage {
         if (worldMap.containsKey(name)) {
             return worldMap.get(name);
         }
-        Connection dbConn = getConnection();
-        Statement stmt = dbConn.createStatement();
-        String query = getWorld.replace("?", name);
-        ResultSet rs = stmt.executeQuery(query);
+        PreparedStatementWrapper getWorldWrap = getWorldPool.getStatement();
+        PreparedStatement getWorldStmt = getWorldWrap.getStatement();
+        getWorldStmt.clearParameters();
+        getWorldStmt.setString(1, name);
+        ResultSet rs = getWorldStmt.executeQuery();
         if (!rs.next()) {
             System.out.println("[Permissions] Creating world '" + name + "'.");
-            String addQuery = (dbms==Dbms.SQLITE ? createWorld.replace("IGNORE", "OR IGNORE") : createWorld).replace("?", name);
-            stmt.executeUpdate(addQuery);
-            rs = stmt.executeQuery(query);
+            PreparedStatementWrapper createWorldWrap = createWorldPool.getStatement();
+            PreparedStatement createWorldStmt = createWorldWrap.getStatement();
+            createWorldStmt.setString(1, name);
+            createWorldStmt.executeUpdate();
+            createWorldWrap.close();
+            rs = getWorldStmt.executeQuery();
             rs.next();
         }
         int id = rs.getInt(1);
         worldMap.put(name, id);
         rs.close();
-        stmt.close();
-        dbConn.close();
+        getWorldWrap.close();
         return id;
-
     }
 
     static int getUser(String world, String name) throws SQLException {
@@ -148,22 +177,27 @@ public abstract class SqlStorage {
                 return id;
             }
         }
-        Connection dbConn = getConnection();
-        Statement stmt = dbConn.createStatement();
-        int worldId = getWorld(world);
-        String query = getUser.replaceFirst("\\?", String.valueOf(worldId)).replaceFirst("\\?", name);
-        ResultSet rs = stmt.executeQuery(query);
+        int worldid = getWorld(world);
+        PreparedStatementWrapper getUserWrap = getUserPool.getStatement();
+        PreparedStatement getUserStmt = getUserWrap.getStatement();
+        getUserStmt.clearParameters();
+        getUserStmt.setInt(1, worldid);
+        getUserStmt.setString(2, name);
+        ResultSet rs = getUserStmt.executeQuery();
         if (!rs.next()) {
             System.out.println("[Permissions] Creating user '" + name + "' in world '" + world + "'.");
-            String addQuery = (dbms==Dbms.SQLITE ? createUser.replace("IGNORE", "OR IGNORE") : createUser).replaceFirst("\\?", String.valueOf(worldId)).replaceFirst("\\?", name);
-            stmt.executeUpdate(addQuery);
-            rs = stmt.executeQuery(query);
+            PreparedStatementWrapper createUserWrap = createUserPool.getStatement();
+            PreparedStatement createUserStmt = createUserWrap.getStatement();
+            createUserStmt.setInt(1, worldid);
+            createUserStmt.setString(2, name);
+            createUserStmt.executeUpdate();
+            createUserWrap.close();
+            rs = getUserStmt.executeQuery();
             rs.next();
         }
         int id = rs.getInt(1);
         rs.close();
-        stmt.close();
-        dbConn.close();
+        getUserWrap.close();
         return id;
 
     }
@@ -176,46 +210,52 @@ public abstract class SqlStorage {
                 return id;
             }
         }
-        Connection dbConn = getConnection();
-        Statement stmt = dbConn.createStatement();
-        int worldId = getWorld(world);
-        String query = getGroup.replaceFirst("\\?", String.valueOf(worldId)).replaceFirst("\\?", name);
-        ResultSet rs = stmt.executeQuery(query);
+        int worldid = getWorld(world);
+        PreparedStatementWrapper getGroupWrap = getGroupPool.getStatement();
+        PreparedStatement getGroupStmt = getGroupWrap.getStatement();
+        getGroupStmt.clearParameters();
+        getGroupStmt.setInt(1, worldid);
+        getGroupStmt.setString(2, name);
+        ResultSet rs = getGroupStmt.executeQuery();
         if (!rs.next()) {
             System.out.println("[Permissions] Creating group '" + name + "' in world '" + world + "'.");
-            String addQuery = (dbms==Dbms.SQLITE ? createGroup.replace("IGNORE", "OR IGNORE") : createGroup).replaceFirst("\\?", String.valueOf(worldId)).replaceFirst("\\?", name);
-            stmt.executeUpdate(addQuery);
-            rs = stmt.executeQuery(query);
+            PreparedStatementWrapper createGroupWrap = createGroupPool.getStatement();
+            PreparedStatement createGroupStmt = createGroupWrap.getStatement();
+            createGroupStmt.setInt(1, worldid);
+            createGroupStmt.setString(2, name);
+            createGroupStmt.executeUpdate();
+            createGroupWrap.close();
+            rs = getGroupStmt.executeQuery();
             rs.next();
         }
         int id = rs.getInt(1);
         rs.close();
-        stmt.close();
-        dbConn.close();
+        getGroupWrap.close();
         return id;
     }
 
     static String getWorldName(int id) throws SQLException {
-        Connection dbConn = getConnection();
-        Statement stmt = dbConn.createStatement();
-        String query = getWorldName.replace("?", String.valueOf(id));
-        ResultSet rs = stmt.executeQuery(query);
+        PreparedStatementWrapper getWorldNameWrap = getWorldNamePool.getStatement();
+        PreparedStatement getWorldNameStmt = getWorldNameWrap.getStatement();
+        getWorldNameStmt.clearParameters();
+        getWorldNameStmt.setInt(1, id);
+        ResultSet rs = getWorldNameStmt.executeQuery();
         if(!rs.next()) {
             return "Error";
         }
         String name = rs.getString(1);
         worldMap.put(name, id);
         rs.close();
-        stmt.close();
-        dbConn.close();
+        getWorldNameWrap.close();
         return name;
     }
 
     static NameWorldId getUserName(int uid) throws SQLException {
-        Connection dbConn = getConnection();
-        Statement stmt = dbConn.createStatement();
-        String query = getUserName.replace("?", String.valueOf(uid));
-        ResultSet rs = stmt.executeQuery(query);
+        PreparedStatementWrapper getUserNameWrap = getUserNamePool.getStatement();
+        PreparedStatement getUserNameStmt = getUserNameWrap.getStatement();
+        getUserNameStmt.clearParameters();
+        getUserNameStmt.setInt(1, uid);
+        ResultSet rs = getUserNameStmt.executeQuery();
         NameWorldId nw = new NameWorldId();
         if(!rs.next()) {
             nw.name = "Error";
@@ -227,15 +267,15 @@ public abstract class SqlStorage {
         nw.name = name;
         nw.worldid = worldid;
         rs.close();
-        stmt.close();
-        dbConn.close();
+        getUserNameWrap.close();
         return nw;
     }
     static NameWorldId getGroupName(int gid) throws SQLException {
-        Connection dbConn = getConnection();
-        Statement stmt = dbConn.createStatement();
-        String query = getGroupName.replace("?", String.valueOf(gid));
-        ResultSet rs = stmt.executeQuery(query);
+        PreparedStatementWrapper getGroupNameWrap = getGroupNamePool.getStatement();
+        PreparedStatement getGroupNameStmt = getGroupNameWrap.getStatement();
+        getGroupNameStmt.clearParameters();
+        getGroupNameStmt.setInt(1, gid);
+        ResultSet rs = getGroupNameStmt.executeQuery();
         NameWorldId nw = new NameWorldId();
         if(!rs.next()) {
             nw.name = "Error";
@@ -247,8 +287,7 @@ public abstract class SqlStorage {
         nw.name = name;
         nw.worldid = worldid;
         rs.close();
-        stmt.close();
-        dbConn.close();
+        getGroupNameWrap.close();
         return nw;
     }
     static SqlUserStorage getUserStorage(String world) throws SQLException {
@@ -273,6 +312,7 @@ public abstract class SqlStorage {
         try {
             SqlUserStorage.close();
             SqlGroupStorage.close();
+            dbConn.close();
             Permissions.instance.getServer().getScheduler().cancelTask(reloadId);
             init = false;
         } catch (SQLException e) {
