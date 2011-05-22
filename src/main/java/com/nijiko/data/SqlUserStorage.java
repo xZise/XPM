@@ -10,65 +10,66 @@ import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
 
+import com.nijiko.data.PreparedStatementPool.PreparedStatementWrapper;
 import com.nijiko.data.SqlStorage.NameWorldId;
 
 
 public class SqlUserStorage implements UserStorage {
 
+    private static int max = 5;
     private final String userWorld;
     private int worldId;
     private Map<String, Integer> userIds = new HashMap<String, Integer>();
-    private Connection dbConn;
+    private static Connection dbConn;
 
     private static final String permGetText = "SELECT PrUserPermissions.permstring FROM PrUserPermissions WHERE PrUserPermissions.uid = ?;";
-    PreparedStatement permGetStmt;
+    private static final PreparedStatementPool permGetPool;
     private static final String parentGetText = "SELECT parentid FROM PrUserInheritance WHERE PrUserInheritance.childid = ?;";
-    PreparedStatement parentGetStmt;
+    private static final PreparedStatementPool parentGetPool;
 
 
     private static final String permAddText = "INSERT IGNORE INTO PrUserPermissions (uid, permstring) VALUES (?,?);";
-    PreparedStatement permAddStmt;
+    private static final PreparedStatementPool permAddPool;
     private static final String permRemText = "DELETE FROM PrUserPermissions WHERE uid = ? AND permstring = ?;";
-    PreparedStatement permRemStmt;
+    private static final PreparedStatementPool permRemPool;
     private static final String parentAddText = "INSERT IGNORE INTO PrUserInheritance (childid, parentid) VALUES (?,?);";
-    PreparedStatement parentAddStmt;
+    private static final PreparedStatementPool parentAddPool;
     private static final String parentRemText = "DELETE FROM PrUserInheritance WHERE childid = ? AND parentid = ?;";
-    PreparedStatement parentRemStmt;
+    private static final PreparedStatementPool parentRemPool;
 
     private static final String userListText = "SELECT username, uid FROM PrUsers WHERE worldid = ?;";
-    PreparedStatement userListStmt;
+    private static final PreparedStatementPool userListPool;
     
     private static final String dataGetText = "SELECT * FROM PrUserData WHERE uid = ? AND path = ?;";
-    PreparedStatement dataGetStmt;
+    private static final PreparedStatementPool dataGetPool;
     private static final String dataModText = "REPLACE INTO PrUserData (data, uid, path) VALUES (?,?,?);";
-    PreparedStatement dataModStmt;
+    private static final PreparedStatementPool dataModPool;
     private static final String dataDelText = "DELETE FROM PrUserData WHERE uid = ? AND path = ?;";
-    PreparedStatement dataDelStmt;
+    private static final PreparedStatementPool dataDelPool;
     
+    static {
+        Dbms dbms = SqlStorage.getDbms();
+        try {
+            dbConn = SqlStorage.getConnection();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        permGetPool = new PreparedStatementPool(dbConn, permGetText, max);
+        parentGetPool = new PreparedStatementPool(dbConn, parentGetText, max);
+        permAddPool = new PreparedStatementPool(dbConn, (dbms==Dbms.SQLITE ? permAddText.replace("IGNORE", "OR IGNORE") : permAddText), max);
+        permRemPool = new PreparedStatementPool(dbConn, permRemText, max);
+        parentAddPool = new PreparedStatementPool(dbConn, (dbms==Dbms.SQLITE ? parentAddText.replace("IGNORE", "OR IGNORE") : parentAddText), max);
+        parentRemPool = new PreparedStatementPool(dbConn, parentRemText, max);
+        userListPool = new PreparedStatementPool(dbConn, userListText, max);
+        dataModPool = new PreparedStatementPool(dbConn, dataModText, max);
+        dataDelPool = new PreparedStatementPool(dbConn, dataDelText, max);
+        dataGetPool = new PreparedStatementPool(dbConn, dataGetText, max);
+    }
     public SqlUserStorage(String userWorld, int id) {
         worldId = id;
         this.userWorld = userWorld;
 
         reload();
-        
-        try {
-            Dbms dbms = SqlStorage.getDbms();
-            worldId = SqlStorage.getWorld(userWorld);
-            dbConn = SqlStorage.getConnection();
-            permGetStmt = dbConn.prepareStatement(permGetText);
-            parentGetStmt = dbConn.prepareStatement(parentGetText);
-            permAddStmt = dbConn.prepareStatement((dbms==Dbms.SQLITE ? permAddText.replace("IGNORE", "OR IGNORE") : permAddText));
-            permRemStmt = dbConn.prepareStatement(permRemText);
-            parentAddStmt = dbConn.prepareStatement((dbms==Dbms.SQLITE ? parentAddText.replace("IGNORE", "OR IGNORE") : parentAddText));
-            parentRemStmt = dbConn.prepareStatement(parentRemText);
-            userListStmt = dbConn.prepareStatement(userListText);
-            dataModStmt = dbConn.prepareStatement(dataModText);
-            dataDelStmt = dbConn.prepareStatement(dataDelText);
-            dataGetStmt = dbConn.prepareStatement(dataGetText);
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-        
     }
 
     @Override
@@ -77,8 +78,11 @@ public class SqlUserStorage implements UserStorage {
             return new HashSet<String>();
         Set<String> permissions = new HashSet<String>();
 
+        PreparedStatementWrapper wrap = null;
 
         try {
+            wrap = permGetPool.getStatement();
+            PreparedStatement permGetStmt = wrap.getStatement();
             permGetStmt.clearParameters();
             int uid = 0;
             if(userIds.containsKey(name)) uid = userIds.get(name);
@@ -95,6 +99,8 @@ public class SqlUserStorage implements UserStorage {
         } catch (SQLException e) {
             e.printStackTrace();
             return new HashSet<String>();
+        } finally {
+            if(wrap != null) wrap.close();
         }
 
         return permissions;
@@ -106,7 +112,10 @@ public class SqlUserStorage implements UserStorage {
             return new LinkedHashSet<GroupWorld>();
         LinkedHashSet<GroupWorld> parents = new LinkedHashSet<GroupWorld>();
 
+        PreparedStatementWrapper wrap = null;
         try {
+            wrap = parentGetPool.getStatement();
+            PreparedStatement parentGetStmt = wrap.getStatement();
             parentGetStmt.clearParameters();
             int uid = 0;
             if(userIds.containsKey(name)) uid = userIds.get(name);
@@ -127,13 +136,18 @@ public class SqlUserStorage implements UserStorage {
         } catch (SQLException e) {
             e.printStackTrace();
             return new LinkedHashSet<GroupWorld>();
+        } finally {
+            if(wrap != null) wrap.close();
         }
         return parents;
     }
 
     @Override
     public void addPermission(String name, String permission) {
+        PreparedStatementWrapper wrap = null;
         try {
+            wrap = permAddPool.getStatement();
+            PreparedStatement permAddStmt = wrap.getStatement();
             permAddStmt.clearParameters();
             int uid = 0;
             if(userIds.containsKey(name)) uid = userIds.get(name);
@@ -146,12 +160,17 @@ public class SqlUserStorage implements UserStorage {
             permAddStmt.executeUpdate();
         } catch (SQLException e) {
             e.printStackTrace();
+        } finally {
+            if(wrap != null) wrap.close();
         }
     }
 
     @Override
     public void removePermission(String name, String permission) {
+        PreparedStatementWrapper wrap = null;
         try {
+            wrap = permRemPool.getStatement();
+            PreparedStatement permRemStmt = wrap.getStatement();
             permRemStmt.clearParameters();
             int uid = 0;
             if(userIds.containsKey(name)) uid = userIds.get(name);
@@ -164,13 +183,19 @@ public class SqlUserStorage implements UserStorage {
             permRemStmt.executeUpdate();
         } catch (SQLException e) {
             e.printStackTrace();
+        } finally {
+            if(wrap != null) wrap.close();
         }
     }
 
     @Override
     public void addParent(String name, String groupWorld, String groupName) {
-        System.out.println("Adding parent " + groupName + " in "+ groupWorld);
+//        System.out.println("Adding parent " + groupName + " in "+ groupWorld);
+
+        PreparedStatementWrapper wrap = null;
         try {
+            wrap = parentAddPool.getStatement();
+            PreparedStatement parentAddStmt = wrap.getStatement();
             parentAddStmt.clearParameters();
             int uid = 0;
             if(userIds.containsKey(name)) uid = userIds.get(name);
@@ -184,14 +209,19 @@ public class SqlUserStorage implements UserStorage {
             parentAddStmt.executeUpdate();
         } catch (SQLException e) {
             e.printStackTrace();
+        } finally {
+            if(wrap != null) wrap.close();
         }
 
     }
 
     @Override
     public void removeParent(String name, String groupWorld, String groupName) {
-        System.out.println("Removing parent " + groupName + " in "+ groupWorld);
+//        System.out.println("Removing parent " + groupName + " in "+ groupWorld);
+        PreparedStatementWrapper wrap = null;
         try {
+            wrap = parentRemPool.getStatement();
+            PreparedStatement parentRemStmt = wrap.getStatement();
             parentRemStmt.clearParameters();
             int uid = 0;
             if(userIds.containsKey(name)) uid = userIds.get(name);
@@ -205,6 +235,8 @@ public class SqlUserStorage implements UserStorage {
             parentRemStmt.executeUpdate();
         } catch (SQLException e) {
             e.printStackTrace();
+        } finally {
+            if(wrap != null) wrap.close();
         }
 
     }
@@ -212,7 +244,10 @@ public class SqlUserStorage implements UserStorage {
     @Override
     public Set<String> getUsers() {
         if(userIds.isEmpty()) {
+            PreparedStatementWrapper wrap = null;
             try {
+                wrap = userListPool.getStatement();
+                PreparedStatement userListStmt = wrap.getStatement();
                 userListStmt.clearParameters();
                 userListStmt.setInt(1, worldId);
                 ResultSet rs = userListStmt.executeQuery();
@@ -222,6 +257,8 @@ public class SqlUserStorage implements UserStorage {
                 }
             } catch(SQLException e) {
                 e.printStackTrace();
+            } finally {
+                if(wrap != null) wrap.close();
             }
         }
         return userIds.keySet();
@@ -245,24 +282,6 @@ public class SqlUserStorage implements UserStorage {
     @Override
     public void reload() {
         userIds.clear();
-//        try {
-//            close();
-//            Dbms dbms = SqlStorage.getDbms();
-//            worldId = SqlStorage.getWorld(userWorld);
-//            dbConn = SqlStorage.getConnection();
-//            permGetStmt = dbConn.prepareStatement(permGetText);
-//            parentGetStmt = dbConn.prepareStatement(parentGetText);
-//            permAddStmt = dbConn.prepareStatement((dbms==Dbms.SQLITE ? permAddText.replace("IGNORE", "OR IGNORE") : permAddText));
-//            permRemStmt = dbConn.prepareStatement(permRemText);
-//            parentAddStmt = dbConn.prepareStatement((dbms==Dbms.SQLITE ? parentAddText.replace("IGNORE", "OR IGNORE") : parentAddText));
-//            parentRemStmt = dbConn.prepareStatement(parentRemText);
-//            userListStmt = dbConn.prepareStatement(userListText);
-//            dataModStmt = dbConn.prepareStatement(dataModText);
-//            dataDelStmt = dbConn.prepareStatement(dataDelText);
-//            dataGetStmt = dbConn.prepareStatement(dataGetText);
-//        } catch (SQLException e) {
-//            e.printStackTrace();
-//        }
     }
 
     @Override
@@ -293,7 +312,10 @@ public class SqlUserStorage implements UserStorage {
     @Override
     public String getString(String name, String path) {
         String data = null;
+        PreparedStatementWrapper wrap = null;
         try {
+            wrap = dataGetPool.getStatement();
+            PreparedStatement dataGetStmt = wrap.getStatement();
             int uid = 0;
             if(userIds.containsKey(name)) uid = userIds.get(name);
             else  {
@@ -309,6 +331,8 @@ public class SqlUserStorage implements UserStorage {
             }
         } catch (SQLException e) {
             e.printStackTrace();
+        } finally {
+            if(wrap != null) wrap.close();
         }
         return data;
     }
@@ -364,6 +388,7 @@ public class SqlUserStorage implements UserStorage {
             throw new IllegalArgumentException("Only ints, bools, doubles and Strings are allowed!");
         }
 
+        PreparedStatementWrapper wrap = null;
         try {
             int uid = 0;
             if(userIds.containsKey(name)) uid = userIds.get(name);
@@ -371,6 +396,8 @@ public class SqlUserStorage implements UserStorage {
                 uid = SqlStorage.getUser(userWorld, name);
                 userIds.put(name, uid);
             }
+            wrap = dataModPool.getStatement();
+            PreparedStatement dataModStmt = wrap.getStatement();
             dataModStmt.clearParameters();
             dataModStmt.setString(1, szForm);
             dataModStmt.setInt(2, uid);
@@ -379,12 +406,15 @@ public class SqlUserStorage implements UserStorage {
         } catch (SQLException e) {
             e.printStackTrace();
             data = "";
+        } finally {
+            if(wrap != null) wrap.close();
         }
         
     }
 
     @Override
     public void removeData(String name, String path) {        
+        PreparedStatementWrapper wrap = null;
         try {
             int uid = 0;
             if(userIds.containsKey(name)) uid = userIds.get(name);
@@ -392,6 +422,8 @@ public class SqlUserStorage implements UserStorage {
                 uid = SqlStorage.getUser(userWorld, name);
                 userIds.put(name, uid);
             }
+            wrap = dataDelPool.getStatement();
+            PreparedStatement dataDelStmt = wrap.getStatement();
             dataDelStmt.clearParameters();
             dataDelStmt.setInt(1, uid);
             dataDelStmt.setString(2, path);
@@ -401,17 +433,17 @@ public class SqlUserStorage implements UserStorage {
         }
 
     }
-    public void close() throws SQLException {
-        if(parentGetStmt!=null)parentGetStmt.close();
-        if(parentAddStmt!=null)parentAddStmt.close();
-        if(parentRemStmt!=null)parentRemStmt.close();
-        if(permGetStmt!=null)permGetStmt.close();
-        if(permAddStmt!=null)permAddStmt.close();
-        if(permRemStmt!=null)permRemStmt.close();
-        if(dataGetStmt!=null)dataGetStmt.close();
-        if(dataModStmt!=null)dataModStmt.close();
-        if(dataDelStmt!=null)dataDelStmt.close();
-        if(userListStmt!=null)userListStmt.close();
+    public static void close() throws SQLException {
+        parentGetPool.close();
+        parentAddPool.close();
+        parentRemPool.close();
+        permGetPool.close();
+        permAddPool.close();
+        permRemPool.close();
+        dataGetPool.close();
+        dataModPool.close();
+        dataDelPool.close();
+        userListPool.close();
         if(dbConn!=null)dbConn.close();
     }
 

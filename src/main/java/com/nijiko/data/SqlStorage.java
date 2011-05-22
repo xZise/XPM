@@ -271,9 +271,8 @@ public abstract class SqlStorage {
 
     public synchronized static void closeAll() {
         try {
-            for (SqlUserStorage sus : userStores.values()) {
-                sus.close();
-            }
+            SqlUserStorage.close();
+            SqlGroupStorage.close();
             Permissions.instance.getServer().getScheduler().cancelTask(reloadId);
             init = false;
         } catch (SQLException e) {
