@@ -3,6 +3,7 @@ package com.nijiko.permissions;
 //import java.util.Arrays;
 import java.util.ArrayDeque;
 import java.util.Comparator;
+import java.util.Deque;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
@@ -116,10 +117,10 @@ public abstract class Entry {
         else
             chain.add(this);
         LinkedHashSet<Entry> rawParents = getParents(world);
-        LinkedHashSet<Entry> parents = new LinkedHashSet<Entry>();
+        Deque<Entry> parents = new ArrayDeque<Entry>();
         for (Entry e : rawParents)
             if (!chain.contains(e))
-                parents.add(e);
+                parents.push(e);
         rawParents = null;
 
         for (Entry e : parents) {
