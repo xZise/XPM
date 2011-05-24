@@ -1,15 +1,16 @@
 package com.nijikokun.bukkit.Permissions;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.LinkedHashSet;
+import java.util.Properties;
 import java.util.Set;
 import java.util.logging.Logger;
 
 import org.bukkit.ChatColor;
-import org.bukkit.Server;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
@@ -22,15 +23,12 @@ import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.util.config.Configuration;
 
 import com.nijiko.Messaging;
-import com.nijiko.Misc;
 import com.nijiko.configuration.NotNullConfiguration;
 import com.nijiko.data.GroupWorld;
-//import com.nijiko.permissions.Group;
 import com.nijiko.permissions.Entry;
 import com.nijiko.permissions.Group;
 import com.nijiko.permissions.ModularControl;
 import com.nijiko.permissions.PermissionHandler;
-//import com.nijiko.permissions.User;
 import com.nijiko.permissions.User;
 
 /**
@@ -53,15 +51,12 @@ import com.nijiko.permissions.User;
 
 public class Permissions extends JavaPlugin {
 
-    public static Logger log = Logger.getLogger("Minecraft");
-    public static PluginDescriptionFile description;
+    public static Logger log;
     public static Plugin instance;
-    public static Server Server = null;
-    public File directory;
     private Configuration storageConfig;
-    public static String name = "Permissions";
-    public static String version = "3.0";
-    public static String codename = "Yeti";
+    public static final String name = "Permissions";
+    public static final String version = "3.0";
+    public static final String codename = "Yeti";
 
     public Listener l = new Listener(this);
 
@@ -70,18 +65,34 @@ public class Permissions extends JavaPlugin {
      */
     public static PermissionHandler Security;
 
-    /**
-     * Miscellaneous object for various functions that don't belong anywhere
-     * else
-     */
-    public static Misc Misc = new Misc();
+//    /**
+//     * Miscellaneous object for various functions that don't belong anywhere
+//     * else
+//     */
+//    public static Misc Misc = new Misc();
 
-    private String DefaultWorld = "";
+    private String defaultWorld = "";
 
-    public Permissions() {
+//    public Permissions() {
+//    }
 
-        PropertyHandler server = new PropertyHandler("server.properties");
-        DefaultWorld = server.getString("level-name");
+    @Override
+    public void onLoad() {
+        instance = this;
+        log = Logger.getLogger("Minecraft");
+        Properties prop = new Properties();
+        FileInputStream in;
+        try {
+            in = new FileInputStream(new File("server.properties"));
+            prop.load(in);
+            defaultWorld = prop.getProperty("level-name");
+        } catch (IOException e) {
+            System.err.println("[Permissions] Unable to read default world's name from server.properties.");
+            e.printStackTrace();
+            defaultWorld = "world";
+        }
+//        PropertyHandler server = new PropertyHandler("server.properties");
+//        defaultWorld = server.getString("level-name");
 
         File storageOpt = new File("plugins" + File.separator + "Permissions" + File.separator, "storageconfig.yml");
         storageOpt.getParentFile().mkdirs();
@@ -101,17 +112,12 @@ public class Permissions extends JavaPlugin {
         storageConfig.load();
         this.storageConfig = storageConfig;
 
-        instance = this;
-
-        // Enabled
-        log.info("[Permissions] (" + codename + ") was Initialized.");
-    }
-
-    @Override
-    public void onLoad() {
         // Setup Permission
         getDataFolder().mkdirs();
         setupPermissions();
+
+        // Enabled
+        log.info("[Permissions] (" + codename + ") was initialized.");
     }
 
     @Override
@@ -144,7 +150,7 @@ public class Permissions extends JavaPlugin {
 
     public void setupPermissions() {
         Security = new ModularControl(storageConfig);
-        Security.setDefaultWorld(DefaultWorld);
+        Security.setDefaultWorld(defaultWorld);
         try {
             Security.load();
         } catch (Exception e) {
@@ -157,6 +163,7 @@ public class Permissions extends JavaPlugin {
     @Override
     public void onEnable() {
 
+        PluginDescriptionFile description = getDescription();
         // Enabled
         log.info("[" + description.getName() + "] version [" + description.getVersion() + "] (" + codename + ")  loaded");
 
@@ -804,7 +811,7 @@ public class Permissions extends JavaPlugin {
                 return true;
             }
             
-            Security.reload(DefaultWorld);
+            Security.reload(defaultWorld);
             sender.sendMessage(ChatColor.GRAY + "[Permissions] Default world reloaded.");
             return true;
         }

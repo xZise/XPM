@@ -53,9 +53,12 @@ public abstract class StorageFactory {
             String uri = config.getString("permissions.storage.uri", "jdbc:sqlite:" + Permissions.instance.getDataFolder() + File.separator + "permissions.db");
             String username = config.getString("permissions.storage.username");
             String password = config.getString("permissions.storage.password");
+            boolean cached = config.getBoolean("permissions.storage.cache", true);
             try {
                 SqlStorage.init(dbms, uri, username, password, delay);
-                return SqlStorage.getUserStorage(userWorld);
+                SqlUserStorage sus = SqlStorage.getUserStorage(userWorld);
+                if(cached) return new CachedUserStorage(sus);
+                else return sus;
             } catch (Exception e) {
                 System.err.println("Error occured while connecting to SQL database. Reverting to YAML.");
                 e.printStackTrace();
@@ -122,9 +125,12 @@ public abstract class StorageFactory {
             String uri = config.getString("permissions.storage.uri", "jdbc:sqlite:" + Permissions.instance.getDataFolder() + File.separator + "permissions.db");
             String username = config.getString("permissions.storage.username");
             String password = config.getString("permissions.storage.password");
+            boolean cached = config.getBoolean("permissions.storage.cache", true);
             try {
                 SqlStorage.init(dbms, uri, username, password, delay);
-                return SqlStorage.getGroupStorage(groupWorld);
+                SqlGroupStorage sgs = SqlStorage.getGroupStorage(groupWorld);
+                if(cached) return new CachedGroupStorage(sgs);
+                else return sgs;
             } catch (Exception e) {
                 System.err.println("Error occured while connecting to SQL database. Reverting to YAML.");
                 e.printStackTrace();

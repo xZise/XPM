@@ -203,6 +203,7 @@ public class ModularControl extends PermissionHandler {
         this.userStores.put(userStore.getWorld(), userStore);
         this.groupStores.put(groupStore.getWorld(), groupStore);
 
+        defaultGroups.remove(groupWorld);
         Map<String, User> users = new HashMap<String, User>();
         Set<String> userNames = userStore.getUsers();
         for (String userName : userNames) {

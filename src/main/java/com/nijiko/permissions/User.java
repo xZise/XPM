@@ -120,4 +120,10 @@ public class User extends Entry {
         data.removeData(name, path);
     }
     
+    @Override
+    public LinkedHashSet<Entry> getParents(String world) {
+        LinkedHashSet<Entry> parents = super.getParents(world);
+        if(parents.isEmpty()) parents.add(controller.getDefaultGroup(this.world));
+        return parents;
+    }
 }

@@ -161,6 +161,7 @@ public abstract class Entry {
     public LinkedHashSet<Entry> getParents(String world) {
         LinkedHashSet<Group> groupParents = controller.stringToGroups(getRawParents(), world);
         LinkedHashSet<Entry> parents = new LinkedHashSet<Entry>();
+        parents.addAll(groupParents);
         Entry global = this.getType() == EntryType.USER ? controller.getUserObject("*", name) : controller.getGroupObject("*", name);
         if(global != null) parents.add(global);
         String parentWorld = controller.getWorldParent(world, this.getType() == EntryType.USER);
@@ -168,7 +169,6 @@ public abstract class Entry {
             Entry inherited = this.getType() == EntryType.USER ? controller.getUserObject(parentWorld, name) : controller.getGroupObject(parentWorld, name);
             if(inherited != null) parents.add(inherited);
         }
-        parents.addAll(groupParents);
         return parents;
     }
 
@@ -188,7 +188,7 @@ public abstract class Entry {
     }
 
     public Set<Entry> getAncestors() {
-        Set<Entry> parentSet = new HashSet<Entry>();
+        Set<Entry> parentSet = new LinkedHashSet<Entry>();
         Queue<Entry> queue = new ArrayDeque<Entry>();
 
         // Start with the direct ancestors or the default group
