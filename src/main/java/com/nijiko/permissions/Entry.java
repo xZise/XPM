@@ -7,6 +7,7 @@ import java.util.Deque;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
+import java.util.Map;
 import java.util.Queue;
 import java.util.Set;
 
@@ -17,7 +18,8 @@ public abstract class Entry {
     protected ModularControl controller;
     protected String name;
     protected String world;
-
+    protected Map<String, CheckResult> cache;
+    
     Entry(ModularControl controller, String name, String world) {
         this.controller = controller;
         this.name = name;
@@ -104,6 +106,22 @@ public abstract class Entry {
         return !relevantNode.isEmpty() && !relevantNode.startsWith("-");
     }
 
+    protected CheckResult has(String node) {
+        
+        return null;
+    }
+    
+    public boolean isChildOf(final Entry entry) {
+        if(entry == null) return false;
+        Boolean val = recursiveCheck(new EntryVisitor<Boolean>(){
+            @Override
+            public Boolean value(Entry e) {
+                if(entry.equals(e)) return true;
+                return null;
+            }});
+        return val == null ? false : val;
+    }
+    
     public Set<String> getAllPermissions() {
         return getAllPermissions(new LinkedHashSet<Entry>(), world);
     }
@@ -442,5 +460,10 @@ public abstract class Entry {
                 return "";
             }});
         return value;
+    }
+
+    public static Set<String> relevantPerms(String node) {
+        // TODO Auto-generated method stub
+        return null;
     }
 }

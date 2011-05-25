@@ -2,7 +2,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>com.nijikokun.bukkit</groupId>
 	<artifactId>Permissions</artifactId>
-	<version>3.0</version>
+	<version>3.0.1</version>
 	<name>Permissions</name>
 	<url>https://github.com/TheYeti/Permissions</url>
 	<issueManagement>
@@ -31,6 +31,7 @@
 					<source>1.6</source>
 					<target>1.6</target>
 					<excludes>
+						<exclude>**/PermissionCache.java</exclude>
 						<exclude>**/Harc*.java</exclude>
 						<exclude>**/harc/**/*.java</exclude>
 					</excludes>
