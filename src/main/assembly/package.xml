@@ -18,9 +18,10 @@
         </fileSet>
         <fileSet>
             <directory>${project.basedir}/Permissions/</directory>
-            <outputDirectory>/Permissions/</outputDirectory>
+            <outputDirectory>/RENAME-ME</outputDirectory>
             <includes>
-                <include>RENAME-ME.yml</include>
+                <include>users.yml</include>
+                <include>groups.yml</include>
             </includes>
         </fileSet>
     </fileSets>

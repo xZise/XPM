@@ -8,9 +8,9 @@ import java.util.Set;
 
 public class CachedUserStorage implements UserStorage {
 
-    private Map<String, Set<String>> userPermissions;
-    private Map<String, LinkedHashSet<GroupWorld>> userParents;
-    private Map<String, Map<String, Object>> userData;
+    private Map<String, Set<String>> userPermissions = new HashMap<String, Set<String>>();
+    private Map<String, LinkedHashSet<GroupWorld>> userParents = new HashMap<String, LinkedHashSet<GroupWorld>>();;
+    private Map<String, Map<String, Object>> userData = new HashMap<String, Map<String, Object>>();
     private final UserStorage wrapped;
 
     public CachedUserStorage(UserStorage wrapped) {

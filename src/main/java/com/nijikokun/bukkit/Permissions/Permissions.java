@@ -765,7 +765,12 @@ public class Permissions extends JavaPlugin {
                         }
                         if (args.length > currentArg) {
                             String track = args[currentArg];
-                            if (!group.getTracks().contains(track)) {
+                            Set<String> tracks = group.getTracks();
+                            if (tracks == null) {
+                                msg.send("&4[Permissions] No tracks in specified world.");
+                                return true;
+                            }
+                            if (!tracks.contains(track)) {
                                 msg.send("&4[Permissions] Specified track does not exist.");
                                 return true;
                             }

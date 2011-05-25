@@ -310,12 +310,14 @@ public abstract class SqlStorage {
 
     public synchronized static void closeAll() {
         try {
-            SqlUserStorage.close();
-            SqlGroupStorage.close();
-            dbConn.close();
-            dbSource = null;
-            Permissions.instance.getServer().getScheduler().cancelTask(reloadId);
-            init = false;
+            if(init){
+                SqlUserStorage.close();
+                SqlGroupStorage.close();
+                dbConn.close();
+                dbSource = null;
+                Permissions.instance.getServer().getScheduler().cancelTask(reloadId);
+                init = false;
+            }
         } catch (SQLException e) {
             e.printStackTrace();
         }

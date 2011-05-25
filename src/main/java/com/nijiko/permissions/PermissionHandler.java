@@ -318,7 +318,7 @@ public abstract class PermissionHandler {
      * Gets a map of world name to all parent groups of the target user in that world. 
      * @param world Target user's world
      * @param name Target user's name
-     * @return
+     * @return Map of world name to set of groups that the user inherits from in the world.
      */
     public abstract Map<String, Set<String>> getAllGroups(String world, String name);
 
@@ -337,9 +337,8 @@ public abstract class PermissionHandler {
     public abstract int compareWeights(String firstWorld, String first, String secondWorld, String second);
     /**
      * Alias for compareWeights(world, first, world, second).
-     * @param firstWorld First user's world
+     * @param world World
      * @param first First user's name
-     * @param secondWorld Second user's world
      * @param second Second user's name
      * @return -1 if firstWeight < secondWeight, 0 if firstWeight == secondWeight, 1 if firstWeight > secondWeight 
      */

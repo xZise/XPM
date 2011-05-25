@@ -1,0 +1,70 @@
+##        
+# AntiBuild is included with this.  To disable a group from being able to build then
+# set the build: flag to false (build: false).  If you want a group to be able to build
+# then set it to true. 
+##
+# Groups can contain inheritance.
+#   To make a group inherit the permissions from another
+#   group simply place the groups name in the "inheritance:" like so:
+#
+#   Example:
+#       inheritance:
+#           - Default
+##
+#   All permissions including the asterisks must be placed in single quotes.
+#   like so:
+#
+#       - 'foo.bar'
+#
+#   Otherwise errors will happen!
+##
+#   Globalized Permission settings:
+#
+#       If a permission contains periods (.) you can denote a globalized parameter:
+#
+#           - 'foo.*'
+#
+#       This will allow you to use all general commands.
+#
+##
+#   Single Asterisk denotes all commands:
+#
+#       - '*'
+#   If you give a group this permissions, do not have the group inherit any permissions
+#   from other groups.  Any users assigned to this group should NOT be given any additional
+#   permissions either.
+##
+#   To exempt a node use the - prefix like so:
+#       - '-foo.bar'
+##
+#   prefix: and suffix: do not do anything on their own.  You need another outside plugin
+#   such as iChat or HeroChat in order for these to do anything.
+groups:
+    Default:
+        default: true
+        info:
+            prefix: ''
+            suffix: ''
+            build: false
+        inheritance:
+        permissions:
+            - 'foo.bar'
+    Moderator:
+        default: false
+        info:
+            prefix: ''
+            suffix: ''
+            build: true
+        inheritance:
+            - Default
+        permissions:
+            - 'bar.foo'
+    Admins:
+        default: false
+        info:
+            prefix: ''
+            suffix: ''
+            build: true
+        inheritance:
+        permissions:
+            - '*'

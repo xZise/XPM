@@ -1,0 +1,24 @@
+##
+# Users denote which users are included in which group.
+# TheNo1Yeti is in the Admin group
+# Herpina is a member of the Moderator group but also has access
+# to the herp.derp permissions
+# Derpina is a member of the admin group but does not have access
+# to the derp.derp permission node
+# Users can also have a prefix and suffix as seen with Herpina
+##
+users:
+    TheNo1Yeti:
+        groups:
+            - Admins
+        permissions:
+    Herpina:
+        groups: 
+            - Moderator
+        permissions:
+            - 'herp.derp'
+    Derpina:
+        groups: 
+            - Admins
+        permissions:
+            - '-derp.derp'
