@@ -344,15 +344,18 @@ public class ModularControl extends PermissionHandler {
     @Override
     public String getPrimaryGroup(String world, String user) {
         User u = getUserObject(world, user);
-        if(u == null)
-            return null;
-        LinkedHashSet<Entry> parents = u.getParents();
-        if(parents == null || parents.isEmpty()) return null;
-        for(Entry e : parents) {
-            if(e instanceof Group)
-                return e.getName();
+        if(u != null) {
+            LinkedHashSet<Entry> parents = u.getParents();
+            if(parents != null && !parents.isEmpty()) {
+                for(Entry e : parents) {
+                    if(e instanceof Group)
+                        return e.getName();
+                }
+            }
         }
-        return null;
+        Group def = this.getDefaultGroup(world);
+        if(def != null) return def.getName();
+        return "Default";
     }
     @Override
     public boolean canUserBuild(String world, String user) {
