@@ -105,11 +105,6 @@ public abstract class Entry {
 
         return !relevantNode.isEmpty() && !relevantNode.startsWith("-");
     }
-
-    protected CheckResult has(String node) {
-        
-        return null;
-    }
     
     public boolean isChildOf(final Entry entry) {
         if(entry == null) return false;
@@ -322,7 +317,7 @@ public abstract class Entry {
                 continue;
             result = e.recursiveCompare(checked, visitor, comparator, overrideWorld);
             if (result != null) {
-                if(comparator.compare(result ,currentValue)==1)  currentValue = result;
+                if(comparator.compare(result ,currentValue)>0)  currentValue = result;
             }
         }
         
