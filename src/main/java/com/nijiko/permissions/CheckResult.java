@@ -5,15 +5,13 @@ class CheckResult {
     private final String mostRelevantNode;
     private final Entry checked;
     private final String node;
-    private final boolean result;
     private boolean valid;
     
-    public CheckResult(Entry source, String mrn, Entry checked, String node, boolean result) {
+    public CheckResult(Entry source, String mrn, Entry checked, String node) {
         this.source = source;
         this.mostRelevantNode = mrn;
         this.checked = checked;
         this.node = node;
-        this.result = result;
         this.valid = true;
     }
 
@@ -42,11 +40,11 @@ class CheckResult {
     }
 
     public boolean getResult() {
-        return result;
+        return this.mostRelevantNode == null ? false : this.mostRelevantNode.startsWith("-");
     }
-    
-    public CheckResult getNegated() {
-        if(!valid) return null;
-        return new CheckResult(source, mostRelevantNode, checked, node,!result);
+        
+    public CheckResult setChecked(Entry e) {
+        if(!valid || e == null) return null;
+        return new CheckResult(source, mostRelevantNode, e, node);        
     }
 }

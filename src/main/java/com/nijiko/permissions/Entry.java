@@ -1,12 +1,14 @@
 package com.nijiko.permissions;
 
-//import java.util.Arrays;
 import java.util.ArrayDeque;
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.Deque;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.ListIterator;
 import java.util.Map;
 import java.util.Queue;
 import java.util.Set;
@@ -45,65 +47,106 @@ public abstract class Entry {
     public abstract void removeParent(Group group);
 
     public boolean hasPermission(String permission) {
-        Set<String> permissions = this.getAllPermissions();
-        if (permissions == null || permissions.isEmpty()) {
-            // System.out.println("Entry \""+name+"\"'s permissions are empty.");
-            return false;
+//        Set<String> permissions = this.getAllPermissions();
+//        if (permissions == null || permissions.isEmpty()) {
+//            // System.out.println("Entry \""+name+"\"'s permissions are empty.");
+//            return false;
+//        }
+//
+//        // Do it in +user -> -user -> +group -> -group order
+//        if (!permissions.isEmpty()) {
+//            if (permissions.contains(permission)) {
+//                // System.out.println("Found direct match for \""+permission+"\" in \""+name+"\".");/
+//                return true;
+//            }
+//            if (permissions.contains("-" + permission)) {
+//                // System.out.println("Found direct negated match for \""+permission+"\" in \""+name+"\".");
+//                return false;
+//            }
+//        }
+//
+//        String[] nodeHierachy = permission.split("\\.");
+//        // nodeHierachy = Arrays.copyOfRange(nodeHierachy, 0,
+//        // nodeHierachy.length);
+//        StringBuilder nextNode = new StringBuilder(permission.length() + 1);
+//        StringBuilder wild = new StringBuilder(permission.length() + 2);
+//        StringBuilder negated = new StringBuilder(permission.length() + 3).append("-");
+//        String relevantNode = "";
+//        if (!permissions.isEmpty()) {
+//            if (permissions.contains("-*")) {
+//                relevantNode = "-*";
+//            }
+//            if (permissions.contains("*")) {
+//                relevantNode = "*";
+//            }
+//        }
+//
+//        // System.out.println("Relevant node: " +relevantNode);
+//
+//        for (String nextLevel : nodeHierachy) {
+//            nextNode.append(nextLevel).append(".");
+//            wild.append(nextLevel).append(".*");
+//            negated.append(nextLevel).append(".*");
+//
+//            if (!permissions.isEmpty()) {
+//                String wildString = wild.toString();
+//                String negString = negated.toString();
+//                if (permissions.contains(wildString)) {
+//                    relevantNode = wildString;
+//                    // System.out.println("Relevant node: " +relevantNode);
+//                    continue;
+//                }
+//
+//                if (permissions.contains(negString)) {
+//                    relevantNode = negString;
+//                    // System.out.println("Relevant node: " +relevantNode);
+//                    continue;
+//                }
+//            }
+//        }
+//
+//        return !relevantNode.isEmpty() && !relevantNode.startsWith("-");
+          return has(permission, relevantPerms(permission)).getResult();
+    }
+    
+    protected CheckResult has(String node, LinkedHashSet<String> relevant) {
+        Set<String> cacheRelevant = new LinkedHashSet<String>(relevant);
+        cacheRelevant.retainAll(cache.keySet());
+        
+        for(Iterator<String> iter = cacheRelevant.iterator();iter.hasNext();) {
+            CheckResult cr = cache.get(iter.next());
+            if(cr.isValid()) return cr;
+            else iter.remove();
         }
-
-        // Do it in +user -> -user -> +group -> -group order
-        if (!permissions.isEmpty()) {
-            if (permissions.contains(permission)) {
-                // System.out.println("Found direct match for \""+permission+"\" in \""+name+"\".");/
-                return true;
-            }
-            if (permissions.contains("-" + permission)) {
-                // System.out.println("Found direct negated match for \""+permission+"\" in \""+name+"\".");
-                return false;
+        
+        Set<String> perms = new LinkedHashSet<String>(relevant); //SUGGESTION: Reuse the same LHS as cacheRelevant?
+        perms.retainAll(this.getPermissions());
+        Iterator<String> iter = perms.iterator();
+        if(iter.hasNext()) {
+            CheckResult cr = new CheckResult(this,iter.next(),this,node);
+            cache(cr);
+            return cr;
+        }
+        
+        for(Entry e : this.getParents()) {
+            CheckResult parentCr = e.has(node, relevant);
+            if(parentCr.getMostRelevantNode() != null) {
+                CheckResult cr = parentCr.setChecked(this);
+                cache(cr);
+                return cr;
             }
         }
-
-        String[] nodeHierachy = permission.split("\\.");
-        // nodeHierachy = Arrays.copyOfRange(nodeHierachy, 0,
-        // nodeHierachy.length);
-        StringBuilder nextNode = new StringBuilder(permission.length() + 1);
-        StringBuilder wild = new StringBuilder(permission.length() + 2);
-        StringBuilder negated = new StringBuilder(permission.length() + 3).append("-");
-        String relevantNode = "";
-        if (!permissions.isEmpty()) {
-            if (permissions.contains("-*")) {
-                relevantNode = "-*";
-            }
-            if (permissions.contains("*")) {
-                relevantNode = "*";
-            }
-        }
-
-        // System.out.println("Relevant node: " +relevantNode);
-
-        for (String nextLevel : nodeHierachy) {
-            nextNode.append(nextLevel).append(".");
-            wild.append(nextLevel).append(".*");
-            negated.append(nextLevel).append(".*");
-
-            if (!permissions.isEmpty()) {
-                String wildString = wild.toString();
-                String negString = negated.toString();
-                if (permissions.contains(wildString)) {
-                    relevantNode = wildString;
-                    // System.out.println("Relevant node: " +relevantNode);
-                    continue;
-                }
-
-                if (permissions.contains(negString)) {
-                    relevantNode = negString;
-                    // System.out.println("Relevant node: " +relevantNode);
-                    continue;
-                }
-            }
-        }
-
-        return !relevantNode.isEmpty() && !relevantNode.startsWith("-");
+        
+        CheckResult cr = new CheckResult(this, null, this, node);
+        cache(cr);
+        return cr;
+    }
+    
+    protected void cache(CheckResult cr) {
+        String mrn = cr.getMostRelevantNode();
+        if(mrn == null) mrn = "-*";
+        //TODO: Add to main cache
+        this.cache.put(mrn, cr);
     }
     
     public boolean isChildOf(final Entry entry) {
@@ -457,8 +500,38 @@ public abstract class Entry {
         return value;
     }
 
-    public static Set<String> relevantPerms(String node) {
-        // TODO Auto-generated method stub
-        return null;
+    public static LinkedHashSet<String> relevantPerms(String node) {
+        if(node == null) {
+            return null;
+        }
+        LinkedHashSet<String> relevant = new LinkedHashSet<String>();
+        if(!node.endsWith(".*"))relevant.add(node);
+        
+        boolean negated = node.startsWith("-");
+        String[] split = node.split("\\.");
+        List<String> rev = new ArrayList<String>(split.length);
+        
+        StringBuilder sb = new StringBuilder();
+        if(negated) sb.append("-");
+        sb.append("*");
+        
+        for(int i = 0; i < split.length - 1; i++) { //Skip the last one
+            String wild = sb.toString();
+            String neg = negationOf(wild);
+            rev.add(wild);
+            rev.add(neg);
+            sb.deleteCharAt(sb.length() - 1);
+            sb.append(split[i]).append(".*");
+        }
+        
+        for(ListIterator<String> iter = rev.listIterator(rev.size());iter.hasPrevious();) {
+            relevant.add(iter.previous());
+        }
+        
+        return relevant;
+    }
+    
+    public static String negationOf(String node) {
+        return node == null ? null : node.startsWith("-") ? node.substring(1) : "-" + node;
     }
 }
