@@ -340,6 +340,20 @@ public class ModularControl extends PermissionHandler {
         return suffix == null ? "" : suffix;
     }
 
+
+    @Override
+    public String getPrimaryGroup(String world, String user) {
+        User u = getUserObject(world, user);
+        if(u == null)
+            return null;
+        LinkedHashSet<Entry> parents = u.getParents();
+        if(parents == null || parents.isEmpty()) return null;
+        for(Entry e : parents) {
+            if(e instanceof Group)
+                return e.getName();
+        }
+        return null;
+    }
     @Override
     public boolean canUserBuild(String world, String user) {
         User u = getUserObject(world, user);
@@ -762,8 +776,8 @@ public class ModularControl extends PermissionHandler {
     }
 
     @Override
-    public String getGroup(String world, String group) {
-        return getGroupProperName(world, group);
+    public String getGroup(String world, String user) {
+        return getPrimaryGroup(world, user);
     }
 
     @Override

@@ -183,6 +183,14 @@ public abstract class PermissionHandler {
      */
     public abstract String getUserSuffix(String world, String user);
     /**
+     * Gets the primary group of the user.
+     * Returns an null if user has no parent groups.
+     * @param world Player's world
+     * @param user Player's name
+     * @return Player's primary group
+     */
+    public abstract String getPrimaryGroup(String world, String user);
+    /**
      * Check if user can build.
      * @param world Player's world
      * @param user Player's name
