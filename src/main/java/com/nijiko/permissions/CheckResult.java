@@ -40,11 +40,16 @@ class CheckResult {
     }
 
     public boolean getResult() {
-        return this.mostRelevantNode == null ? false : this.mostRelevantNode.startsWith("-");
+        return this.mostRelevantNode == null ? false : !this.mostRelevantNode.startsWith("-");
     }
         
     public CheckResult setChecked(Entry e) {
         if(!valid || e == null) return null;
         return new CheckResult(source, mostRelevantNode, e, node);        
+    }
+    
+    @Override
+    public String toString() {
+        return "Checked: " + checked.toString() + " , Node: " + node + " , Source: " + source.toString() + " , MRN: " + mostRelevantNode;
     }
 }

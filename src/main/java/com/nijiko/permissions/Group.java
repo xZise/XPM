@@ -81,19 +81,23 @@ public class Group extends Entry {
 //            data.removePermission(name, permission);
 //            data.addPermission(name, negated);
 //        }
+        super.setPermission(permission, add);
         if(add) data.addPermission(name, permission);
         else data.removePermission(name, permission);
     }
 
     @Override
     public void addParent(Group group) {
+        super.addParent(group);
         data.addParent(name, group.world, group.name);
     }
 
     @Override
     public void removeParent(Group group) {
-        if (this.inGroup(group.world, group.name))
+        if (this.inGroup(group.world, group.name)) {
+            super.removeParent(group);
             data.removeParent(name, group.world, group.name);
+        }
     }
     
     public Set<String> getTracks()

@@ -31,8 +31,10 @@
 					<source>1.6</source>
 					<target>1.6</target>
 					<excludes>
+						<!-- 
 						<exclude>**/CheckResult.java</exclude>
 						<exclude>**/PermissionCache.java</exclude>
+						-->
 						<exclude>**/Harc*.java</exclude>
 						<exclude>**/harc/**/*.java</exclude>
 					</excludes>

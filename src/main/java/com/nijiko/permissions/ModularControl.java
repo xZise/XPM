@@ -32,6 +32,7 @@ public class ModularControl extends PermissionHandler {
     private Map<String, Group> defaultGroups = new HashMap<String, Group>();
     private Configuration storageConfig;
     private String defaultWorld = "";
+    PermissionCache cache;
     
     public ModularControl(Configuration storageConfig) {
         this.storageConfig = storageConfig;
@@ -46,6 +47,7 @@ public class ModularControl extends PermissionHandler {
     }
     @Override
     public boolean reload(String world) {
+        cache.reloadWorld(world);
         UserStorage userStore = getUserStorage(world);
         GroupStorage groupStore = getGroupStorage(world);
         if (userStore == null && groupStore == null)
@@ -89,6 +91,7 @@ public class ModularControl extends PermissionHandler {
 
     @Override
     public void reload() {
+        cache.flushAll();
         for (UserStorage store : userStores.values()) {
             store.reload();
         }
@@ -102,11 +105,11 @@ public class ModularControl extends PermissionHandler {
         for (String world : worlds) {
             load(world, getUserStorage(world), getGroupStorage(world));
         }
-
     }
     
     @Override
     public void closeAll() {
+        cache.flushAll();
         this.saveAll();
         SqlStorage.closeAll();
     }

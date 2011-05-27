@@ -4,6 +4,7 @@ import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.Deque;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
@@ -20,7 +21,7 @@ public abstract class Entry {
     protected ModularControl controller;
     protected String name;
     protected String world;
-    protected Map<String, CheckResult> cache;
+    protected Map<String, CheckResult> cache = new HashMap<String, CheckResult>();
     
     Entry(ModularControl controller, String name, String world) {
         this.controller = controller;
@@ -32,7 +33,9 @@ public abstract class Entry {
 
     public abstract LinkedHashSet<GroupWorld> getRawParents();
 
-    public abstract void setPermission(final String permission, final boolean add);
+    public void setPermission(final String permission, final boolean add) {
+        controller.cache.updatePerms(this, permission);
+    }
 
     public void addPermission(final String permission) {
         this.setPermission(permission, true);
@@ -42,71 +45,18 @@ public abstract class Entry {
         this.setPermission(permission, false);
     }
 
-    public abstract void addParent(Group group);
+    public void addParent(Group group) {
+        controller.cache.updateParent(this, group);
+    }
 
-    public abstract void removeParent(Group group);
+    public void removeParent(Group group) {
+        controller.cache.updateParent(this, group);        
+    }
 
     public boolean hasPermission(String permission) {
-//        Set<String> permissions = this.getAllPermissions();
-//        if (permissions == null || permissions.isEmpty()) {
-//            // System.out.println("Entry \""+name+"\"'s permissions are empty.");
-//            return false;
-//        }
-//
-//        // Do it in +user -> -user -> +group -> -group order
-//        if (!permissions.isEmpty()) {
-//            if (permissions.contains(permission)) {
-//                // System.out.println("Found direct match for \""+permission+"\" in \""+name+"\".");/
-//                return true;
-//            }
-//            if (permissions.contains("-" + permission)) {
-//                // System.out.println("Found direct negated match for \""+permission+"\" in \""+name+"\".");
-//                return false;
-//            }
-//        }
-//
-//        String[] nodeHierachy = permission.split("\\.");
-//        // nodeHierachy = Arrays.copyOfRange(nodeHierachy, 0,
-//        // nodeHierachy.length);
-//        StringBuilder nextNode = new StringBuilder(permission.length() + 1);
-//        StringBuilder wild = new StringBuilder(permission.length() + 2);
-//        StringBuilder negated = new StringBuilder(permission.length() + 3).append("-");
-//        String relevantNode = "";
-//        if (!permissions.isEmpty()) {
-//            if (permissions.contains("-*")) {
-//                relevantNode = "-*";
-//            }
-//            if (permissions.contains("*")) {
-//                relevantNode = "*";
-//            }
-//        }
-//
-//        // System.out.println("Relevant node: " +relevantNode);
-//
-//        for (String nextLevel : nodeHierachy) {
-//            nextNode.append(nextLevel).append(".");
-//            wild.append(nextLevel).append(".*");
-//            negated.append(nextLevel).append(".*");
-//
-//            if (!permissions.isEmpty()) {
-//                String wildString = wild.toString();
-//                String negString = negated.toString();
-//                if (permissions.contains(wildString)) {
-//                    relevantNode = wildString;
-//                    // System.out.println("Relevant node: " +relevantNode);
-//                    continue;
-//                }
-//
-//                if (permissions.contains(negString)) {
-//                    relevantNode = negString;
-//                    // System.out.println("Relevant node: " +relevantNode);
-//                    continue;
-//                }
-//            }
-//        }
-//
-//        return !relevantNode.isEmpty() && !relevantNode.startsWith("-");
-          return has(permission, relevantPerms(permission)).getResult();
+        CheckResult cr = has(permission, relevantPerms(permission));
+//        System.out.println(cr);
+        return cr.getResult();
     }
     
     protected CheckResult has(String node, LinkedHashSet<String> relevant) {
@@ -145,7 +95,7 @@ public abstract class Entry {
     protected void cache(CheckResult cr) {
         String mrn = cr.getMostRelevantNode();
         if(mrn == null) mrn = "-*";
-        //TODO: Add to main cache
+        controller.cache.cacheResult(cr);
         this.cache.put(mrn, cr);
     }
     
@@ -515,11 +465,11 @@ public abstract class Entry {
         if(negated) sb.append("-");
         sb.append("*");
         
-        for(int i = 0; i < split.length - 1; i++) { //Skip the last one
+        for(int i = 0; i < split.length; i++) { //Skip the last one
             String wild = sb.toString();
             String neg = negationOf(wild);
-            rev.add(wild);
             rev.add(neg);
+            rev.add(wild);
             sb.deleteCharAt(sb.length() - 1);
             sb.append(split[i]).append(".*");
         }
