@@ -54,18 +54,21 @@ public abstract class Entry {
     }
 
     public boolean hasPermission(String permission) {
-        CheckResult cr = has(permission, relevantPerms(permission));
+        CheckResult cr = has(permission, relevantPerms(permission), new LinkedHashSet<Entry>());
 //        System.out.println(cr);
         return cr.getResult();
     }
     
-    protected CheckResult has(String node, LinkedHashSet<String> relevant) {
+    protected CheckResult has(String node, LinkedHashSet<String> relevant, LinkedHashSet<Entry> checked) {
+        if(checked.contains(this))
+            return null;
+        checked.add(this);
         Set<String> cacheRelevant = new LinkedHashSet<String>(relevant);
         cacheRelevant.retainAll(cache.keySet());
         
         for(Iterator<String> iter = cacheRelevant.iterator();iter.hasNext();) {
             CheckResult cr = cache.get(iter.next());
-            if(cr.isValid()) return cr;
+            if(cr.isValid()) return cr.setNode(node);
             else iter.remove();
         }
         
@@ -79,8 +82,8 @@ public abstract class Entry {
         }
         
         for(Entry e : this.getParents()) {
-            CheckResult parentCr = e.has(node, relevant);
-            if(parentCr.getMostRelevantNode() != null) {
+            CheckResult parentCr = e.has(node, relevant, checked);
+            if(parentCr != null && parentCr.getMostRelevantNode() != null) {
                 CheckResult cr = parentCr.setChecked(this);
                 cache(cr);
                 return cr;
@@ -89,6 +92,7 @@ public abstract class Entry {
         
         CheckResult cr = new CheckResult(this, null, this, node);
         cache(cr);
+        checked.remove(this);
         return cr;
     }
     

@@ -138,6 +138,7 @@ public abstract class SqlStorage {
         getWorldStmt.clearParameters();
         getWorldStmt.setString(1, name);
         ResultSet rs = getWorldStmt.executeQuery();
+        boolean fail = false;
         if (!rs.next()) {
             System.out.println("[Permissions] Creating world '" + name + "'.");
             PreparedStatementWrapper createWorldWrap = createWorldPool.getStatement();
@@ -146,9 +147,9 @@ public abstract class SqlStorage {
             createWorldStmt.executeUpdate();
             createWorldWrap.close();
             rs = getWorldStmt.executeQuery();
-            rs.next();
+            fail = !rs.next();
         }
-        int id = rs.getInt(1);
+        int id = fail ? -1 :  rs.getInt(1);
         worldMap.put(name, id);
         rs.close();
         getWorldWrap.close();
@@ -170,6 +171,7 @@ public abstract class SqlStorage {
         getUserStmt.setInt(1, worldid);
         getUserStmt.setString(2, name);
         ResultSet rs = getUserStmt.executeQuery();
+        boolean fail = false;
         if (!rs.next()) {
             System.out.println("[Permissions] Creating user '" + name + "' in world '" + world + "'.");
             PreparedStatementWrapper createUserWrap = createUserPool.getStatement();
@@ -179,9 +181,9 @@ public abstract class SqlStorage {
             createUserStmt.executeUpdate();
             createUserWrap.close();
             rs = getUserStmt.executeQuery();
-            rs.next();
+            fail = !rs.next();
         }
-        int id = rs.getInt(1);
+        int id = fail ? -1 : rs.getInt(1);
         rs.close();
         getUserWrap.close();
         return id;
@@ -203,6 +205,7 @@ public abstract class SqlStorage {
         getGroupStmt.setInt(1, worldid);
         getGroupStmt.setString(2, name);
         ResultSet rs = getGroupStmt.executeQuery();
+        boolean fail = false;
         if (!rs.next()) {
             System.out.println("[Permissions] Creating group '" + name + "' in world '" + world + "'.");
             PreparedStatementWrapper createGroupWrap = createGroupPool.getStatement();
@@ -212,9 +215,9 @@ public abstract class SqlStorage {
             createGroupStmt.executeUpdate();
             createGroupWrap.close();
             rs = getGroupStmt.executeQuery();
-            rs.next();
+            fail = !rs.next();
         }
-        int id = rs.getInt(1);
+        int id = fail ? -1 : rs.getInt(1);
         rs.close();
         getGroupWrap.close();
         return id;

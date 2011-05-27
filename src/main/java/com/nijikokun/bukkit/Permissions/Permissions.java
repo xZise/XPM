@@ -55,7 +55,7 @@ public class Permissions extends JavaPlugin {
     public static Plugin instance;
     private Configuration storageConfig;
     public static final String name = "Permissions";
-    public static final String version = "3.0.5";
+    public static final String version = "3.0.6";
     public static final String codename = "Yeti";
 
     public Listener l = new Listener(this);
@@ -356,7 +356,7 @@ public class Permissions extends JavaPlugin {
         String world = sender instanceof Player ? ((Player) sender).getWorld().getName() : null;
         if (args.length > currentArg && args[currentArg].startsWith("w:")) {
             String tempWorld = args[currentArg].substring(2);
-            if(tempWorld.startsWith("w:\"")) {
+            if(tempWorld.startsWith("\"")) {
                 boolean closed = false;
                 tempWorld = tempWorld.substring(1);
                 if(tempWorld.endsWith("\"")) {
@@ -379,7 +379,7 @@ public class Permissions extends JavaPlugin {
                     }
                 }
             }
-            world = tempWorld.substring(2);
+            world = tempWorld;
             currentArg ++;
         }
         if (world == null) {
@@ -523,7 +523,7 @@ public class Permissions extends JavaPlugin {
                             String parentWorld = world;
                             if (args.length > (++currentArg)) {
                                 String tempWorld = args[currentArg];
-                                if(tempWorld.startsWith("w:\"")) {
+                                if(tempWorld.startsWith("\"")) {
                                     boolean closed = false;
                                     tempWorld = tempWorld.substring(1);
                                     if(tempWorld.endsWith("\"")) {
@@ -546,7 +546,7 @@ public class Permissions extends JavaPlugin {
                                         }
                                     }
                                 }
-                                parentWorld = tempWorld.substring(2);
+                                parentWorld = tempWorld;
                                 currentArg ++;
                             }
                             LinkedHashSet<GroupWorld> parents = entry.getRawParents();
@@ -735,8 +735,8 @@ public class Permissions extends JavaPlugin {
                         String parentWorld = world;
                         currentArg++;
                         if (args.length > currentArg && args[currentArg].startsWith("w:")) {
-                            String tempWorld = args[currentArg];
-                            if(tempWorld.startsWith("w:\"")) {
+                            String tempWorld = args[currentArg].substring(2);
+                            if(tempWorld.startsWith("\"")) {
                                 boolean closed = false;
                                 tempWorld = tempWorld.substring(1);
                                 if(tempWorld.endsWith("\"")) {
@@ -759,7 +759,7 @@ public class Permissions extends JavaPlugin {
                                     }
                                 }
                             }
-                            parentWorld = tempWorld.substring(2);
+                            parentWorld = tempWorld;
                             currentArg++;
                         }
                         Group group = Security.getGroupObject(parentWorld, parentName);

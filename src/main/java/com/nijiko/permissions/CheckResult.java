@@ -52,4 +52,9 @@ class CheckResult {
     public String toString() {
         return "Checked: " + checked.toString() + " , Node: " + node + " , Source: " + source.toString() + " , MRN: " + mostRelevantNode;
     }
+    
+    public CheckResult setNode(String node) {
+        if(!valid || node == null) return null;
+        return new CheckResult(source, mostRelevantNode, checked, node); 
+    }
 }
