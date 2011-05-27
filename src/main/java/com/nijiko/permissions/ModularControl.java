@@ -17,6 +17,7 @@ import com.nijiko.data.GroupWorld;
 import com.nijiko.data.SqlStorage;
 import com.nijiko.data.StorageFactory;
 import com.nijiko.data.UserStorage;
+import com.nijikokun.bukkit.Permissions.Permissions;
 
 public class ModularControl extends PermissionHandler {
     private Map<String, UserStorage> userStores = new HashMap<String, UserStorage>();
@@ -32,12 +33,18 @@ public class ModularControl extends PermissionHandler {
     private Map<String, Group> defaultGroups = new HashMap<String, Group>();
     private Configuration storageConfig;
     private String defaultWorld = "";
-    PermissionCache cache;
+    PermissionCache cache = new PermissionCache();
     
     public ModularControl(Configuration storageConfig) {
         this.storageConfig = storageConfig;
         StorageFactory.setConfig(storageConfig);
         loadWorldInheritance();
+        int period = storageConfig.getInt("permissions.storage.reload", 6000);
+        Permissions.instance.getServer().getScheduler().scheduleAsyncRepeatingTask(Permissions.instance, new Runnable(){
+            @Override
+            public void run() {
+                storageReload();
+            }}, period, period);
     }
     
     //World manipulation methods
@@ -89,8 +96,7 @@ public class ModularControl extends PermissionHandler {
         this.loadWorld(defaultWorld);
     }
 
-    @Override
-    public void reload() {
+    private void storageReload() {
         cache.flushAll();
         for (UserStorage store : userStores.values()) {
             store.reload();
@@ -98,6 +104,11 @@ public class ModularControl extends PermissionHandler {
         for (GroupStorage store : groupStores.values()) {
             store.reload();
         }
+        SqlStorage.clearWorldCache();
+    }
+    @Override
+    public void reload() {
+        storageReload();
         defaultGroups.clear();
         worldUsers.clear();
         worldGroups.clear();

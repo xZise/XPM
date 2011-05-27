@@ -55,7 +55,7 @@ public class Permissions extends JavaPlugin {
     public static Plugin instance;
     private Configuration storageConfig;
     public static final String name = "Permissions";
-    public static final String version = "3.0.3";
+    public static final String version = "3.0.4";
     public static final String codename = "Yeti";
 
     public Listener l = new Listener(this);
@@ -126,7 +126,7 @@ public class Permissions extends JavaPlugin {
         Security.closeAll();
         Security = null;
         log.info("[Permissions] (" + codename + ") saved all data.");
-
+        this.getServer().getScheduler().cancelTasks(this);
         log.info("[Permissions] (" + codename + ") disabled successfully.");
         return;
     }
@@ -356,7 +356,7 @@ public class Permissions extends JavaPlugin {
         String world = sender instanceof Player ? ((Player) sender).getWorld().getName() : null;
         if (args.length > currentArg && args[currentArg].startsWith("w:")) {
             String tempWorld = args[currentArg].substring(2);
-            if(tempWorld.startsWith("\"")) {
+            if(tempWorld.startsWith("w:\"")) {
                 boolean closed = false;
                 tempWorld = tempWorld.substring(1);
                 if(tempWorld.endsWith("\"")) {
@@ -379,7 +379,7 @@ public class Permissions extends JavaPlugin {
                     }
                 }
             }
-            world = tempWorld;
+            world = tempWorld.substring(2);
             currentArg ++;
         }
         if (world == null) {
@@ -523,7 +523,7 @@ public class Permissions extends JavaPlugin {
                             String parentWorld = world;
                             if (args.length > (++currentArg)) {
                                 String tempWorld = args[currentArg];
-                                if(tempWorld.startsWith("\"")) {
+                                if(tempWorld.startsWith("w:\"")) {
                                     boolean closed = false;
                                     tempWorld = tempWorld.substring(1);
                                     if(tempWorld.endsWith("\"")) {
@@ -546,7 +546,7 @@ public class Permissions extends JavaPlugin {
                                         }
                                     }
                                 }
-                                parentWorld = tempWorld;
+                                parentWorld = tempWorld.substring(2);
                                 currentArg ++;
                             }
                             LinkedHashSet<GroupWorld> parents = entry.getRawParents();
@@ -736,7 +736,7 @@ public class Permissions extends JavaPlugin {
                         currentArg++;
                         if (args.length > currentArg && args[currentArg].startsWith("w:")) {
                             String tempWorld = args[currentArg];
-                            if(tempWorld.startsWith("\"")) {
+                            if(tempWorld.startsWith("w:\"")) {
                                 boolean closed = false;
                                 tempWorld = tempWorld.substring(1);
                                 if(tempWorld.endsWith("\"")) {
@@ -759,7 +759,7 @@ public class Permissions extends JavaPlugin {
                                     }
                                 }
                             }
-                            parentWorld = tempWorld;
+                            parentWorld = tempWorld.substring(2);
                             currentArg++;
                         }
                         Group group = Security.getGroupObject(parentWorld, parentName);

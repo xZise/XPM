@@ -15,14 +15,12 @@ import org.sqlite.SQLiteDataSource;
 
 import com.mysql.jdbc.jdbc2.optional.MysqlDataSource;
 import com.nijiko.data.PreparedStatementPool.PreparedStatementWrapper;
-import com.nijikokun.bukkit.Permissions.Permissions;
 
 public abstract class SqlStorage {
 
     private static final int max = 10;
     private static Dbms dbms;
     private static DataSource dbSource;
-    private static int reloadId;
     private static boolean init = false;
     private static Map<String, SqlUserStorage> userStores = new HashMap<String, SqlUserStorage>();
     private static Map<String, SqlGroupStorage> groupStores = new HashMap<String, SqlGroupStorage>();
@@ -86,13 +84,6 @@ public abstract class SqlStorage {
         }
         dbSource = dbms.getSource(username, password, uri);
         verifyAndCreateTables();
-        reloadId = Permissions.instance.getServer().getScheduler().scheduleAsyncRepeatingTask(Permissions.instance, new Runnable() {
-
-            @Override
-            public void run() {
-                refresh();
-            }
-        }, reloadDelay, reloadDelay);
         dbConn = dbSource.getConnection();
         getWorldPool = new PreparedStatementPool(dbConn, getWorld, max);
         getUserPool = new PreparedStatementPool(dbConn, getUser, max);
@@ -106,18 +97,13 @@ public abstract class SqlStorage {
         SqlGroupStorage.reloadPools(dbConn);
         SqlUserStorage.reloadPools(dbConn);
         init = true;
-        refresh();
+        clearWorldCache();
     }
 
-    private synchronized static void refresh() // Used for periodic cache flush
+    public synchronized static void clearWorldCache() // Used for periodic cache flush
     {
-        worldMap.clear();
-        for (SqlUserStorage instance : userStores.values()) {
-            instance.reload();
-        }
-        for (SqlGroupStorage instance : groupStores.values()) {
-            instance.reload();
-        }
+        if(init)
+            worldMap.clear();
     }
 
     private static void verifyAndCreateTables() throws SQLException {
@@ -315,7 +301,6 @@ public abstract class SqlStorage {
                 SqlGroupStorage.close();
                 dbConn.close();
                 dbSource = null;
-                Permissions.instance.getServer().getScheduler().cancelTask(reloadId);
                 init = false;
             }
         } catch (SQLException e) {
