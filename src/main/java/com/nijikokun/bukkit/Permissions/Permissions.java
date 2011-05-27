@@ -18,7 +18,7 @@ import org.bukkit.event.Event;
 import org.bukkit.event.Event.Priority;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.PluginDescriptionFile;
-import org.bukkit.plugin.ServicePriority;
+//import org.bukkit.plugin.ServicePriority;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.util.config.Configuration;
 
@@ -105,8 +105,9 @@ public class Permissions extends JavaPlugin {
                 System.out.println("[Permissions] Creating storageconfig.yml.");
                 storageOpt.createNewFile();
             } catch (IOException e) {
-                System.err.println("[Permissions] storageconfig.yml could not be created.");
                 e.printStackTrace();
+                disable("[Permissions] storageconfig.yml could not be created.");
+                return;
             }
         Configuration storageConfig = new NotNullConfiguration(storageOpt);
         storageConfig.load();
@@ -122,15 +123,20 @@ public class Permissions extends JavaPlugin {
 
     @Override
     public void onDisable() {
-        // Addition by rcjrrjcr
         Security.closeAll();
+        Security = null;
         log.info("[Permissions] (" + codename + ") saved all data.");
-        // End of addition by rcjrrjcr
 
         log.info("[Permissions] (" + codename + ") disabled successfully.");
         return;
     }
 
+    private void disable(String error) {
+        if(error != null)
+            log.severe(error);
+        log.info("[Permissions] Shutting down Permissions due to error(s).");
+        getServer().getPluginManager().disablePlugin(this);
+    }
     /**
      * Alternative method of grabbing Permissions.Security <br />
      * <br />
@@ -155,9 +161,10 @@ public class Permissions extends JavaPlugin {
             Security.load();
         } catch (Exception e) {
             e.printStackTrace();
-            getServer().getPluginManager().disablePlugin(this);
+            disable("[Permissions] Unable to load permission data.");
+            return;
         }
-        getServer().getServicesManager().register(PermissionHandler.class, Security, this, ServicePriority.Normal);
+//        getServer().getServicesManager().register(PermissionHandler.class, Security, this, ServicePriority.Normal);
     }
 
     @Override
@@ -726,6 +733,7 @@ public class Permissions extends JavaPlugin {
                     if (args.length > currentArg) {
                         String parentName = args[currentArg];
                         String parentWorld = world;
+                        currentArg++;
                         if (args.length > currentArg && args[currentArg].startsWith("w:")) {
                             String tempWorld = args[currentArg];
                             if(tempWorld.startsWith("\"")) {
@@ -823,7 +831,7 @@ public class Permissions extends JavaPlugin {
 
         if (arg.equalsIgnoreCase("all")) {
 
-            if (p!=null&&Security.has(p.getWorld().getName(), p.getName(), "permissions.reload.all")) {
+            if (p!=null&&!Security.has(p.getWorld().getName(), p.getName(), "permissions.reload.all")) {
                 p.sendMessage(ChatColor.RED + "[Permissions] You lack the necessary permissions to perform this action.");
                 return true;
             }

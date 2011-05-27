@@ -5,7 +5,7 @@
 # to the herp.derp permissions
 # Derpina is a member of the admin group but does not have access
 # to the derp.derp permission node
-# Users can also have a prefix and suffix as seen with Herpina
+# Users can no longer have a prefix and suffix
 ##
 users:
     TheNo1Yeti:
