@@ -55,7 +55,7 @@ public class Permissions extends JavaPlugin {
     public static Plugin instance;
     private Configuration storageConfig;
     public static final String name = "Permissions";
-    public static final String version = "3.0.4";
+    public static final String version = "3.0.5";
     public static final String codename = "Yeti";
 
     public Listener l = new Listener(this);
