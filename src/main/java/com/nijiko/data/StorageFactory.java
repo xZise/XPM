@@ -5,6 +5,7 @@ import java.io.IOException;
 
 import org.bukkit.util.config.Configuration;
 
+import com.nijiko.configuration.NotNullConfiguration;
 import com.nijikokun.bukkit.Permissions.Permissions;
 
 //TODO: Remove duplicated code
@@ -83,7 +84,7 @@ public abstract class StorageFactory {
                 throw new IOException("User config for world " + userWorld + " cannot be read.");
             if (!userFile.canWrite())
                 throw new IOException("User config for world " + userWorld + " cannot be written to.");
-            return new YamlUserStorage(new Configuration(userFile), userWorld, delay, autosave);
+            return new YamlUserStorage(new NotNullConfiguration(userFile), userWorld, delay, autosave);
         }
     }
 
@@ -155,7 +156,7 @@ public abstract class StorageFactory {
                 throw new IOException("Group config for world " + groupWorld + " cannot be read.");
             if (!userFile.canWrite())
                 throw new IOException("Group config for world " + groupWorld + " cannot be written to.");
-            return new YamlGroupStorage(new Configuration(userFile), groupWorld, delay, autosave);
+            return new YamlGroupStorage(new NotNullConfiguration(userFile), groupWorld, delay, autosave);
         }
     }
 }

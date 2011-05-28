@@ -12,11 +12,11 @@ public class Group extends Entry {
 
     private GroupStorage data;
 
-    Group(ModularControl controller, GroupStorage data, String name,
-            String world, boolean create) {
+    Group(ModularControl controller, GroupStorage data, String name, String world, boolean create) {
         super(controller, name, world);
         this.data = data;
-        if(create)data.createGroup(name);
+        if (create)
+            data.createGroup(name);
     }
 
     public boolean isDefault() {
@@ -69,21 +69,23 @@ public class Group extends Entry {
 
     @Override
     public void setPermission(final String permission, final boolean add) {
-//        Set<String> permissions = this.getPermissions();
-//        String negated = permission.startsWith("-") ? permission.substring(1)
-//                : "-" + permission;
-//        if (add) {
-//            if (permissions.contains(negated)) {
-//                data.removePermission(name, negated);
-//            }
-//            data.addPermission(name, permission);
-//        } else {
-//            data.removePermission(name, permission);
-//            data.addPermission(name, negated);
-//        }
+        // Set<String> permissions = this.getPermissions();
+        // String negated = permission.startsWith("-") ? permission.substring(1)
+        // : "-" + permission;
+        // if (add) {
+        // if (permissions.contains(negated)) {
+        // data.removePermission(name, negated);
+        // }
+        // data.addPermission(name, permission);
+        // } else {
+        // data.removePermission(name, permission);
+        // data.addPermission(name, negated);
+        // }
         super.setPermission(permission, add);
-        if(add) data.addPermission(name, permission);
-        else data.removePermission(name, permission);
+        if (add)
+            data.addPermission(name, permission);
+        else
+            data.removePermission(name, permission);
     }
 
     @Override
@@ -99,54 +101,52 @@ public class Group extends Entry {
             data.removeParent(name, group.world, group.name);
         }
     }
-    
-    public Set<String> getTracks()
-    {
+
+    public Set<String> getTracks() {
         return data.getTracks();
     }
-    public GroupWorld getPrevRank(String trackName)
-    {
+
+    public GroupWorld getPrevRank(String trackName) {
         LinkedList<GroupWorld> track = data.getTrack(trackName);
-        if(track != null)
-            for(ListIterator<GroupWorld> iter = track.listIterator(); iter.hasNext();)
-            {
+        if (track != null)
+            for (ListIterator<GroupWorld> iter = track.listIterator(); iter.hasNext();) {
                 GroupWorld gw = iter.next();
-                if(gw.getWorld().equals(world)&&gw.getName().equalsIgnoreCase(name))
-                {
-                    return iter.previous();
+                if (gw.getWorld().equals(world) && gw.getName().equalsIgnoreCase(name)) {
+                    iter.previous();
+                    if(iter.hasPrevious())
+                        return iter.previous();
+                    else
+                        iter.next();
                 }
             }
         return null;
     }
-    
-    public GroupWorld getNextRank(String trackName)
-    {
+
+    public GroupWorld getNextRank(String trackName) {
         LinkedList<GroupWorld> track = data.getTrack(trackName);
-        if(track != null)
-            for(ListIterator<GroupWorld> iter = track.listIterator(); iter.hasNext();)
-            {
+        if (track != null)
+            for (ListIterator<GroupWorld> iter = track.listIterator(); iter.hasNext();) {
                 GroupWorld gw = iter.next();
-                if(gw.getWorld().equals(world)&&gw.getName().equalsIgnoreCase(name))
-                {
-                    if(iter.hasNext()) return iter.next();                    
+                if (gw.getWorld().equals(world) && gw.getName().equalsIgnoreCase(name)) {
+                    if (iter.hasNext())
+                        return iter.next();
                 }
             }
         return null;
     }
-    
-    public int getRawWeight()
-    {
+
+    public int getRawWeight() {
         return data.getWeight(name);
     }
 
     @Override
     public void setData(String path, Object newdata) {
-        data.setData(name,path,newdata);
+        data.setData(name, path, newdata);
     }
 
     @Override
     public String getRawString(String path) {
-        return data.getString(name,path);
+        return data.getString(name, path);
     }
 
     @Override

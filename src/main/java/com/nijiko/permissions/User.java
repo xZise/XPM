@@ -75,10 +75,10 @@ public class User extends Entry {
         GroupWorld prevRank = group.getPrevRank(track);
         if(prevRank == null) return;
         
-        this.removeParent(group);
         if(this.getRawParents().contains(prevRank)) return;
         Group prev = controller.getGroupObject(prevRank.getWorld(), prevRank.getName());
         if(prev==null) return;
+        this.removeParent(group);
         this.addParent(prev);
     }
     
@@ -87,11 +87,11 @@ public class User extends Entry {
         if(!this.getParents().contains(group)) return;
         GroupWorld nextRank = group.getNextRank(track);
         if(nextRank==null)return;
-        this.removeParent(group);
         if(this.getRawParents().contains(nextRank)) return;
         Group prev = controller.getGroupObject(nextRank.getWorld(), nextRank.getName());
         if (prev == null)
             return;
+        this.removeParent(group);
         this.addParent(prev);
     }
     @Override
