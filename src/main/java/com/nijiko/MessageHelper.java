@@ -22,17 +22,18 @@ import org.bukkit.command.CommandSender;
  */
 
 /**
- * Messaging.java <br />
- * <br />
+ * MessagingHelper.java <br />
+ * Renamed from Messaging.java to avoid conflicts with iConomy, due to switching static methods to instance methods.<br />
+ * 
  * Lets us do fancy pantsy things with colors, messages, and broadcasting :D!
  * 
  * @author Nijikokun <nijikokun@gmail.com>
  */
-public class Messaging {
+public class MessageHelper {
 
     public final CommandSender sender;
 
-    public Messaging(CommandSender sender) {
+    public MessageHelper(CommandSender sender) {
         this.sender = sender;
     }
     /**
@@ -157,7 +158,7 @@ public class Messaging {
      * 
      * @param message
      *            The message to be sent.
-     * @see Messaging#save(CommandSender)
+     * @see MessageHelper#save(CommandSender)
      */
     public void send(String message) {
         if (sender != null)

@@ -7,6 +7,8 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import javax.sql.DataSource;
@@ -22,53 +24,44 @@ public abstract class SqlStorage {
     private static Dbms dbms;
     private static DataSource dbSource;
     private static boolean init = false;
-    private static Map<String, SqlUserStorage> userStores = new HashMap<String, SqlUserStorage>();
+    private static HashMap<String, SqlUserStorage> userStores = new HashMap<String, SqlUserStorage>();
     private static Map<String, SqlGroupStorage> groupStores = new HashMap<String, SqlGroupStorage>();
     private static Map<String, Integer> worldMap = new HashMap<String, Integer>();
-    private static List<String> create = new ArrayList<String>(12);
+    private static List<String> create = new ArrayList<String>(8);
     static final String getWorld = "SELECT PrWorlds.worldid FROM PrWorlds WHERE PrWorlds.worldname = ?;";
     private static PreparedStatementPool getWorldPool;
-    static final String getUser = "SELECT uid FROM PrUsers WHERE PrUsers.worldid = ? AND PrUsers.username = ?;";
-    private static PreparedStatementPool getUserPool;
-    static final String getGroup = "SELECT gid FROM PrGroups WHERE PrGroups.worldid = ? AND PrGroups.groupname = ?;";
-    private static PreparedStatementPool getGroupPool;
+    static final String getEntry = "SELECT entryid FROM PrEntries WHERE worldid = ? AND type = ? AND name = ?;";
+    private static PreparedStatementPool getEntryPool;
     static final String createWorld = "INSERT IGNORE INTO PrWorlds (worldname) VALUES (?);";
     private static PreparedStatementPool createWorldPool;
-    static final String createUser = "INSERT IGNORE INTO PrUsers (worldid,username) VALUES (?,?);";
-    private static PreparedStatementPool createUserPool;
-    static final String createGroup = "INSERT IGNORE INTO PrGroups (worldid, groupname, build, weight) VALUES (?,?,0,0);";
-    private static PreparedStatementPool createGroupPool;
+    static final String createEntry = "INSERT IGNORE INTO PrEntries (worldid,type,name) VALUES (?,?,?);";
+    private static PreparedStatementPool createEntryPool;
     static final String getWorldName = "SELECT worldname FROM PrWorlds WHERE worldid = ?;";
     private static PreparedStatementPool getWorldNamePool;
-    static final String getUserName = "SELECT username, worldid FROM PrUsers WHERE uid = ?;";
-    private static PreparedStatementPool getUserNamePool;
-    static final String getGroupName = "SELECT groupname, worldid FROM PrGroups WHERE gid = ?;";
-    private static PreparedStatementPool getGroupNamePool;
+    static final String getEntryName = "SELECT name, worldid FROM PrEntries WHERE entryid = ?;";
+    private static PreparedStatementPool getEntryNamePool;
     private static Connection dbConn;
 
     static {
         create.add("CREATE TABLE IF NOT EXISTS PrWorlds (" + " worldid INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT," + " worldname VARCHAR(32) NOT NULL UNIQUE" + ")");
-        create.add("CREATE TABLE IF NOT EXISTS PrUsers (" + " uid INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT," + " username VARCHAR(32) NOT NULL," + " worldid INTEGER NOT NULL," + " CONSTRAINT UserNameWorld UNIQUE (username, worldid)," + " USERINDEX" + " FOREIGN KEY(worldid) REFERENCES PrWorlds(worldid)" + ")");
-        create.add("CREATE TABLE IF NOT EXISTS PrGroups (" + " gid INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT," + " groupname VARCHAR(32) NOT NULL," + " worldid  INTEGER NOT NULL," + " prefix VARCHAR(32)," + " suffix VARCHAR(32), " + " build TINYINT NOT NULL DEFAULT 0," + " weight INTEGER NOT NULL DEFAULT 0," + " CONSTRAINT GroupNameWorld UNIQUE (groupname, worldid)," + " FOREIGN KEY(worldid) REFERENCES PrWorlds(worldid)" + ")");
-        create.add("CREATE TABLE IF NOT EXISTS PrUserPermissions (" + " upermid INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT," + " permstring VARCHAR(64) NOT NULL," + " uid INTEGER NOT NULL," + " CONSTRAINT UserPerm UNIQUE (uid, permstring)," + " FOREIGN KEY(uid) REFERENCES PrUsers(uid)" + ")");
-        create.add("CREATE TABLE IF NOT EXISTS PrGroupPermissions (" + " gpermid INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT," + " permstring VARCHAR(64) NOT NULL," + " gid INTEGER NOT NULL," + " CONSTRAINT GroupPerm UNIQUE (gid, permstring)," + " FOREIGN KEY(gid) REFERENCES PrGroups(gid)" + ")");
-        create.add("CREATE TABLE IF NOT EXISTS PrUserInheritance (" + " uinheritid INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT," + " childid INTEGER NOT NULL," + " parentid INTEGER NOT NULL," + " CONSTRAINT UserParent UNIQUE (childid, parentid)," + " FOREIGN KEY(childid) REFERENCES PrUsers(uid)," + " FOREIGN KEY(parentid) REFERENCES PrGroups(gid)" + ")");
-        create.add("CREATE TABLE IF NOT EXISTS PrGroupInheritance (" + " ginheritid INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT," + " childid INTEGER NOT NULL," + " parentid INTEGER NOT NULL," + " CONSTRAINT UserParent UNIQUE (childid, parentid)," + " CONSTRAINT GroupNoSelfInherit CHECK (childid <> parentid)," + " FOREIGN KEY(childid) REFERENCES PrGroups(gid)," + " FOREIGN KEY(parentid) REFERENCES PrGroups(gid)" + ")");
-        create.add("CREATE TABLE IF NOT EXISTS PrWorldBase (" + " worldid INTEGER NOT NULL," + " defaultid INTEGER," + "FOREIGN KEY(worldid) REFERENCES PrWorlds(worldid)," + "FOREIGN KEY(defaultid) REFERENCES PrGroups(gid)" + ")");
-        create.add("CREATE TABLE IF NOT EXISTS PrUserData (" + " dataid INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT," + " uid INTEGER NOT NULL ," + " path VARCHAR(64) NOT NULL," + " data VARCHAR(64) NOT NULL," + " CONSTRAINT UserDataUnique UNIQUE (uid, path)," + "FOREIGN KEY(uid) REFERENCES PrUsers(uid)" + ")");
-        create.add("CREATE TABLE IF NOT EXISTS PrGroupData (" + " dataid INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT," + " gid INTEGER NOT NULL," + " path VARCHAR(64) NOT NULL," + " data VARCHAR(64) NOT NULL," + " CONSTRAINT GroupDataUnique UNIQUE (gid, path)," + "FOREIGN KEY(gid) REFERENCES PrGroups(gid)" + ")");
-        create.add("CREATE TABLE IF NOT EXISTS PrTracks (" + " trackid INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT," + " trackname VARCHAR(64) NOT NULL UNIQUE," + "worldid INTEGER NOT NULL," + "FOREIGN KEY(worldid) REFERENCES PrWorlds(worldid)" + ")");
-        create.add("CREATE TABLE IF NOT EXISTS PrTrackGroups (" + " trackgroupid INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT," + " trackid INTEGER NOT NULL," + " gid INTEGER NOT NULL," + " groupOrder INTEGER NOT NULL," + " CONSTRAINT TrackGroupsUnique UNIQUE (trackid, gid)," + "FOREIGN KEY(trackid) REFERENCES PrTracks(trackid)," + "FOREIGN KEY(gid) REFERENCES PrGroups(gid)" + ")");
+        create.add("CREATE TABLE IF NOT EXISTS PrEntries (" + " entryid INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT," + " name VARCHAR(32) NOT NULL," + " worldid INTEGER NOT NULL," + " type TINYINT NOT NULL," + " CONSTRAINT NameWorld UNIQUE (name, worldid, type)," + " ENTRYINDEX" + " FOREIGN KEY(worldid) REFERENCES PrWorlds(worldid) ON DELETE CASCADE" + ")");
+        create.add("CREATE TABLE IF NOT EXISTS PrPermissions (" + " permid INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT," + " permstring VARCHAR(64) NOT NULL," + " entryid INTEGER NOT NULL," + " CONSTRAINT PrEntryPerm UNIQUE (entryid, permstring)," + " FOREIGN KEY(entryid) REFERENCES PrEntries(id) ON DELETE CASCADE" + ")");
+        create.add("CREATE TABLE IF NOT EXISTS PrInheritance (" + " uinheritid INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT," + " childid INTEGER NOT NULL," + " parentid INTEGER NOT NULL," + " CONSTRAINT PrParent UNIQUE (childid, parentid)," + " CONSTRAINT PrNoSelfInherit CHECK (childid <> parentid)," + " FOREIGN KEY(childid) REFERENCES PrEntries(id) ON DELETE CASCADE," + " FOREIGN KEY(parentid) REFERENCES PrEntries(id) ON DELETE CASCADE" + ")");
+        create.add("CREATE TABLE IF NOT EXISTS PrWorldBase (" + " worldid INTEGER NOT NULL," + " defaultid INTEGER," + " FOREIGN KEY(worldid) REFERENCES PrWorlds(worldid) ON DELETE CASCADE," + " FOREIGN KEY(defaultid) REFERENCES PrEntries(entryid) ON DELETE CASCADE" + ")");
+        create.add("CREATE TABLE IF NOT EXISTS PrData (" + " dataid INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT," + " entryid INTEGER NOT NULL ," + " path VARCHAR(64) NOT NULL," + " data VARCHAR(64) NOT NULL," + " CONSTRAINT PrDataUnique UNIQUE (entryid, path)," + " FOREIGN KEY(entryid) REFERENCES PrEntries(entryid) ON DELETE CASCADE" + ")");
+        create.add("CREATE TABLE IF NOT EXISTS PrTracks (" + " trackid INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT," + " trackname VARCHAR(64) NOT NULL UNIQUE," + " worldid INTEGER NOT NULL," + " CONSTRAINT TracksUnique UNIQUE (trackid, worldid)," + " FOREIGN KEY(worldid) REFERENCES PrWorlds(worldid) ON DELETE CASCADE" + ")");
+        create.add("CREATE TABLE IF NOT EXISTS PrTrackGroups (" + " trackgroupid INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT," + " trackid INTEGER NOT NULL," + " gid INTEGER NOT NULL," + " groupOrder INTEGER NOT NULL," + " CONSTRAINT TrackGroupsUnique UNIQUE (trackid, gid)," + " FOREIGN KEY(trackid) REFERENCES PrTracks(trackid) ON DELETE CASCADE," + " FOREIGN KEY(gid) REFERENCES PrEntries(entryid) ON DELETE CASCADE" + ")");
     }
 
     static Dbms getDbms() {
         return dbms;
     }
+
     public static void init(String dbmsName, String uri, String username, String password, int reloadDelay) throws Exception {
         if (init) {
             return;
         }
-        
+
         System.out.println("[Permissions] Initializing Permissions 3 SQL interface.");
         // SqlStorage.reloadDelay = reloadDelay;
         try {
@@ -86,23 +79,21 @@ public abstract class SqlStorage {
         verifyAndCreateTables();
         dbConn = dbSource.getConnection();
         getWorldPool = new PreparedStatementPool(dbConn, getWorld, max);
-        getUserPool = new PreparedStatementPool(dbConn, getUser, max);
-        getGroupPool = new PreparedStatementPool(dbConn, getGroup, max);
-        createWorldPool = new PreparedStatementPool(dbConn, (dbms==Dbms.SQLITE ? createWorld.replace("IGNORE", "OR IGNORE") : createWorld), max);
-        createUserPool = new PreparedStatementPool(dbConn, (dbms==Dbms.SQLITE ? createUser.replace("IGNORE", "OR IGNORE") : createUser), max);
-        createGroupPool = new PreparedStatementPool(dbConn, (dbms==Dbms.SQLITE ? createGroup.replace("IGNORE", "OR IGNORE") : createGroup), max);
+        getEntryPool = new PreparedStatementPool(dbConn, getEntry, max);
+        createWorldPool = new PreparedStatementPool(dbConn, (dbms == Dbms.SQLITE ? createWorld.replace("IGNORE", "OR IGNORE") : createWorld), max);
+        createEntryPool = new PreparedStatementPool(dbConn, (dbms == Dbms.SQLITE ? createEntry.replace("IGNORE", "OR IGNORE") : createEntry), max);
         getWorldNamePool = new PreparedStatementPool(dbConn, getWorldName, max);
-        getUserNamePool = new PreparedStatementPool(dbConn, getUserName, max);
-        getGroupNamePool = new PreparedStatementPool(dbConn, getGroupName, max);
+        getEntryNamePool = new PreparedStatementPool(dbConn, getEntryName, max);
         SqlGroupStorage.reloadPools(dbConn);
         SqlUserStorage.reloadPools(dbConn);
         init = true;
         clearWorldCache();
     }
 
-    public synchronized static void clearWorldCache() // Used for periodic cache flush
+    public synchronized static void clearWorldCache() // Used for periodic cache
+                                                      // flush
     {
-        if(init)
+        if (init)
             worldMap.clear();
     }
 
@@ -114,14 +105,14 @@ public abstract class SqlStorage {
         for (String state : create) {
             if (dbms == Dbms.MYSQL) {
                 state = state.replace("AUTOINCREMENT", "AUTO_INCREMENT");
-                state = state.replace(" USERINDEX", " INDEX pr_username_index(username),");
+                state = state.replace(" ENTRYINDEX", " INDEX pr_entryname_index(name),");
             } else {
-                state = state.replace(" USERINDEX", "");
+                state = state.replace(" ENTRYINDEX", "");
             }
             s.executeUpdate(state + engine);
         }
         if (dbms != Dbms.MYSQL) {
-            s.executeUpdate("CREATE INDEX IF NOT EXISTS pr_username_index ON PrUsers(username);");
+            s.executeUpdate("CREATE INDEX IF NOT EXISTS pr_entry_index ON PrEntries(name);");
         }
     }
 
@@ -129,157 +120,90 @@ public abstract class SqlStorage {
         return dbSource;
     }
 
-    static int getWorld(String name) throws SQLException {
+    static int getWorld(String name) {
         if (worldMap.containsKey(name)) {
             return worldMap.get(name);
         }
-        PreparedStatementWrapper getWorldWrap = getWorldPool.getStatement();
-        PreparedStatement getWorldStmt = getWorldWrap.getStatement();
-        getWorldStmt.clearParameters();
-        getWorldStmt.setString(1, name);
-        ResultSet rs = getWorldStmt.executeQuery();
-        boolean fail = false;
-        if (!rs.next()) {
+        Object[] params = new Object[] { name };
+        List<Map<Integer, Object>> results = runQuery(getWorldPool, params, true, 1);
+        if (results.isEmpty()) {
             System.out.println("[Permissions] Creating world '" + name + "'.");
-            PreparedStatementWrapper createWorldWrap = createWorldPool.getStatement();
-            PreparedStatement createWorldStmt = createWorldWrap.getStatement();
-            createWorldStmt.setString(1, name);
-            createWorldStmt.executeUpdate();
-            createWorldWrap.close();
-            rs = getWorldStmt.executeQuery();
-            fail = !rs.next();
+            runUpdate(createWorldPool, params);
         }
-        int id = fail ? -1 :  rs.getInt(1);
-        worldMap.put(name, id);
-        rs.close();
-        getWorldWrap.close();
-        return id;
-    }
-
-    static int getUser(String world, String name) throws SQLException {
-        SqlUserStorage sus = userStores.get(world);
-        if (sus != null) {
-            Integer id = sus.getUserId(name);
-            if (id != null) {
-                return id;
+        int id = -1;
+        Iterator<Map<Integer, Object>> iter = results.iterator();
+        if (iter.hasNext()) {
+            Object o = iter.next().get(1);
+            if (o instanceof Integer) {
+                id = (Integer) o;
             }
         }
-        int worldid = getWorld(world);
-        PreparedStatementWrapper getUserWrap = getUserPool.getStatement();
-        PreparedStatement getUserStmt = getUserWrap.getStatement();
-        getUserStmt.clearParameters();
-        getUserStmt.setInt(1, worldid);
-        getUserStmt.setString(2, name);
-        ResultSet rs = getUserStmt.executeQuery();
-        boolean fail = false;
-        if (!rs.next()) {
-            System.out.println("[Permissions] Creating user '" + name + "' in world '" + world + "'.");
-            PreparedStatementWrapper createUserWrap = createUserPool.getStatement();
-            PreparedStatement createUserStmt = createUserWrap.getStatement();
-            createUserStmt.setInt(1, worldid);
-            createUserStmt.setString(2, name);
-            createUserStmt.executeUpdate();
-            createUserWrap.close();
-            rs = getUserStmt.executeQuery();
-            fail = !rs.next();
-        }
-        int id = fail ? -1 : rs.getInt(1);
-        rs.close();
-        getUserWrap.close();
+        worldMap.put(name, id);
         return id;
-
     }
 
-    static int getGroup(String world, String name) throws SQLException {
-        SqlGroupStorage sgs = groupStores.get(world);
-        if (sgs != null) {
-            Integer id = sgs.getGroupId(name);
-            if (id != null) {
-                return id;
+    static int getEntry(String world, String name, boolean isGroup) {
+        SqlEntryStorage ses = isGroup ? getGroupStorage(world) : getUserStorage(world);
+        Integer cachedId = ses.getCachedId(name);
+        if(cachedId != null) {
+            return cachedId;
+        }
+        int worldid = getWorld(world);
+        Object[] params = new Object[] { worldid, (byte) (isGroup ? 1 : 0), name };
+        List<Map<Integer, Object>> results = runQuery(getEntryPool, params, true, 1);
+        if (results.isEmpty()) {
+            System.out.println("[Permissions] Creating " + (isGroup ? "group" : "user") + " '" + name + "' in world '" + world + "'.");
+            runUpdate(createEntryPool, params);
+            results = runQuery(getEntryPool, params, true, 1);
+        }
+        int id = -1;
+        Iterator<Map<Integer, Object>> iter = results.iterator();
+        if (iter.hasNext()) {
+            Object o = iter.next().get(1);
+            if (o instanceof Integer) {
+                id = (Integer) o;
             }
         }
-        int worldid = getWorld(world);
-        PreparedStatementWrapper getGroupWrap = getGroupPool.getStatement();
-        PreparedStatement getGroupStmt = getGroupWrap.getStatement();
-        getGroupStmt.clearParameters();
-        getGroupStmt.setInt(1, worldid);
-        getGroupStmt.setString(2, name);
-        ResultSet rs = getGroupStmt.executeQuery();
-        boolean fail = false;
-        if (!rs.next()) {
-            System.out.println("[Permissions] Creating group '" + name + "' in world '" + world + "'.");
-            PreparedStatementWrapper createGroupWrap = createGroupPool.getStatement();
-            PreparedStatement createGroupStmt = createGroupWrap.getStatement();
-            createGroupStmt.setInt(1, worldid);
-            createGroupStmt.setString(2, name);
-            createGroupStmt.executeUpdate();
-            createGroupWrap.close();
-            rs = getGroupStmt.executeQuery();
-            fail = !rs.next();
-        }
-        int id = fail ? -1 : rs.getInt(1);
-        rs.close();
-        getGroupWrap.close();
         return id;
     }
 
-    static String getWorldName(int id) throws SQLException {
-        PreparedStatementWrapper getWorldNameWrap = getWorldNamePool.getStatement();
-        PreparedStatement getWorldNameStmt = getWorldNameWrap.getStatement();
-        getWorldNameStmt.clearParameters();
-        getWorldNameStmt.setInt(1, id);
-        ResultSet rs = getWorldNameStmt.executeQuery();
-        if(!rs.next()) {
-            return "Error";
+    static String getWorldName(int id) {
+        List<Map<Integer, Object>> results = runQuery(getWorldNamePool, new Object[] { id }, true, 1);
+        Iterator<Map<Integer, Object>> iter = results.iterator();
+        String name = "Error";
+        if (iter.hasNext()) {
+            Object o = iter.next().get(1);
+            if (o instanceof String)
+                name = (String) o;
         }
-        String name = rs.getString(1);
         worldMap.put(name, id);
-        rs.close();
-        getWorldNameWrap.close();
         return name;
     }
 
-    static NameWorldId getUserName(int uid) throws SQLException {
-        PreparedStatementWrapper getUserNameWrap = getUserNamePool.getStatement();
-        PreparedStatement getUserNameStmt = getUserNameWrap.getStatement();
-        getUserNameStmt.clearParameters();
-        getUserNameStmt.setInt(1, uid);
-        ResultSet rs = getUserNameStmt.executeQuery();
+    static NameWorldId getEntryName(int id) {
+        List<Map<Integer, Object>> results = runQuery(getEntryNamePool, new Object[] { id }, true, 1, 2);
+        Iterator<Map<Integer, Object>> iter = results.iterator();
         NameWorldId nw = new NameWorldId();
-        if(!rs.next()) {
+        if (!iter.hasNext()) {
             nw.name = "Error";
             nw.worldid = -1;
             return nw;
         }
-        String name = rs.getString(1);
-        int worldid = rs.getInt(2);
-        nw.name = name;
-        nw.worldid = worldid;
-        rs.close();
-        getUserNameWrap.close();
-        return nw;
-    }
-    static NameWorldId getGroupName(int gid) throws SQLException {
-        PreparedStatementWrapper getGroupNameWrap = getGroupNamePool.getStatement();
-        PreparedStatement getGroupNameStmt = getGroupNameWrap.getStatement();
-        getGroupNameStmt.clearParameters();
-        getGroupNameStmt.setInt(1, gid);
-        ResultSet rs = getGroupNameStmt.executeQuery();
-        NameWorldId nw = new NameWorldId();
-        if(!rs.next()) {
-            nw.name = "Error";
-            nw.worldid = -1;
-            return nw;
+        Map<Integer, Object> row = iter.next();
+        Object oName = row.get(1);
+        Object oWId = row.get(2);
+        String name = null;
+        int worldid = -1;
+        if (oName instanceof String && oWId instanceof Integer) {
+            name = (String) oName;
+            worldid = (Integer) oWId;
         }
-        String name = rs.getString(1);
-        int worldid = rs.getInt(2);
         nw.name = name;
         nw.worldid = worldid;
-        rs.close();
-        getGroupNameWrap.close();
         return nw;
     }
-    static SqlUserStorage getUserStorage(String world) throws SQLException {
+
+    static SqlUserStorage getUserStorage(String world) {
         if (userStores.containsKey(world)) {
             return userStores.get(world);
         }
@@ -288,7 +212,7 @@ public abstract class SqlStorage {
         return sus;
     }
 
-    static SqlGroupStorage getGroupStorage(String world) throws SQLException {
+    static SqlGroupStorage getGroupStorage(String world) {
         if (groupStores.containsKey(world)) {
             return groupStores.get(world);
         }
@@ -299,7 +223,7 @@ public abstract class SqlStorage {
 
     public synchronized static void closeAll() {
         try {
-            if(init){
+            if (init) {
                 SqlUserStorage.close();
                 SqlGroupStorage.close();
                 dbConn.close();
@@ -314,9 +238,72 @@ public abstract class SqlStorage {
     static Connection getConnection() throws SQLException {
         return dbSource.getConnection();
     }
+
     public static class NameWorldId {
         public int worldid;
         public String name;
+    }
+
+    static List<Map<Integer, Object>> runQuery(PreparedStatementPool pool, Object[] params, boolean single, int... dataCols) {
+        if (dataCols == null || dataCols.length == 0) {
+            return null;
+        }
+        List<Map<Integer, Object>> results = new LinkedList<Map<Integer, Object>>();
+        PreparedStatementWrapper wrap = null;
+        try {
+            wrap = pool.getStatement();
+            PreparedStatement stmt = wrap.getStatement();
+            fillStatement(stmt, params);
+            ResultSet rs = stmt.executeQuery();
+            while (rs.next()) {
+                Map<Integer, Object> row = new HashMap<Integer, Object>();
+                for (int index : dataCols) {
+                    row.put(index, rs.getObject(index));
+                    if (dbms == Dbms.MYSQL && rs.isClosed())
+                        break;
+                }
+                results.add(row);
+                if (single)
+                    break;
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return null;
+        } finally {
+            if (wrap != null)
+                wrap.close();
+        }
+        return results;
+    }
+
+    static int runUpdate(PreparedStatementPool pool, Object[] params) {
+        PreparedStatementWrapper wrap = null;
+        int result = -1;
+        try {
+            wrap = pool.getStatement();
+            PreparedStatement stmt = wrap.getStatement();
+            fillStatement(stmt, params);
+            result = stmt.executeUpdate();
+        } catch (SQLException e) {
+            e.printStackTrace();
+            result = -1;
+        } finally {
+            if (wrap != null)
+                wrap.close();
+        }
+        return result;
+    }
+
+    static void fillStatement(PreparedStatement stmt, Object[] params) throws SQLException {
+        stmt.clearParameters();
+        if (params == null)
+            return;
+        for (int i = 0; i < params.length; i++) {
+            Object param = params[i];
+            if (param != null) {
+                stmt.setObject(i + 1, param);
+            }
+        }
     }
 }
 
@@ -335,17 +322,17 @@ enum Dbms {
 
     public DataSource getSource(String username, String password, String url) {
         switch (this) {
-            case MYSQL:
-                MysqlDataSource mds = new MysqlDataSource();
-                mds.setUser(username);
-                mds.setPassword(password);
-                mds.setUrl(url);
-                return mds;
-            default:
-            case SQLITE:
-                SQLiteDataSource sds = new SQLiteDataSource();
-                sds.setUrl(url);
-                return sds;
+        case MYSQL:
+            MysqlDataSource mds = new MysqlDataSource();
+            mds.setUser(username);
+            mds.setPassword(password);
+            mds.setUrl(url);
+            return mds;
+        default:
+        case SQLITE:
+            SQLiteDataSource sds = new SQLiteDataSource();
+            sds.setUrl(url);
+            return sds;
         }
     }
 }

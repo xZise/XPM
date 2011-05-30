@@ -36,15 +36,21 @@ public class ModularControl extends PermissionHandler {
     PermissionCache cache = new PermissionCache();
     
     public ModularControl(Configuration storageConfig) {
+        System.out.println(this.getClass().getClassLoader().getClass().getName());
         this.storageConfig = storageConfig;
         StorageFactory.setConfig(storageConfig);
         loadWorldInheritance();
         int period = storageConfig.getInt("permissions.storage.reload", 6000);
-        Permissions.instance.getServer().getScheduler().scheduleAsyncRepeatingTask(Permissions.instance, new Runnable(){
+        class RefreshTask implements Runnable {
+            public RefreshTask() {
+                System.out.println(this.getClass().getClassLoader().getClass().getName());
+            }
             @Override
             public void run() {
                 storageReload();
-            }}, period, period);
+            }
+        }
+        Permissions.instance.getServer().getScheduler().scheduleAsyncRepeatingTask(Permissions.instance, new RefreshTask(), period, period);
     }
     
     //World manipulation methods
@@ -104,6 +110,13 @@ public class ModularControl extends PermissionHandler {
         for (GroupStorage store : groupStores.values()) {
             store.reload();
         }
+        for(Map<String, User> users : worldUsers.values())
+            for(User u : users.values())
+                u.clearTransientPerms();
+        for(Map<String, Group> groups : worldGroups.values())
+            for(Group g : groups.values())
+                g.clearTransientPerms();
+        //TODO: Fire reload event
         SqlStorage.clearWorldCache();
     }
     @Override
@@ -114,7 +127,11 @@ public class ModularControl extends PermissionHandler {
         worldGroups.clear();
         Set<String> worlds = this.getWorlds();
         for (String world : worlds) {
-            load(world, getUserStorage(world), getGroupStorage(world));
+            UserStorage us = getUserStorage(world);
+            GroupStorage gs = getGroupStorage(world);
+            us.reload();
+            gs.reload();
+            load(world, us, gs);
         }
     }
     
@@ -206,6 +223,7 @@ public class ModularControl extends PermissionHandler {
     }
 
     private void load(String world, UserStorage userStore, GroupStorage groupStore) {
+        //TODO: Fire load event
         if (userStore == null || groupStore == null)
             return;
         String userWorld = userStore.getWorld();
@@ -219,7 +237,7 @@ public class ModularControl extends PermissionHandler {
 
         defaultGroups.remove(groupWorld);
         Map<String, User> users = new HashMap<String, User>();
-        Set<String> userNames = userStore.getUsers();
+        Set<String> userNames = userStore.getEntries();
         for (String userName : userNames) {
             User user = new User(this, userStore, userName, userWorld, false);
             users.put(userName.toLowerCase(), user);
@@ -227,7 +245,7 @@ public class ModularControl extends PermissionHandler {
         worldUsers.put(world, users);
 
         HashMap<String, Group> groups = new HashMap<String, Group>();
-        Set<String> groupNames = groupStore.getGroups();
+        Set<String> groupNames = groupStore.getEntries();
         for (String groupName : groupNames) {
             Group group = new Group(this, groupStore, groupName, groupWorld, false);
             groups.put(groupName.toLowerCase(), group);
@@ -385,7 +403,7 @@ public class ModularControl extends PermissionHandler {
         Group g = this.getGroupObject(world, group);
         if (g == null)
             return "";
-        String prefix = g.getRawPrefix();
+        String prefix = g.getRawString("prefix");
         return prefix == null ? "" : prefix;
     }
 
@@ -395,7 +413,7 @@ public class ModularControl extends PermissionHandler {
         Group g = this.getGroupObject(world, group);
         if (g == null)
             return "";
-        String suffix = g.getRawSuffix();
+        String suffix = g.getRawString("suffix");
         return suffix == null ? "" : suffix;
     }
 

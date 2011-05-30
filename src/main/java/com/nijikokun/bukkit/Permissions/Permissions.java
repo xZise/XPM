@@ -22,7 +22,7 @@ import org.bukkit.plugin.PluginDescriptionFile;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.util.config.Configuration;
 
-import com.nijiko.Messaging;
+import com.nijiko.MessageHelper;
 import com.nijiko.configuration.NotNullConfiguration;
 import com.nijiko.data.GroupWorld;
 import com.nijiko.permissions.Entry;
@@ -55,7 +55,7 @@ public class Permissions extends JavaPlugin {
     public static Plugin instance;
     private Configuration storageConfig;
     public static final String name = "Permissions";
-    public static final String version = "3.0.6";
+    public static final String version = "3.1";
     public static final String codename = "Yeti";
 
     public Listener l = new Listener(this);
@@ -183,7 +183,7 @@ public class Permissions extends JavaPlugin {
         Player player = null;
         // String commandName = command.getName().toLowerCase();
         PluginDescriptionFile pdfFile = this.getDescription();
-        Messaging msg = new Messaging(sender);
+        MessageHelper msg = new MessageHelper(sender);
         if (sender instanceof Player) {
             player = (Player) sender;
         }
@@ -654,7 +654,7 @@ public class Permissions extends JavaPlugin {
                             }
                             String text = isPrefix ? "&7[Permissions]&b " + group.getName() + "'s prefix:" : "&7[Permissions]&b " + group.getName() + "'s suffix:";
                             msg.send(text);
-                            text = isPrefix ? group.getRawPrefix() : group.getRawSuffix();
+                            text = group.getRawString(isPrefix ? "prefix" : "suffix");
                             msg.send("\"" + text + "\"");
                             return true;
                         } else if (args[currentArg].equalsIgnoreCase("set")) {
@@ -673,10 +673,7 @@ public class Permissions extends JavaPlugin {
                                 newFix = newFix.substring(0, newFix.length() - 1); // Possible
                                                                                    // bug
                             }
-                            if (isPrefix)
-                                group.setPrefix(newFix);
-                            else
-                                group.setSuffix(newFix);
+                            group.setData(isPrefix ? "prefix" : "suffix", newFix);
                             String text = isPrefix ? "&7[Permissions]&b Group's prefix set to " + newFix + "." : "&7[Permissions]&7 Group's suffix set to " + newFix + ".";
                             msg.send(text);
                             return true;
@@ -708,7 +705,7 @@ public class Permissions extends JavaPlugin {
                             if (args.length > currentArg) {
                                 String bool = args[currentArg];
                                 boolean build = Boolean.parseBoolean(bool);
-                                group.setBuild(build);
+                                group.setData("build",build);
                                 msg.send("&7[Permissions]&b" + group.getName() + "'s build setting was set to " + Boolean.toString(build));
                                 return true;
                             }

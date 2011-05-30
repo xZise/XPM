@@ -1,9 +1,9 @@
 package com.nijiko.permissions;
 
 import java.util.LinkedHashSet;
-import java.util.Set;
 
 import com.nijiko.data.GroupWorld;
+import com.nijiko.data.Storage;
 import com.nijiko.data.UserStorage;
 
 public class User extends Entry {
@@ -12,7 +12,10 @@ public class User extends Entry {
     User(ModularControl controller, UserStorage data, String name, String world, boolean create) {
         super(controller, name, world);
         this.data = data;
-        if(create)data.createUser(name);
+        if(create) {
+            System.out.println("Creating user " + name);
+            data.create(name);
+        }
     }
 
     @Override
@@ -24,50 +27,6 @@ public class User extends Entry {
     public String toString() {
         return "User " + name + " in " + world;
     }
-
-    @Override
-    public Set<String> getPermissions() {
-        return data.getPermissions(name);
-    }
-
-    @Override
-    public LinkedHashSet<GroupWorld> getRawParents() {
-        return data.getParents(name);
-    }
-
-    @Override
-    public void setPermission(final String permission, final boolean add) {
-//        Set<String> permissions = this.getPermissions();
-//        String negated = permission.startsWith("-") ? permission.substring(1)
-//                : "-" + permission;
-//        if (add) {
-//            if (permissions.contains(negated)) {
-//                data.removePermission(name, negated);
-//            }
-//            data.addPermission(name, permission);
-//        } else {
-//            data.removePermission(name, permission);
-//            data.addPermission(name, negated);
-//        }
-        super.setPermission(permission, add);
-        if(add) data.addPermission(name, permission);
-        else data.removePermission(name, permission);
-    }
-
-    @Override
-    public void addParent(Group group) {
-        super.addParent(group);
-        data.addParent(name, group.world, group.name);
-    }
-
-    @Override
-    public void removeParent(Group group) {
-        if (this.inGroup(group.world, group.name)) {
-            super.removeParent(group);
-            data.removeParent(name, group.world, group.name);
-        }
-    }
-    
     
     public void demote(Group group, String track) {
         if(group==null) return;
@@ -94,40 +53,17 @@ public class User extends Entry {
         this.removeParent(group);
         this.addParent(prev);
     }
-    @Override
-    public void setData(String path, Object newdata) {
-        data.setData(name,path,newdata);
-    }
-
-    @Override
-    public String getRawString(String path) {
-        return data.getString(name,path);
-    }
-
-    @Override
-    public Integer getRawInt(String path) {
-        return data.getInt(name, path);
-    }
-
-    @Override
-    public Boolean getRawBool(String path) {
-        return data.getBool(name, path);
-    }
-
-    @Override
-    public Double getRawDouble(String path) {
-        return data.getDouble(name, path);
-    }
-
-    @Override
-    public void removeData(String path) {
-        data.removeData(name, path);
-    }
     
     @Override
     public LinkedHashSet<Entry> getParents(String world) {
         LinkedHashSet<Entry> parents = super.getParents(world);
-        if(parents.isEmpty()) parents.add(controller.getDefaultGroup(this.world));
+        Group def = controller.getDefaultGroup(this.world);
+        if(parents.isEmpty() && def != null) parents.add(def);
         return parents;
+    }
+
+    @Override
+    protected Storage getStorage() {
+        return data;
     }
 }

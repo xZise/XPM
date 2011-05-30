@@ -28,6 +28,9 @@ public class NotNullConfiguration extends Configuration {
     private Yaml yaml;
     private File file;
 
+//    static {
+//        System.out.println(NotNullConfiguration.class.getClassLoader().getClass().getName());
+//    }
     public NotNullConfiguration(File file) {
         super(file);
 
@@ -35,8 +38,7 @@ public class NotNullConfiguration extends Configuration {
         options.setIndent(4);
         options.setDefaultFlowStyle(DumperOptions.FlowStyle.BLOCK);
 
-        yaml = new Yaml(new SafeConstructor(), new NotNullRepresenter(),
-                options);
+        yaml = new Yaml(new SafeConstructor(), new NotNullRepresenter(), options);
 
         this.file = file;
     }
@@ -97,9 +99,7 @@ public class NotNullConfiguration extends Configuration {
                 root = (Map<String, Object>) input;
             }
         } catch (ClassCastException e) {
-            throw new ConfigurationException(
-                    "Root document must be an key-value structure");
+            throw new ConfigurationException("Root document must be an key-value structure");
         }
     }
 }
-

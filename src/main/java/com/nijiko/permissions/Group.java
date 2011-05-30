@@ -7,6 +7,7 @@ import java.util.Set;
 
 import com.nijiko.data.GroupStorage;
 import com.nijiko.data.GroupWorld;
+import com.nijiko.data.Storage;
 
 public class Group extends Entry {
 
@@ -15,8 +16,10 @@ public class Group extends Entry {
     Group(ModularControl controller, GroupStorage data, String name, String world, boolean create) {
         super(controller, name, world);
         this.data = data;
-        if (create)
-            data.createGroup(name);
+        if (create) {
+            System.out.println("Creating group " + name);
+            data.create(name);
+        }
     }
 
     public boolean isDefault() {
@@ -26,30 +29,6 @@ public class Group extends Entry {
     @Override
     public EntryType getType() {
         return EntryType.GROUP;
-    }
-
-    public String getRawPrefix() {
-        return data.getPrefix(name);
-    }
-
-    public String getRawSuffix() {
-        return data.getSuffix(name);
-    }
-
-    public void setBuild(final boolean build) {
-        data.setBuild(name, build);
-    }
-
-    public void setPrefix(final String prefix) {
-        data.setPrefix(name, prefix);
-    }
-
-    public void setSuffix(final String suffix) {
-        data.setSuffix(name, suffix);
-    }
-
-    protected boolean canSelfBuild() {
-        return data.canBuild(name);
     }
 
     @Override
@@ -65,41 +44,6 @@ public class Group extends Entry {
     @Override
     public LinkedHashSet<GroupWorld> getRawParents() {
         return data.getParents(name);
-    }
-
-    @Override
-    public void setPermission(final String permission, final boolean add) {
-        // Set<String> permissions = this.getPermissions();
-        // String negated = permission.startsWith("-") ? permission.substring(1)
-        // : "-" + permission;
-        // if (add) {
-        // if (permissions.contains(negated)) {
-        // data.removePermission(name, negated);
-        // }
-        // data.addPermission(name, permission);
-        // } else {
-        // data.removePermission(name, permission);
-        // data.addPermission(name, negated);
-        // }
-        super.setPermission(permission, add);
-        if (add)
-            data.addPermission(name, permission);
-        else
-            data.removePermission(name, permission);
-    }
-
-    @Override
-    public void addParent(Group group) {
-        super.addParent(group);
-        data.addParent(name, group.world, group.name);
-    }
-
-    @Override
-    public void removeParent(Group group) {
-        if (this.inGroup(group.world, group.name)) {
-            super.removeParent(group);
-            data.removeParent(name, group.world, group.name);
-        }
     }
 
     public Set<String> getTracks() {
@@ -135,37 +79,8 @@ public class Group extends Entry {
         return null;
     }
 
-    public int getRawWeight() {
-        return data.getWeight(name);
-    }
-
     @Override
-    public void setData(String path, Object newdata) {
-        data.setData(name, path, newdata);
-    }
-
-    @Override
-    public String getRawString(String path) {
-        return data.getString(name, path);
-    }
-
-    @Override
-    public Integer getRawInt(String path) {
-        return data.getInt(name, path);
-    }
-
-    @Override
-    public Boolean getRawBool(String path) {
-        return data.getBool(name, path);
-    }
-
-    @Override
-    public Double getRawDouble(String path) {
-        return data.getDouble(name, path);
-    }
-
-    @Override
-    public void removeData(String path) {
-        data.removeData(name, path);
+    protected Storage getStorage() {
+        return data;
     }
 }

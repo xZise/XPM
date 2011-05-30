@@ -11,7 +11,7 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import org.bukkit.util.config.Configuration;
 
-import com.nijikokun.bukkit.Permissions.Permissions;
+import com.nijiko.permissions.EntryType;
 
 public class YamlGroupStorage implements GroupStorage {
     private final Configuration groupConfig;
@@ -26,13 +26,6 @@ public class YamlGroupStorage implements GroupStorage {
         this.world = world;
         this.rwl = new ReentrantReadWriteLock(false);
         reload();
-        // this.taskId =
-        Permissions.instance.getServer().getScheduler().scheduleAsyncRepeatingTask(Permissions.instance, new Runnable() {
-            @Override
-            public void run() {
-                reload();
-            }
-        }, reloadDelay, reloadDelay);
     }
 
     @Override
@@ -119,7 +112,7 @@ public class YamlGroupStorage implements GroupStorage {
     }
 
     @Override
-    public Set<String> getGroups() {
+    public Set<String> getEntries() {
         rwl.readLock().lock();
         List<String> rawGroups = groupConfig.getKeys("groups");
         rwl.readLock().unlock();
@@ -194,58 +187,7 @@ public class YamlGroupStorage implements GroupStorage {
     }
 
     @Override
-    public boolean canBuild(String name) {
-        rwl.readLock().lock();
-        boolean canBuild = groupConfig.getBoolean("groups." + name + ".info.build", false);
-        rwl.readLock().unlock();
-        return canBuild;
-    }
-
-    @Override
-    public String getPrefix(String name) {
-        rwl.readLock().lock();
-        String prefix = groupConfig.getString("groups." + name + ".info.prefix", "");
-        rwl.readLock().unlock();
-        return prefix;
-    }
-
-    @Override
-    public String getSuffix(String name) {
-        rwl.readLock().lock();
-        String suffix = groupConfig.getString("groups." + name + ".info.suffix", "");
-        rwl.readLock().unlock();
-        return suffix;
-    }
-
-    @Override
-    public void setBuild(String name, boolean build) {
-        rwl.writeLock().lock();
-        groupConfig.setProperty("groups." + name + ".info.build", build);
-        modified = true;
-        save();
-        rwl.writeLock().unlock();
-    }
-
-    @Override
-    public void setPrefix(String name, String prefix) {
-        rwl.writeLock().lock();
-        groupConfig.setProperty("groups." + name + ".info.prefix", prefix);
-        modified = true;
-        save();
-        rwl.writeLock().unlock();
-    }
-
-    @Override
-    public void setSuffix(String name, String suffix) {
-        rwl.writeLock().lock();
-        groupConfig.setProperty("groups." + name + ".info.suffix", suffix);
-        modified = true;
-        save();
-        rwl.writeLock().unlock();
-    }
-
-    @Override
-    public boolean createGroup(String name) {
+    public boolean create(String name) {
         rwl.writeLock().lock();
         if (groupConfig.getProperty("groups." + name) != null) {
             rwl.writeLock().unlock();
@@ -259,29 +201,14 @@ public class YamlGroupStorage implements GroupStorage {
         rwl.writeLock().unlock();
         return true;
     }
-
     
-
-    @Override
-    public int getWeight(String name) {
-        rwl.readLock().lock();
-        int weight = groupConfig.getInt("groups."+name+".weight", -1);
-        rwl.readLock().unlock();
-        return weight;        
-    }
-    //TODO: Add setWeight()
-    
-
-
     @Override
     public void setData(String name, String path, Object data) {
-        if(path.equalsIgnoreCase("prefix")||path.equalsIgnoreCase("suffix")||path.equalsIgnoreCase("build"))
-            throw new IllegalArgumentException("No modification of prefixes/suffixes/build values allowed via this method!");
         rwl.writeLock().lock();
-        groupConfig.setProperty("groups."+name+".info."+path, data);
+        groupConfig.setProperty("groups." + name + ".info." + path, data);
         groupConfig.save();
         rwl.writeLock().unlock();
-        return;        
+        return;
     }
 
     @Override
@@ -289,14 +216,15 @@ public class YamlGroupStorage implements GroupStorage {
         rwl.readLock().lock();
         List<String> rawTracks = groupConfig.getKeys("tracks");
         rwl.readLock().unlock();
-        if(rawTracks==null)return null;
+        if (rawTracks == null)
+            return null;
         return new HashSet<String>(rawTracks);
     }
 
     @Override
     public LinkedList<GroupWorld> getTrack(String trackName) {
         rwl.readLock().lock();
-        List<String> rawGroups = groupConfig.getStringList("tracks."+trackName,null);
+        List<String> rawGroups = groupConfig.getStringList("tracks." + trackName, null);
         rwl.readLock().unlock();
 
         LinkedHashSet<GroupWorld> track = new LinkedHashSet<GroupWorld>(rawGroups.size());
@@ -316,49 +244,56 @@ public class YamlGroupStorage implements GroupStorage {
 
     @Override
     public void removeData(String name, String path) {
-        if(path.equalsIgnoreCase("prefix")||path.equalsIgnoreCase("suffix")||path.equalsIgnoreCase("build"))
+        if (path.equalsIgnoreCase("prefix") || path.equalsIgnoreCase("suffix") || path.equalsIgnoreCase("build"))
             throw new IllegalArgumentException("No removal of prefixes/suffixes/build values allowed via this method!");
         rwl.writeLock().lock();
-        groupConfig.removeProperty("groups."+name+".info."+path);
+        groupConfig.removeProperty("groups." + name + ".info." + path);
         groupConfig.save();
         rwl.writeLock().unlock();
-        return;        
+        return;
     }
-    
+
     @Override
     public String getString(String name, String path) {
         Object raw = getObj(name, path);
-        if(raw instanceof String) return (String) raw;
+        if (raw instanceof String)
+            return (String) raw;
         return null;
     }
 
     @Override
     public Integer getInt(String name, String path) {
         Object raw = getObj(name, path);
-        if(raw instanceof Integer) return (Integer) raw;
+        if (raw instanceof Integer)
+            return (Integer) raw;
         return null;
     }
 
     @Override
     public Double getDouble(String name, String path) {
         Object raw = getObj(name, path);
-        if(raw instanceof Double) return (Double) raw;
+        if (raw instanceof Double)
+            return (Double) raw;
         return null;
     }
 
     @Override
     public Boolean getBool(String name, String path) {
         Object raw = getObj(name, path);
-        if(raw instanceof Boolean) return (Boolean) raw;
+        if (raw instanceof Boolean)
+            return (Boolean) raw;
         return null;
     }
-    
+
     private Object getObj(String name, String path) {
-        if(path.equalsIgnoreCase("prefix")||path.equalsIgnoreCase("suffix")||path.equalsIgnoreCase("build"))
-            throw new IllegalArgumentException("No reading of prefixes/suffixes/build values allowed via this method!");
         rwl.readLock().lock();
-        Object data = groupConfig.getProperty("groups."+name+".info."+path);
+        Object data = groupConfig.getProperty("groups." + name + ".info." + path);
         rwl.readLock().unlock();
-        return data;        
+        return data;
+    }
+
+    @Override
+    public EntryType getType() {
+        return EntryType.GROUP;
     }
 }

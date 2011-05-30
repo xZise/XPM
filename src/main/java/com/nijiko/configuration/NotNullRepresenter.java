@@ -11,7 +11,9 @@ import org.yaml.snakeyaml.representer.Represent;
 import org.yaml.snakeyaml.representer.Representer;
 
 public class NotNullRepresenter extends Representer {
-
+//    static {
+//        System.out.println(NotNullRepresenter.class.getClassLoader().getClass().getName());
+//    }
     public NotNullRepresenter() {
         super();
         this.nullRepresenter = this.new EmptyRepresentNull();

@@ -11,7 +11,7 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import org.bukkit.util.config.Configuration;
 
-import com.nijikokun.bukkit.Permissions.Permissions;
+import com.nijiko.permissions.EntryType;
 
 public class YamlUserStorage implements UserStorage {
     private final Configuration userConfig;
@@ -21,31 +21,18 @@ public class YamlUserStorage implements UserStorage {
     // private int taskId;
     private boolean saveOff;
 
-    YamlUserStorage(Configuration userConfig, String world, int reloadDelay,
-            boolean autoSave) {
+    YamlUserStorage(Configuration userConfig, String world, int reloadDelay, boolean autoSave) {
         this.userConfig = userConfig;
         this.world = world;
         this.rwl = new ReentrantReadWriteLock(false);
         reload();
-        // this.taskId =
-        Permissions.instance
-                .getServer()
-                .getScheduler()
-                .scheduleAsyncRepeatingTask(Permissions.instance,
-                        new Runnable() {
-                            @Override
-                            public void run() {
-                                reload();
-                            }
-                        }, reloadDelay, reloadDelay);
     }
 
     @Override
     public Set<String> getPermissions(String name) {
         name = name.replace('.', ','); // Fix for legacy usernames with periods
         rwl.readLock().lock();
-        Set<String> permissions = new HashSet<String>(userConfig.getStringList(
-                "users." + name + ".permissions", null));
+        Set<String> permissions = new HashSet<String>(userConfig.getStringList("users." + name + ".permissions", null));
         rwl.readLock().unlock();
         return permissions;
     }
@@ -54,8 +41,7 @@ public class YamlUserStorage implements UserStorage {
     public LinkedHashSet<GroupWorld> getParents(String name) {
         name = name.replace('.', ','); // Fix for legacy usernames with periods
         rwl.readLock().lock();
-        List<String> rawParents = userConfig.getStringList(
-                "users." + name + ".groups", null);
+        List<String> rawParents = userConfig.getStringList("users." + name + ".groups", null);
         rwl.readLock().unlock();
         LinkedHashSet<GroupWorld> parents = new LinkedHashSet<GroupWorld>(rawParents.size());
         for (String raw : rawParents) {
@@ -76,11 +62,9 @@ public class YamlUserStorage implements UserStorage {
     public void addPermission(String name, String permission) {
         name = name.replace('.', ','); // Fix for legacy usernames with periods
         rwl.writeLock().lock();
-        Set<String> permissions = new HashSet<String>(userConfig.getStringList(
-                "users." + name + ".permissions", null));
+        Set<String> permissions = new HashSet<String>(userConfig.getStringList("users." + name + ".permissions", null));
         permissions.add(permission);
-        userConfig.setProperty("users." + name + ".permissions",
-                new LinkedList<String>(permissions));
+        userConfig.setProperty("users." + name + ".permissions", new LinkedList<String>(permissions));
         modified = true;
         save();
         rwl.writeLock().unlock();
@@ -90,11 +74,9 @@ public class YamlUserStorage implements UserStorage {
     public void removePermission(String name, String permission) {
         name = name.replace('.', ','); // Fix for legacy usernames with periods
         rwl.writeLock().lock();
-        Set<String> permissions = new HashSet<String>(userConfig.getStringList(
-                "users." + name + ".permissions", null));
+        Set<String> permissions = new HashSet<String>(userConfig.getStringList("users." + name + ".permissions", null));
         permissions.add(permission);
-        userConfig.setProperty("users." + name + ".permissions",
-                new LinkedList<String>(permissions));
+        userConfig.setProperty("users." + name + ".permissions", new LinkedList<String>(permissions));
         modified = true;
         save();
         rwl.writeLock().unlock();
@@ -104,14 +86,12 @@ public class YamlUserStorage implements UserStorage {
     public void addParent(String name, String groupWorld, String groupName) {
         name = name.replace('.', ','); // Fix for legacy usernames with periods
         rwl.writeLock().lock();
-        Set<String> permissions = new HashSet<String>(userConfig.getStringList(
-                "users." + name + ".groups", null));
+        Set<String> permissions = new HashSet<String>(userConfig.getStringList("users." + name + ".groups", null));
         if (groupWorld == null || this.world.equalsIgnoreCase(groupWorld))
             permissions.add(groupName);
         else
             permissions.add(groupWorld + "," + groupName);
-        userConfig.setProperty("users." + name + ".groups",
-                new LinkedList<String>(permissions));
+        userConfig.setProperty("users." + name + ".groups", new LinkedList<String>(permissions));
         modified = true;
         save();
         rwl.writeLock().unlock();
@@ -122,14 +102,12 @@ public class YamlUserStorage implements UserStorage {
     public void removeParent(String name, String groupWorld, String groupName) {
         name = name.replace('.', ','); // Fix for legacy usernames with periods
         rwl.writeLock().lock();
-        Set<String> permissions = new HashSet<String>(userConfig.getStringList(
-                "users." + name + ".groups", null));
+        Set<String> permissions = new HashSet<String>(userConfig.getStringList("users." + name + ".groups", null));
         if (groupWorld == null || this.world.equalsIgnoreCase(groupWorld))
             permissions.remove(groupName);
         else
             permissions.remove(groupWorld + "," + groupName);
-        userConfig.setProperty("users." + name + ".groups",
-                new LinkedList<String>(permissions));
+        userConfig.setProperty("users." + name + ".groups", new LinkedList<String>(permissions));
         modified = true;
         save();
         rwl.writeLock().unlock();
@@ -137,7 +115,7 @@ public class YamlUserStorage implements UserStorage {
     }
 
     @Override
-    public Set<String> getUsers() {
+    public Set<String> getEntries() {
         rwl.readLock().lock();
         List<String> rawUsers = userConfig.getKeys("users");
         rwl.readLock().unlock();
@@ -188,7 +166,7 @@ public class YamlUserStorage implements UserStorage {
     @Override
     public void reload() {
         rwl.writeLock().lock();
-//        System.out.println("Reloading user config for world \""+world+"\".");
+        // System.out.println("Reloading user config for world \""+world+"\".");
         userConfig.load();
         modified = false;
         rwl.writeLock().unlock();
@@ -210,17 +188,16 @@ public class YamlUserStorage implements UserStorage {
     }
 
     @Override
-    public boolean createUser(String name) {
+    public boolean create(String name) {
         rwl.writeLock().lock();
-        if(userConfig.getProperty("users."+name)!=null)
-        {
+        if (userConfig.getProperty("users." + name) != null) {
             rwl.writeLock().unlock();
             return false;
         }
-        Map<String, Object> template = new HashMap<String,Object>();
+        Map<String, Object> template = new HashMap<String, Object>();
         template.put("groups", null);
         template.put("permissions", null);
-        userConfig.setProperty("users."+name, template);
+        userConfig.setProperty("users." + name, template);
         userConfig.save();
         rwl.writeLock().unlock();
         return true;
@@ -229,16 +206,16 @@ public class YamlUserStorage implements UserStorage {
     @Override
     public void removeData(String name, String path) {
         rwl.writeLock().lock();
-        userConfig.removeProperty("users."+name+".info."+path);
+        userConfig.removeProperty("users." + name + ".info." + path);
         userConfig.save();
         rwl.writeLock().unlock();
-        return;        
+        return;
     }
-    
+
     @Override
     public void setData(String name, String path, Object data) {
         rwl.writeLock().lock();
-        userConfig.setProperty("users."+name+".info."+path, data);
+        userConfig.setProperty("users." + name + ".info." + path, data);
         userConfig.save();
         rwl.writeLock().unlock();
         return;
@@ -247,36 +224,44 @@ public class YamlUserStorage implements UserStorage {
     @Override
     public String getString(String name, String path) {
         Object raw = getObj(name, path);
-        if(raw instanceof String) return (String) raw;
+        if (raw instanceof String)
+            return (String) raw;
         return null;
     }
 
     @Override
     public Integer getInt(String name, String path) {
         Object raw = getObj(name, path);
-        if(raw instanceof Integer) return (Integer) raw;
+        if (raw instanceof Integer)
+            return (Integer) raw;
         return null;
     }
 
     @Override
     public Double getDouble(String name, String path) {
         Object raw = getObj(name, path);
-        if(raw instanceof Double) return (Double) raw;
+        if (raw instanceof Double)
+            return (Double) raw;
         return null;
     }
 
     @Override
     public Boolean getBool(String name, String path) {
         Object raw = getObj(name, path);
-        if(raw instanceof Boolean) return (Boolean) raw;
+        if (raw instanceof Boolean)
+            return (Boolean) raw;
         return null;
     }
-    
+
     private Object getObj(String name, String path) {
         rwl.readLock().lock();
-        Object data = userConfig.getProperty("users."+name+".info."+path);
+        Object data = userConfig.getProperty("users." + name + ".info." + path);
         rwl.readLock().unlock();
-        return data;        
+        return data;
     }
-    
+
+    @Override
+    public EntryType getType() {
+        return EntryType.USER;
+    }
 }
