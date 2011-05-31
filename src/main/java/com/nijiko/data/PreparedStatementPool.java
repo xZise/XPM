@@ -102,7 +102,7 @@ public class PreparedStatementPool {
         }
         
         @Override
-        public void finalize() {
+        protected void finalize() {
             close();
         }
     }

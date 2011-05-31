@@ -16,11 +16,11 @@ public class SqlGroupStorage extends SqlEntryStorage implements GroupStorage {
     private String defaultGroup = null;
     
     private static final String defGroupText = "SELECT defaultid FROM PrWorldBase WHERE worldid = ?;";
-    protected static PreparedStatementPool defGroupPool;
+    static PreparedStatementPool defGroupPool;
     private static final String trackListText = "SELECT trackname FROM PrTracks WHERE worldid = ?;";
-    protected static PreparedStatementPool trackListPool;
+    static PreparedStatementPool trackListPool;
     private static final String trackGetText = "SELECT PrWorlds.worldname, PrEntries.name FROM PrWorlds, PrEntries, PrTracks, PrTrackGroups WHERE PrTrackGroups.trackid = PrTracks.trackid AND PrTracks.worldid = ? AND PrTracks.trackname = ? AND PrEntries.entryid = PrTrackGroups.gid AND PrWorlds.worldid = PrEntries.worldid ORDER BY PrTrackGroups.groupOrder;";
-    protected static PreparedStatementPool trackGetPool;
+    static PreparedStatementPool trackGetPool;
     
     static void reloadPools(Connection dbConn) {
         defGroupPool = new PreparedStatementPool(dbConn, defGroupText, SqlEntryStorage.max);

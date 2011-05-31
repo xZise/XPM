@@ -51,7 +51,7 @@ import com.nijiko.permissions.User;
 
 public class Permissions extends JavaPlugin {
 
-    public static Logger log;
+    static Logger log;
     public static Plugin instance;
 //    private Configuration storageConfig;
     public static final String name = "Permissions";
@@ -113,7 +113,9 @@ public class Permissions extends JavaPlugin {
         if (!storageOpt.exists())
             try {
                 System.out.println("[Permissions] Creating storageconfig.yml.");
-                storageOpt.createNewFile();
+                if(!storageOpt.createNewFile()) {
+                    disable("[Permissions] Unable to create storageconfig.yml!");
+                }
             } catch (IOException e) {
                 e.printStackTrace();
                 disable("[Permissions] storageconfig.yml could not be created.");
@@ -380,14 +382,15 @@ public class Permissions extends JavaPlugin {
                             return true;
                         }
                         Set<String> perms = entry.getPermissions();
-                        String text = "&7[Permissions]&b Permissions: &c";
+                        String text = "";
                         if (perms == null || perms.isEmpty()) {
                             text = "&4[Permissions] User/Group has no non-inherited permissions.";
                         } else {
+                            StringBuilder temp = new StringBuilder("&7[Permissions]&b Permissions: &c");
                             for (String perm : perms) {
-                                text = text + perm + "&b,&c ";
+                                temp.append(perm).append("&b,&c ");
                             }
-                            text = text.substring(0, text.length() - 6);
+                            text = temp.substring(0, text.length() - 6);
                         }
                         msg.send(text);
                         return true;

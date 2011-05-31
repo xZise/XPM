@@ -14,34 +14,34 @@ import com.nijiko.permissions.EntryType;
 
 public abstract class SqlEntryStorage implements Storage {
 
-    protected static int max = 5;
+    protected static final int max = 5;
     protected final String world;
     protected int worldId;
     protected Map<String, Integer> idCache = new HashMap<String, Integer>();
 
     protected static final String permGetText = "SELECT permstring FROM PrPermissions WHERE entryid = ?;";
-    protected static PreparedStatementPool permGetPool;
+    static PreparedStatementPool permGetPool;
     protected static final String parentGetText = "SELECT parentid FROM PrInheritance WHERE childid = ?;";
-    protected static PreparedStatementPool parentGetPool;
+    static PreparedStatementPool parentGetPool;
 
     protected static final String permAddText = "INSERT IGNORE INTO PrPermissions (entryid, permstring) VALUES (?,?);";
-    protected static PreparedStatementPool permAddPool;
+    static PreparedStatementPool permAddPool;
     protected static final String permRemText = "DELETE FROM PrPermissions WHERE entryid = ? AND permstring = ?;";
-    protected static PreparedStatementPool permRemPool;
+    static PreparedStatementPool permRemPool;
     protected static final String parentAddText = "INSERT IGNORE INTO PrInheritance (childid, parentid) VALUES (?,?);";
-    protected static PreparedStatementPool parentAddPool;
+    static PreparedStatementPool parentAddPool;
     protected static final String parentRemText = "DELETE FROM PrInheritance WHERE childid = ? AND parentid = ?;";
-    protected static PreparedStatementPool parentRemPool;
+    static PreparedStatementPool parentRemPool;
 
     protected static final String entryListText = "SELECT name, entryid FROM PrEntries WHERE worldid = ? AND type = ?;";
-    protected static PreparedStatementPool entryListPool;
+    static PreparedStatementPool entryListPool;
 
     protected static final String dataGetText = "SELECT * FROM PrData WHERE entryid = ? AND path = ?;";
-    protected static PreparedStatementPool dataGetPool;
+    static PreparedStatementPool dataGetPool;
     protected static final String dataModText = "REPLACE INTO PrData (data, entryid, path) VALUES (?,?,?);";
-    protected static PreparedStatementPool dataModPool;
+    static PreparedStatementPool dataModPool;
     protected static final String dataDelText = "DELETE FROM PrData WHERE entryid = ? AND path = ?;";
-    protected static PreparedStatementPool dataDelPool;
+    static PreparedStatementPool dataDelPool;
 
     static void reloadPools(Connection dbConn) {
         Dbms dbms = SqlStorage.getDbms();
