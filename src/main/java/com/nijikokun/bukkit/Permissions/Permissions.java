@@ -53,7 +53,7 @@ public class Permissions extends JavaPlugin {
 
     public static Logger log;
     public static Plugin instance;
-    private Configuration storageConfig;
+//    private Configuration storageConfig;
     public static final String name = "Permissions";
     public static final String version = "3.1";
     public static final String codename = "Yeti";
@@ -81,7 +81,10 @@ public class Permissions extends JavaPlugin {
         instance = this;
         log = Logger.getLogger("Minecraft");
         Properties prop = new Properties();
-        FileInputStream in;
+        FileInputStream in = null;
+        if(!getDataFolder().mkdirs()) {
+            disable("[Permissions] Directory structure could not be created.");            
+        }
         try {
             in = new FileInputStream(new File("server.properties"));
             prop.load(in);
@@ -90,16 +93,23 @@ public class Permissions extends JavaPlugin {
             System.err.println("[Permissions] Unable to read default world's name from server.properties.");
             e.printStackTrace();
             defaultWorld = "world";
+        } finally {
+            try {
+                if(in != null) in.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         }
 //        PropertyHandler server = new PropertyHandler("server.properties");
 //        defaultWorld = server.getString("level-name");
 
         File storageOpt = new File("plugins" + File.separator + "Permissions" + File.separator, "storageconfig.yml");
-        storageOpt.getParentFile().mkdirs();
+        if(!storageOpt.getParentFile().mkdirs())
+            disable("[Permissions] Unable to create directory structure.");            
         if (!storageOpt.isFile())
-            System.err.println("[Permissions] storageconfig.yml is not a file.");
+            disable("[Permissions] storageconfig.yml is not a file.");
         if (!storageOpt.canRead())
-            System.err.println("[Permissions] storageconfig.yml cannot be read.");
+            disable("[Permissions] storageconfig.yml cannot be read.");
         if (!storageOpt.exists())
             try {
                 System.out.println("[Permissions] Creating storageconfig.yml.");
@@ -111,11 +121,10 @@ public class Permissions extends JavaPlugin {
             }
         Configuration storageConfig = new NotNullConfiguration(storageOpt);
         storageConfig.load();
-        this.storageConfig = storageConfig;
+//        this.storageConfig = storageConfig;
 
         // Setup Permission
-        getDataFolder().mkdirs();
-        setupPermissions();
+        setupPermissions(storageConfig);
 
         // Enabled
         log.info("[Permissions] (" + codename + ") was initialized.");
@@ -154,7 +163,7 @@ public class Permissions extends JavaPlugin {
         return Permissions.Security;
     }
 
-    public void setupPermissions() {
+    public void setupPermissions(Configuration storageConfig) {
         Security = new ModularControl(storageConfig);
         Security.setDefaultWorld(defaultWorld);
         try {
@@ -207,64 +216,29 @@ public class Permissions extends JavaPlugin {
         }
 
         if (args[0].equalsIgnoreCase("-reload")) {
-            String tempWorld = "";
-
-            if(args.length > 1)
-                tempWorld = args[1];
-
-            int currentArg = 1;
-            if(tempWorld.startsWith("\"")) {
-                boolean closed = false;
-                tempWorld = tempWorld.substring(1);
-                if(tempWorld.endsWith("\"")) {
-                    tempWorld = tempWorld.substring(0, tempWorld.length() - 1);                    
-                } else {
-                    currentArg++;
-                    while (args.length > currentArg) {
-                        String part = args[currentArg];
-                        closed = part.endsWith("\"");
-                        if(closed) {
-                            part = part.substring(0, part.length() - 1);
-                        }
-                        tempWorld = tempWorld + " " + part;
-                        if(closed) break;
-                        currentArg++;
-                    }
-                    if(!closed) {
-                        msg.send("&4[Permissions] No ending quote found for world string.");
-                        return true;
-                    }
-                }
+            StringBuilder world = new StringBuilder();
+            int val = extractQuoted(args, 1, world);
+            switch(val) {
+            case -1:
+                msg.send("&4[Permissions] Argument index error.");
+                return true;
+            case -2:
+                msg.send("&4[Permissions] No ending quote found.");
+                return true;
             }
-            String world = tempWorld;
-            return reload(sender, world);
+            return reload(sender, world.toString());
         } else if (args[0].equalsIgnoreCase("-load")) {
-            String tempWorld = args[1];
-            int currentArg = 1;
-            if(tempWorld.startsWith("\"")) {
-                boolean closed = false;
-                tempWorld = tempWorld.substring(1);
-                if(tempWorld.endsWith("\"")) {
-                    tempWorld = tempWorld.substring(0, tempWorld.length() - 1);                    
-                } else {
-                    currentArg++;
-                    while (args.length > currentArg) {
-                        String part = args[currentArg];
-                        closed = part.endsWith("\"");
-                        if(closed) {
-                            part = part.substring(0, part.length() - 1);
-                        }
-                        tempWorld = tempWorld + " " + part;
-                        if(closed) break;
-                        currentArg++;
-                    }
-                    if(!closed) {
-                        msg.send("&4[Permissions] No ending quote found for world string.");
-                        return true;
-                    }
-                }
+            StringBuilder tempWorld = new StringBuilder();
+            int val = extractQuoted(args, 1, tempWorld);
+            switch(val) {
+            case -1:
+                msg.send("&4[Permissions] Argument index error.");
+                return true;
+            case -2:
+                msg.send("&4[Permissions] No ending quote found.");
+                return true;
             }
-            String world = tempWorld;
+            String world = tempWorld.toString();
             try {
                 Security.forceLoadWorld(world);
             } catch (Exception e) {
@@ -282,46 +256,31 @@ public class Permissions extends JavaPlugin {
                         return true;
                     }
                     Set<String> worlds = Security.getWorlds();
-                    String text = "";
+                    StringBuilder text = new StringBuilder();
                     if (worlds.isEmpty()) {
-                        text = "&4[Permissions] No worlds loaded.";
+                        text.append("&4[Permissions] No worlds loaded.");
                     } else {
-                        text = "&a[Permissions] Loaded worlds: &b";
+                        text.append("&a[Permissions] Loaded worlds: &b");
                         for (String world : worlds) {
-                            text = text + world + " ,";
+                            text.append(world).append(" ,");
                         }
-                        text = text.substring(0, text.length() - 2);
+                        text.delete(text.length() - 2, text.length());
                     }
-                    msg.send(text);
+                    msg.send(text.toString());
                     return true;
                 }
                 if (args.length > 2) {
-                    String tempWorld = args[2];
-                    int currentArg = 2;
-                    if(tempWorld.startsWith("\"")) {
-                        boolean closed = false;
-                        tempWorld = tempWorld.substring(1);
-                        if(tempWorld.endsWith("\"")) {
-                            tempWorld = tempWorld.substring(0, tempWorld.length() - 1);                    
-                        } else {
-                            currentArg++;
-                            while (args.length > currentArg) {
-                                String part = args[currentArg];
-                                closed = part.endsWith("\"");
-                                if(closed) {
-                                    part = part.substring(0, part.length() - 1);
-                                }
-                                tempWorld = tempWorld + " " + part;
-                                if(closed) break;
-                                currentArg++;
-                            }
-                            if(!closed) {
-                                msg.send("&4[Permissions] No ending quote found for world string.");
-                                return true;
-                            }
-                        }
+                    StringBuilder tempWorld = new StringBuilder();
+                    int val = extractQuoted(args, 2, tempWorld);
+                    switch(val) {
+                    case -1:
+                        msg.send("&4[Permissions] Argument index error.");
+                        return true;
+                    case -2:
+                        msg.send("&4[Permissions] No ending quote found.");
+                        return true;
                     }
-                    String world = tempWorld;
+                    String world = tempWorld.toString();
                     if (args[1].equalsIgnoreCase("users")) {
                         if (player != null && !Security.has(player, "permissions.list.users")) {
                             msg.send("&4[Permissions] You do not have permissions to use this command.");
@@ -355,32 +314,20 @@ public class Permissions extends JavaPlugin {
         currentArg++;
         String world = sender instanceof Player ? ((Player) sender).getWorld().getName() : null;
         if (args.length > currentArg && args[currentArg].startsWith("w:")) {
-            String tempWorld = args[currentArg].substring(2);
-            if(tempWorld.startsWith("\"")) {
-                boolean closed = false;
-                tempWorld = tempWorld.substring(1);
-                if(tempWorld.endsWith("\"")) {
-                    tempWorld = tempWorld.substring(0, tempWorld.length() - 1);                    
-                } else {
-                    currentArg++;
-                    while (args.length > currentArg) {
-                        String part = args[currentArg];
-                        closed = part.endsWith("\"");
-                        if(closed) {
-                            part = part.substring(0, part.length() - 1);
-                        }
-                        tempWorld = tempWorld + " " + part;
-                        if(closed) break;
-                        currentArg++;
-                    }
-                    if(!closed) {
-                        msg.send("&4[Permissions] No ending quote found for world string.");
-                        return true;
-                    }
-                }
+            StringBuilder tempWorld = new StringBuilder();
+            String[] tempArgs = new String[args.length];
+            System.arraycopy(args, 0, tempArgs, 0, args.length); //XXX: Temp solution for w: prefix
+            tempArgs[currentArg] = tempArgs[currentArg].substring(2);
+            currentArg = extractQuoted(tempArgs, currentArg, tempWorld);
+            switch(currentArg) {
+            case -1:
+                msg.send("&4[Permissions] Argument index error.");
+                return true;
+            case -2:
+                msg.send("&4[Permissions] No ending quote found.");
+                return true;
             }
-            world = tempWorld;
-            currentArg ++;
+            world = tempWorld.toString();
         }
         if (world == null) {
             msg.send("&4[Permissions] No world specified.");
@@ -522,32 +469,17 @@ public class Permissions extends JavaPlugin {
                             String parentName = args[currentArg];
                             String parentWorld = world;
                             if (args.length > (++currentArg)) {
-                                String tempWorld = args[currentArg];
-                                if(tempWorld.startsWith("\"")) {
-                                    boolean closed = false;
-                                    tempWorld = tempWorld.substring(1);
-                                    if(tempWorld.endsWith("\"")) {
-                                        tempWorld = tempWorld.substring(0, tempWorld.length() - 1);                    
-                                    } else {
-                                        currentArg++;
-                                        while (args.length > currentArg) {
-                                            String part = args[currentArg];
-                                            closed = part.endsWith("\"");
-                                            if(closed) {
-                                                part = part.substring(0, part.length() - 1);
-                                            }
-                                            tempWorld = tempWorld + " " + part;
-                                            if(closed) break;
-                                            currentArg++;
-                                        }
-                                        if(!closed) {
-                                            msg.send("&4[Permissions] No ending quote found for world string.");
-                                            return true;
-                                        }
-                                    }
+                                StringBuilder tempWorld = new StringBuilder();
+                                currentArg = extractQuoted(args, currentArg, tempWorld);
+                                switch(currentArg) {
+                                case -1:
+                                    msg.send("&4[Permissions] Argument index error.");
+                                    return true;
+                                case -2:
+                                    msg.send("&4[Permissions] No ending quote found.");
+                                    return true;
                                 }
-                                parentWorld = tempWorld;
-                                currentArg ++;
+                                parentWorld = tempWorld.toString();
                             }
                             LinkedHashSet<GroupWorld> parents = entry.getRawParents();
                             if (add && parents.contains(new GroupWorld(parentWorld, parentName)))
@@ -732,31 +664,20 @@ public class Permissions extends JavaPlugin {
                         String parentWorld = world;
                         currentArg++;
                         if (args.length > currentArg && args[currentArg].startsWith("w:")) {
-                            String tempWorld = args[currentArg].substring(2);
-                            if(tempWorld.startsWith("\"")) {
-                                boolean closed = false;
-                                tempWorld = tempWorld.substring(1);
-                                if(tempWorld.endsWith("\"")) {
-                                    tempWorld = tempWorld.substring(0, tempWorld.length() - 1);                    
-                                } else {
-                                    currentArg++;
-                                    while (args.length > currentArg) {
-                                        String part = args[currentArg];
-                                        closed = part.endsWith("\"");
-                                        if(closed) {
-                                            part = part.substring(0, part.length() - 1);
-                                        }
-                                        tempWorld = tempWorld + " " + part;
-                                        if(closed) break;
-                                        currentArg++;
-                                    }
-                                    if(!closed) {
-                                        msg.send("&4[Permissions] No ending quote found for world string.");
-                                        return true;
-                                    }
-                                }
+                            StringBuilder tempWorld = new StringBuilder();
+                            String[] tempArgs = new String[args.length];
+                            System.arraycopy(args, 0, tempArgs, 0, args.length); //XXX: Temp solution for w: prefix
+                            tempArgs[currentArg] = tempArgs[currentArg].substring(2);
+                            currentArg = extractQuoted(tempArgs, currentArg, tempWorld);
+                            switch(currentArg) {
+                            case -1:
+                                msg.send("&4[Permissions] Argument index error.");
+                                return true;
+                            case -2:
+                                msg.send("&4[Permissions] No ending quote found.");
+                                return true;
                             }
-                            parentWorld = tempWorld;
+                            parentWorld = tempWorld.toString();
                             currentArg++;
                         }
                         Group group = Security.getGroupObject(parentWorld, parentName);
@@ -858,18 +779,40 @@ public class Permissions extends JavaPlugin {
     }
 
     private String listEntries(Collection<? extends Entry> entries, String type) {
-        String text = "";
+        StringBuilder text = new StringBuilder();
         if (entries == null) {
-            text = "&4[Permissions] World does not exist.";
+            text.append("&4[Permissions] World does not exist.");
         } else if (entries.isEmpty()) {
-            text = "&4[Permissions] No " + type.toLowerCase() + " in that world.";
+            text.append("&4[Permissions] No ").append(type.toLowerCase()).append(" in that world.");
         } else {
-            text = "&a[Permissions] " + type + ": &b";
+            text.append("&a[Permissions] " + type + ": &b");
             for (Entry entry : entries) {
-                text = text + entry.getName() + ", ";
+                text.append(entry.getName()).append(", ");
             }
-            text = text.substring(0, text.length() - 2);
+            text.delete(text.length() - 2, text.length());
         }
-        return text;
+        return text.toString();
+    }
+    
+    private int extractQuoted(String[] args, int currentArg, StringBuilder target) {
+        if(args.length <= currentArg)
+            return -1; //Args array too small
+        target.append(args[currentArg]);
+        currentArg ++;
+        if(target.charAt(0) != '"')
+            return currentArg;
+        
+        target.deleteCharAt(0); //Delete the starting quote
+        
+        while(args.length > currentArg) {
+            target.append(" ").append(args[currentArg]);
+            currentArg++;
+            if(target.charAt(target.length() - 1) == '"') {
+                target.deleteCharAt(target.length() - 1);
+                return currentArg;
+            }
+        }
+        
+        return -2; //No ending quote
     }
 }

@@ -98,21 +98,28 @@ public abstract class SqlStorage {
     }
 
     private static void verifyAndCreateTables() throws SQLException {
-        Connection dbConn = SqlStorage.dbSource.getConnection();
-        Statement s = dbConn.createStatement();
-        // Verify stuff
-        String engine = dbms.equals(Dbms.MYSQL) ? " ENGINE = InnoDB;" : ";";
-        for (String state : create) {
-            if (dbms == Dbms.MYSQL) {
-                state = state.replace("AUTOINCREMENT", "AUTO_INCREMENT");
-                state = state.replace(" ENTRYINDEX", " INDEX pr_entryname_index(name),");
-            } else {
-                state = state.replace(" ENTRYINDEX", "");
+        Connection dbConn = null;
+        Statement s = null;
+        try {
+            dbConn = SqlStorage.dbSource.getConnection();
+            s = dbConn.createStatement();
+            // TODO: Verify stuff
+            String engine = dbms.equals(Dbms.MYSQL) ? " ENGINE = InnoDB;" : ";";
+            for (String state : create) {
+                if (dbms == Dbms.MYSQL) {
+                    state = state.replace("AUTOINCREMENT", "AUTO_INCREMENT");
+                    state = state.replace(" ENTRYINDEX", " INDEX pr_entryname_index(name),");
+                } else {
+                    state = state.replace(" ENTRYINDEX", "");
+                }
+                s.executeUpdate(state + engine);
             }
-            s.executeUpdate(state + engine);
-        }
-        if (dbms != Dbms.MYSQL) {
-            s.executeUpdate("CREATE INDEX IF NOT EXISTS pr_entry_index ON PrEntries(name);");
+            if (dbms != Dbms.MYSQL) {
+                s.executeUpdate("CREATE INDEX IF NOT EXISTS pr_entry_index ON PrEntries(name);");
+            }
+        } finally {
+            if(s != null) s.close();
+            if(dbConn != null) dbConn.close();
         }
     }
 

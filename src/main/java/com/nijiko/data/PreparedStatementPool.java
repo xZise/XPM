@@ -28,43 +28,54 @@ public class PreparedStatementPool {
     
     public void close() {
         rwl.writeLock().lock();
-        Set<PreparedStatement> stmts = new HashSet<PreparedStatement>();
-        pool.drainTo(stmts);
-        for(PreparedStatement p : stmts) {
-            try {
-                p.close();
-            } catch (SQLException e) {
-                e.printStackTrace();
+        try {
+            Set<PreparedStatement> stmts = new HashSet<PreparedStatement>();
+            pool.drainTo(stmts);
+            for(PreparedStatement p : stmts) {
+                try {
+                    p.close();
+                } catch (SQLException e) {
+                    e.printStackTrace();
+                }
             }
+        } finally {
+            rwl.writeLock().unlock();
         }
-        rwl.writeLock().unlock();
     }
     
     private void freeStatement(PreparedStatement p) {
         rwl.readLock().lock();
-        boolean b = false;
         try {
-            b = pool.offer(p, timeout, TimeUnit.MICROSECONDS);
-        } catch (InterruptedException e) {}
-        if(!b)
+            boolean b = false;
             try {
-                p.close();
-            } catch (SQLException e) {
-                e.printStackTrace();
-            }
-        rwl.readLock().unlock();
+                b = pool.offer(p, timeout, TimeUnit.MICROSECONDS);
+            } catch (InterruptedException e) {}
+            if(!b)
+                try {
+                    p.close();
+                } catch (SQLException e) {
+                    e.printStackTrace();
+                }
+        } finally {
+            rwl.readLock().unlock();
+        }
     }
     public PreparedStatementWrapper getStatement() throws SQLException {
+        PreparedStatementWrapper wrap = null;
         rwl.readLock().lock();
-        PreparedStatement p = null;
         try {
-            p = pool.poll(timeout, TimeUnit.MICROSECONDS);
-        } catch (InterruptedException e) {}
-        if(p == null) {
-            p = dbConn.prepareStatement(statement);
+            PreparedStatement p = null;
+            try {
+                p = pool.poll(timeout, TimeUnit.MICROSECONDS);
+            } catch (InterruptedException e) {}
+            if(p == null) {
+                p = dbConn.prepareStatement(statement);
+            }
+            wrap = new PreparedStatementWrapper(p, this);
+        } finally {
+            rwl.readLock().unlock();
         }
-        rwl.readLock().unlock();
-        return new PreparedStatementWrapper(p, this);
+        return wrap;
     }
     
     static class PreparedStatementWrapper {

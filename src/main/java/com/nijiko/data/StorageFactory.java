@@ -58,8 +58,10 @@ public abstract class StorageFactory {
             try {
                 SqlStorage.init(dbms, uri, username, password, delay);
                 SqlUserStorage sus = SqlStorage.getUserStorage(userWorld);
-                if(cached) return new CachedUserStorage(sus);
-                else return sus;
+                if (cached)
+                    return new CachedUserStorage(sus);
+                else
+                    return sus;
             } catch (Exception e) {
                 System.err.println("Error occured while connecting to SQL database. Reverting to YAML.");
                 e.printStackTrace();
@@ -69,15 +71,18 @@ public abstract class StorageFactory {
         case YAML:
             boolean global = userWorld.equals("*");
             String worldString = Permissions.instance.getDataFolder().getPath();
-            if(!global) worldString = worldString + File.separator + userWorld;
+            if (!global)
+                worldString = worldString + File.separator + userWorld;
             File worldFolder = new File(worldString);
             if (!worldFolder.exists())
-                worldFolder.mkdirs();
+                if (worldFolder.mkdirs())
+                    throw new IOException("Unable to create directory structure for world '" + userWorld + "'.");
             if (!worldFolder.isDirectory())
                 throw new IOException("World folder for world " + userWorld + " is not a directory.");
-            File userFile = new File(worldString, global ?  "globalUsers.yml" :"users.yml");
+            File userFile = new File(worldString, global ? "globalUsers.yml" : "users.yml");
             if (!userFile.exists())
-                userFile.createNewFile();
+                if (!userFile.createNewFile())
+                    throw new IOException("Unable to create user config for world '" + userWorld + "'.");
             if (!userFile.isFile())
                 throw new IOException("User config for world " + userWorld + " is not a file.");
             if (!userFile.canRead())
@@ -130,8 +135,10 @@ public abstract class StorageFactory {
             try {
                 SqlStorage.init(dbms, uri, username, password, delay);
                 SqlGroupStorage sgs = SqlStorage.getGroupStorage(groupWorld);
-                if(cached) return new CachedGroupStorage(sgs);
-                else return sgs;
+                if (cached)
+                    return new CachedGroupStorage(sgs);
+                else
+                    return sgs;
             } catch (Exception e) {
                 System.err.println("Error occured while connecting to SQL database. Reverting to YAML.");
                 e.printStackTrace();
@@ -141,22 +148,25 @@ public abstract class StorageFactory {
         case YAML:
             boolean global = groupWorld.equals("*");
             String worldString = Permissions.instance.getDataFolder().getPath();
-            if(!global) worldString = worldString + File.separator + groupWorld;
+            if (!global)
+                worldString = worldString + File.separator + groupWorld;
             File worldFolder = new File(worldString);
             if (!worldFolder.exists())
-                worldFolder.mkdirs();
+                if (worldFolder.mkdirs())
+                    throw new IOException("Unable to create directory structure for world '" + groupWorld + "'.");
             if (!worldFolder.isDirectory())
                 throw new IOException("World folder for world " + groupWorld + " is not a directory.");
-            File userFile = new File(worldString, global ? "globalGroups.yml" : "groups.yml");
-            if (!userFile.exists())
-                userFile.createNewFile();
-            if (!userFile.isFile())
+            File groupFile = new File(worldString, global ? "globalGroups.yml" : "groups.yml");
+            if (!groupFile.exists())
+                if (!groupFile.createNewFile())
+                    throw new IOException("Unable to create user config for world '" + groupWorld + "'.");
+            if (!groupFile.isFile())
                 throw new IOException("Group config for world " + groupWorld + " is not a file.");
-            if (!userFile.canRead())
+            if (!groupFile.canRead())
                 throw new IOException("Group config for world " + groupWorld + " cannot be read.");
-            if (!userFile.canWrite())
+            if (!groupFile.canWrite())
                 throw new IOException("Group config for world " + groupWorld + " cannot be written to.");
-            return new YamlGroupStorage(new NotNullConfiguration(userFile), groupWorld, delay, autosave);
+            return new YamlGroupStorage(new NotNullConfiguration(groupFile), groupWorld, delay, autosave);
         }
     }
 }

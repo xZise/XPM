@@ -36,34 +36,34 @@ public class MessageHelper {
     public MessageHelper(CommandSender sender) {
         this.sender = sender;
     }
-    /**
-     * Converts a list of arguments into points.
-     * 
-     * @param original
-     *            The original string necessary to convert inside of.
-     * @param arguments
-     *            The list of arguments, multiple arguments are seperated by
-     *            commas for a single point.
-     * @param points
-     *            The point used to alter the argument.
-     * 
-     * @return <code>String</code> - The parsed string after converting
-     *         arguments to variables (points)
-     */
-    public static String argument(String original, String[] arguments,
-            String[] points) {
-        for (int i = 0; i < arguments.length; i++) {
-            if (arguments[i].contains(",")) {
-                for (String arg : arguments[i].split(",")) {
-                    original = original.replace(arg, points[i]);
-                }
-            } else {
-                original = original.replace(arguments[i], points[i]);
-            }
-        }
-
-        return original;
-    }
+//    /**
+//     * Converts a list of arguments into points.
+//     * 
+//     * @param original
+//     *            The original string necessary to convert inside of.
+//     * @param arguments
+//     *            The list of arguments, multiple arguments are seperated by
+//     *            commas for a single point.
+//     * @param points
+//     *            The point used to alter the argument.
+//     * 
+//     * @return <code>String</code> - The parsed string after converting
+//     *         arguments to variables (points)
+//     */
+//    public static String argument(String original, String[] arguments,
+//            String[] points) {
+//        for (int i = 0; i < arguments.length; i++) {
+//            if (arguments[i].contains(",")) {
+//                for (String arg : arguments[i].split(",")) {
+//                    original = original.replace(arg, points[i]);
+//                }
+//            } else {
+//                original = original.replace(arguments[i], points[i]);
+//            }
+//        }
+//
+//        return original;
+//    }
 
     /**
      * Parses the original string against color specific codes. This one
@@ -119,18 +119,6 @@ public class MessageHelper {
                 .replace("<aqua>", "\u00A7b").replace("<rose>", "\u00A7c")
                 .replace("<pink>", "\u00A7d").replace("<yellow>", "\u00A7e")
                 .replace("<white>", "\u00A7f");
-    }
-
-    /**
-     * Helper function to assist with making brackets. Why? Dunno, lazy.
-     * 
-     * @param message
-     *            The message inside of brackets.
-     * 
-     * @return <code>String</code> - The message inside [brackets]
-     */
-    public static String bracketize(String message) {
-        return "[" + message + "]";
     }
 
     /**

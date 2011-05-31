@@ -169,7 +169,7 @@ public abstract class CachedStorage implements Storage {
             Object o = data.get(name).get(path);
             if (data.get(name).containsKey(path) && o == null)
                 return null;
-            if (o instanceof Integer)
+            if (o instanceof Double)
                 return (Double) o;
         }
         Double val = getWrapped().getDouble(name, path);
@@ -185,7 +185,7 @@ public abstract class CachedStorage implements Storage {
             Object o = data.get(name).get(path);
             if (data.get(name).containsKey(path) && o == null)
                 return null;
-            if (o instanceof Integer)
+            if (o instanceof Boolean)
                 return (Boolean) o;
         }
         Boolean val = getWrapped().getBool(name, path);

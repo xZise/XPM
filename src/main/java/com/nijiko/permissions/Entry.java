@@ -138,7 +138,7 @@ public abstract class Entry {
     protected void cache(CheckResult cr) {
         String mrn = cr.getMostRelevantNode();
         if (mrn == null)
-            mrn = "-*";
+            mrn = negationOf(cr.getNode());
         controller.cache.cacheResult(cr);
         this.cache.put(mrn, cr);
     }

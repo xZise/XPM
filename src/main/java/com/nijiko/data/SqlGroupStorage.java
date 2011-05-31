@@ -76,7 +76,7 @@ public class SqlGroupStorage extends SqlEntryStorage implements GroupStorage {
         while(iter.hasNext()) {
             Object oWorld = iter.next().get(1);
             Object oName = iter.next().get(2);
-            if(oWorld instanceof String && oName instanceof Integer) {                
+            if(oWorld instanceof String && oName instanceof String) {                
                 trackGroups.add(new GroupWorld((String)oWorld, (String)oName));
             }
         }
