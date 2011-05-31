@@ -32,22 +32,23 @@ public abstract class Entry {
     }
 
     public void addTransientPermission(String node) {
-        if(node == null)
+        if (node == null)
             return;
         controller.cache.updatePerms(this, node);
         transientPerms.add(node);
     }
 
     public void removeTransientPermission(String node) {
-        if(node == null)
+        if (node == null)
             return;
         controller.cache.updatePerms(this, node);
         transientPerms.remove(node);
     }
-    
+
     public void clearTransientPerms() {
         transientPerms.clear();
     }
+
     protected abstract Storage getStorage();
 
     public Set<String> getPermissions() {

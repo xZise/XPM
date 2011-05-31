@@ -36,14 +36,14 @@ public class ModularControl extends PermissionHandler {
     PermissionCache cache = new PermissionCache();
     
     public ModularControl(Configuration storageConfig) {
-        System.out.println(this.getClass().getClassLoader().getClass().getName());
+//        System.out.println(this.getClass().getClassLoader().getClass().getName());
         this.storageConfig = storageConfig;
         StorageFactory.setConfig(storageConfig);
         loadWorldInheritance();
         int period = storageConfig.getInt("permissions.storage.reload", 6000);
         class RefreshTask implements Runnable {
             public RefreshTask() {
-                System.out.println(this.getClass().getClassLoader().getClass().getName());
+//                System.out.println(this.getClass().getClassLoader().getClass().getName());
             }
             @Override
             public void run() {
@@ -116,8 +116,9 @@ public class ModularControl extends PermissionHandler {
         for(Map<String, Group> groups : worldGroups.values())
             for(Group g : groups.values())
                 g.clearTransientPerms();
-        //TODO: Fire reload event
         SqlStorage.clearWorldCache();
+        
+        Permissions.instance.getServer().getPluginManager().callEvent(new StorageReloadEvent());
     }
     @Override
     public void reload() {
@@ -223,7 +224,6 @@ public class ModularControl extends PermissionHandler {
     }
 
     private void load(String world, UserStorage userStore, GroupStorage groupStore) {
-        //TODO: Fire load event
         if (userStore == null || groupStore == null)
             return;
         String userWorld = userStore.getWorld();
@@ -253,6 +253,8 @@ public class ModularControl extends PermissionHandler {
                 defaultGroups.put(groupWorld, group);
         }
         worldGroups.put(world, groups);
+        
+        Permissions.instance.getServer().getPluginManager().callEvent(new WorldConfigLoadEvent(world));
     }
    
     @Override  
