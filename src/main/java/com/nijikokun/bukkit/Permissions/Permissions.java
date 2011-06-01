@@ -3,7 +3,6 @@ package com.nijikokun.bukkit.Permissions;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.LinkedHashSet;
 import java.util.Properties;
@@ -53,7 +52,7 @@ public class Permissions extends JavaPlugin {
 
     static Logger log;
     public static Plugin instance;
-//    private Configuration storageConfig;
+    //    private Configuration storageConfig;
     public static final String name = "Permissions";
     public static final String version = "3.1";
     public static final String codename = "Yeti";
@@ -67,16 +66,16 @@ public class Permissions extends JavaPlugin {
     @Deprecated
     public static PermissionHandler Security;
 
-//    /**
-//     * Miscellaneous object for various functions that don't belong anywhere
-//     * else
-//     */
-//    public static Misc Misc = new Misc();
+    //    /**
+    //     * Miscellaneous object for various functions that don't belong anywhere
+    //     * else
+    //     */
+    //    public static Misc Misc = new Misc();
 
     private String defaultWorld = "";
 
-//    public Permissions() {
-//    }
+    //    public Permissions() {
+    //    }
 
     @Override
     public void onLoad() {
@@ -100,8 +99,8 @@ public class Permissions extends JavaPlugin {
                 e.printStackTrace();
             }
         }
-//        PropertyHandler server = new PropertyHandler("server.properties");
-//        defaultWorld = server.getString("level-name");
+        //        PropertyHandler server = new PropertyHandler("server.properties");
+        //        defaultWorld = server.getString("level-name");
 
         File storageOpt = new File("plugins" + File.separator + "Permissions" + File.separator, "storageconfig.yml");
         storageOpt.getParentFile().mkdirs();
@@ -120,15 +119,15 @@ public class Permissions extends JavaPlugin {
                 disable("[Permissions] storageconfig.yml could not be created.");
                 return;
             }
-        Configuration storageConfig = new NotNullConfiguration(storageOpt);
-        storageConfig.load();
-//        this.storageConfig = storageConfig;
+            Configuration storageConfig = new NotNullConfiguration(storageOpt);
+            storageConfig.load();
+            //        this.storageConfig = storageConfig;
 
-        // Setup Permission
-        setupPermissions(storageConfig);
+            // Setup Permission
+            setupPermissions(storageConfig);
 
-        // Enabled
-        log.info("[Permissions] (" + codename + ") was initialized.");
+            // Enabled
+            log.info("[Permissions] (" + codename + ") was initialized.");
     }
 
     @Override
@@ -174,7 +173,7 @@ public class Permissions extends JavaPlugin {
             disable("[Permissions] Unable to load permission data.");
             return;
         }
-//        getServer().getServicesManager().register(PermissionHandler.class, Security, this, ServicePriority.Normal);
+        //        getServer().getServicesManager().register(PermissionHandler.class, Security, this, ServicePriority.Normal);
     }
 
     @Override
@@ -455,7 +454,7 @@ public class Permissions extends JavaPlugin {
                             msg.send("&4[Permissions] You do not have permissions to use this command.");
                             return true;
                         }
-//                        LinkedHashSet<GroupWorld> parents = entry.getRawParents();
+                        //                        LinkedHashSet<GroupWorld> parents = entry.getRawParents();
                         LinkedHashSet<Entry> parents = entry.getParents();
                         String text = "&7[Permissions]&b Parents: &c";
                         if (parents == null || parents.isEmpty()) {
@@ -583,90 +582,6 @@ public class Permissions extends JavaPlugin {
                 msg.send("&b/permissions &a(g:)<target> (w:<world>) info get <path>");
                 msg.send("&b/permissions &a(g:)<target> (w:<world>) info set <path> (i:|d:|b:)<data>");
                 return true;
-            }
-            if (isGroup && entry instanceof Group)// Just in case
-            {
-                Group group = (Group) entry;
-                if (args[currentArg].equalsIgnoreCase("prefix") || args[currentArg].equalsIgnoreCase("suffix")) {
-                    boolean isPrefix = args[currentArg].equalsIgnoreCase("prefix");
-                    currentArg++;
-                    if (args.length > currentArg) {
-                        if (args[currentArg].equalsIgnoreCase("get")) {
-                            String node = isPrefix ? "permissions.prefix.get" : "permissions.suffix.get";
-                            if (player != null && !Security.has(player, node)) {
-                                msg.send("&4[Permissions] You do not have permissions to use this command.");
-                                return true;
-                            }
-                            String text = isPrefix ? "&7[Permissions]&b " + group.getName() + "'s prefix:" : "&7[Permissions]&b " + group.getName() + "'s suffix:";
-                            msg.send(text);
-                            text = group.getRawString(isPrefix ? "prefix" : "suffix");
-                            msg.send("\"" + text + "\"");
-                            return true;
-                        } else if (args[currentArg].equalsIgnoreCase("set")) {
-                            String node = isPrefix ? "permissions.prefix.set" : "permissions.suffix.set";
-                            if (player != null && !Security.has(player, node)) {
-                                msg.send("&4[Permissions] You do not have permissions to use this command.");
-                                return true;
-                            }
-                            currentArg++;
-                            String newFix = "";
-                            if (args.length > currentArg) {
-                                String[] fullFix = Arrays.copyOfRange(args, currentArg, args.length);
-                                for (String part : fullFix) {
-                                    newFix = newFix + part + " ";
-                                }
-                                newFix = newFix.substring(0, newFix.length() - 1); // Possible
-                                                                                   // bug
-                            }
-                            group.setData(isPrefix ? "prefix" : "suffix", newFix);
-                            String text = isPrefix ? "&7[Permissions]&b Group's prefix set to " + newFix + "." : "&7[Permissions]&7 Group's suffix set to " + newFix + ".";
-                            msg.send(text);
-                            return true;
-                        }
-                    }
-                    msg.send("&7[Permissions] Syntax: ");
-                    msg.send("&b/permissions &ag:<target> (w:<world>) [prefix|suffix] get");
-                    msg.send("&b/permissions &ag:<target> (w:<world>) [prefix|suffix] set <newfix>");
-                    return true;
-                } else if (args[currentArg].equalsIgnoreCase("build")) {
-                    currentArg++;
-                    if (args.length > currentArg) {
-                        if (args[currentArg].equalsIgnoreCase("get")) {
-                            if (player != null && !Security.has(player, "permissions.build.get")) {
-                                msg.send("&4[Permissions] You do not have permissions to use this command.");
-                                return true;
-                            }
-                            if (group.canBuild())
-                                msg.send("&7[Permissions]&b " + group.getName() + " can build.");
-                            else
-                                msg.send("&7[Permissions]&b " + group.getName() + " cannot build.");
-                            return true;
-                        } else if (args[currentArg].equalsIgnoreCase("set")) {
-                            if (player != null && !Security.has(player, "permissions.build.set")) {
-                                msg.send("&4[Permissions] You do not have permissions to use this command.");
-                                return true;
-                            }
-                            currentArg++;
-                            if (args.length > currentArg) {
-                                String bool = args[currentArg];
-                                boolean build = Boolean.parseBoolean(bool);
-                                group.setData("build",build);
-                                msg.send("&7[Permissions]&b" + group.getName() + "'s build setting was set to " + Boolean.toString(build));
-                                return true;
-                            }
-
-                            msg.send("&7[Permissions] Syntax: &b/permissions &ag:<target> (w:<world>) build set <true|false>.");
-                            return true;
-                        }
-                    }
-                    msg.send("&7[Permissions] Syntax: ");
-                    msg.send("&b/permissions &ag:<target> (w:<world>) build get");
-                    msg.send("&b/permissions &ag:<target> (w:<world>) build set <newfix>");
-                    return true;
-                }
-
-                msg.send("&7[Permissions] Syntax: ");
-                msg.send("&b/permissions &ag:<target> (w:<world>) [prefix|suffix|build] [get|set] ...");
             } else if (entry instanceof User) {
                 User user = (User) entry;
                 if (args[currentArg].equalsIgnoreCase("promote") || args[currentArg].equalsIgnoreCase("demote")) {
@@ -736,7 +651,8 @@ public class Permissions extends JavaPlugin {
             }
 
             msg.send("&b/permissions &a(g:)<target> (w:<world>) [perms|parents] [list|add|remove] ...");
-            msg.send("&b/permissions &a(g:)<target> (w:<world>) info [get|set|remove] ...");
+            msg.send("&b/permissions &a(g:)<target> (w:<world>) info [get|set|remove] ...");     
+            msg.send("&b/permissions &a(g:)<target> (w:<world>) [prefix|suffix|build] [get|set] ...");
         }
 
         return false;
@@ -754,7 +670,7 @@ public class Permissions extends JavaPlugin {
                 p.sendMessage(ChatColor.RED + "[Permissions] You lack the necessary permissions to perform this action.");
                 return true;
             }
-            
+
             Security.reload(defaultWorld);
             sender.sendMessage(ChatColor.GRAY + "[Permissions] Default world reloaded.");
             return true;
@@ -766,7 +682,7 @@ public class Permissions extends JavaPlugin {
                 p.sendMessage(ChatColor.RED + "[Permissions] You lack the necessary permissions to perform this action.");
                 return true;
             }
-            
+
             Security.reload();
             sender.sendMessage(ChatColor.GRAY + "[Permissions] All worlds reloaded.");
             return true;
@@ -777,7 +693,7 @@ public class Permissions extends JavaPlugin {
             p.sendMessage(ChatColor.RED + "[Permissions] You lack the necessary permissions to perform this action.");
             return true;
         }
-        
+
         if (Security.reload(arg))
             sender.sendMessage(ChatColor.GRAY + "[Permissions] Reload of World " + arg + " completed.");
         else
@@ -806,7 +722,7 @@ public class Permissions extends JavaPlugin {
         }
         return text.toString();
     }
-    
+
     private int extractQuoted(String[] args, int currentArg, StringBuilder target) {
         if(args.length <= currentArg)
             return -1; //Args array too small
@@ -814,9 +730,9 @@ public class Permissions extends JavaPlugin {
         currentArg ++;
         if(target.charAt(0) != '"')
             return currentArg;
-        
+
         target.deleteCharAt(0); //Delete the starting quote
-        
+
         while(args.length > currentArg) {
             target.append(" ").append(args[currentArg]);
             currentArg++;
@@ -825,7 +741,7 @@ public class Permissions extends JavaPlugin {
                 return currentArg;
             }
         }
-        
+
         return -2; //No ending quote
     }
 }
