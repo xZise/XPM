@@ -310,7 +310,7 @@ public class ModularControl extends PermissionHandler {
         if (name == null || name.isEmpty() || world == null || world.isEmpty())
             return true;
         world = getParentWorldUser(world);
-        User user = this.getUserObject(world, name);
+        User user = this.getUsr(world, name);
         if (user == null)
             return false;
         return user.hasPermission(permission);
@@ -356,7 +356,7 @@ public class ModularControl extends PermissionHandler {
     //Prefix, suffix, build methods
     @Override
     public String getGroupProperName(String world, String group) {
-        Group g = getGroupObject(world, group);
+        Group g = getGrp(world, group);
         if(g == null) {
             g = getDefaultGroup(world);
             if(g == null) return "";
@@ -366,7 +366,7 @@ public class ModularControl extends PermissionHandler {
     
     @Override
     public String getUserPrefix(String world, String user) {
-        User u = getUserObject(world, user);
+        User u = getUsr(world, user);
         if(u == null)
             return "";
         String prefix = u.getPrefix();
@@ -375,7 +375,7 @@ public class ModularControl extends PermissionHandler {
 
     @Override
     public String getUserSuffix(String world, String user) {
-        User u = getUserObject(world, user);
+        User u = getUsr(world, user);
         if(u == null)
             return "";
         String suffix = u.getSuffix();
@@ -385,7 +385,7 @@ public class ModularControl extends PermissionHandler {
 
     @Override
     public String getPrimaryGroup(String world, String user) {
-        User u = getUserObject(world, user);
+        User u = getUsr(world, user);
         if(u != null) {
             LinkedHashSet<Entry> parents = u.getParents();
             if(parents != null && !parents.isEmpty()) {
@@ -401,7 +401,7 @@ public class ModularControl extends PermissionHandler {
     }
     @Override
     public boolean canUserBuild(String world, String user) {
-        User u = getUserObject(world, user);
+        User u = getUsr(world, user);
         if(u == null)
             return false;
         return u.canBuild();
@@ -410,7 +410,7 @@ public class ModularControl extends PermissionHandler {
     @Override
     public String getGroupRawPrefix(String world, String group) {
         world = getParentWorldGroup(world);
-        Group g = this.getGroupObject(world, group);
+        Group g = this.getGrp(world, group);
         if (g == null)
             return "";
         String prefix = g.getRawString("prefix");
@@ -420,7 +420,7 @@ public class ModularControl extends PermissionHandler {
     @Override
     public String getGroupRawSuffix(String world, String group) {
         world = getParentWorldGroup(world);
-        Group g = this.getGroupObject(world, group);
+        Group g = this.getGrp(world, group);
         if (g == null)
             return "";
         String suffix = g.getRawString("suffix");
@@ -430,7 +430,7 @@ public class ModularControl extends PermissionHandler {
     @Override
     public boolean canGroupRawBuild(String world, String group) {
         world = getParentWorldGroup(world);
-        Group g = this.getGroupObject(world, group);
+        Group g = this.getGrp(world, group);
         if (g == null)
             return false;
         return g.canBuild();
@@ -464,6 +464,8 @@ public class ModularControl extends PermissionHandler {
             throw new Exception("Error creating user " + name + " in world " + world + " due to storage problems!", e);
         }
         world = getParentWorldUser(world);
+        if (userStorageMirrorings.get(world) != null)
+            world = userStorageMirrorings.get(world);
         if (this.worldUsers.get(world) == null)
             this.worldUsers.put(world, new HashMap<String, User>());
         if (this.worldUsers.get(world).get(name.toLowerCase()) == null)
@@ -535,7 +537,34 @@ public class ModularControl extends PermissionHandler {
             return world.equals("*") ? null : getGroupObject("*", name);
         return worldGroups.get(world).get(name.toLowerCase());
     }
-    
+
+    private User getUsr(String world, String name) {
+        world = getParentWorldUser(world);
+        try {
+            User u = safeGetUser(world, name);
+            return u;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
+//        if (worldUsers.get(world) == null)
+//            return world.equals("*") ? null : getUserObject("*", name);
+//        return worldUsers.get(world).get(name.toLowerCase());
+    }
+
+    private Group getGrp(String world, String name) {
+        world = getParentWorldGroup(world);
+        try {
+            Group g = safeGetGroup(world, name);
+            return g;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
+//        if (worldGroups.get(world) == null)
+//            return world.equals("*") ? null : getGroupObject("*", name);
+//        return worldGroups.get(world).get(name.toLowerCase());
+    }
     //Parent-related methods
     @Override
     public boolean inGroup(String world, String name, String groupWorld, String group) {
@@ -553,7 +582,7 @@ public class ModularControl extends PermissionHandler {
     public boolean inSingleGroup(String world, String name, String groupWorld, String group) {
         world = getParentWorldUser(world);
         groupWorld = getParentWorldGroup(groupWorld);
-        User u = this.getUserObject(world, name);
+        User u = this.getUsr(world, name);
         if (u == null) {
             if (!world.equalsIgnoreCase(groupWorld))
                 return false;
@@ -569,7 +598,7 @@ public class ModularControl extends PermissionHandler {
     public String[] getGroups(String world, String name) {
         world = getParentWorldGroup(world);
         Set<Entry> parents;
-        User u = this.getUserObject(world, name);
+        User u = this.getUsr(world, name);
         if (u == null)
             return new String[0];
         parents = u.getAncestors();
@@ -599,7 +628,7 @@ public class ModularControl extends PermissionHandler {
         Map<String, Set<String>> groupMap = new HashMap<String, Set<String>>();
         world = getParentWorldGroup(world);
         Set<Entry> parents;
-        User u = this.getUserObject(world, name);
+        User u = this.getUsr(world, name);
         if (u == null)
             return groupMap;
         parents = u.getAncestors();
@@ -620,8 +649,8 @@ public class ModularControl extends PermissionHandler {
 
     @Override
     public int compareWeights(String firstWorld, String first, String secondWorld, String second) {
-        User firstUser = this.getUserObject(firstWorld, first);
-        User secondUser = this.getUserObject(secondWorld, second);
+        User firstUser = this.getUsr(firstWorld, first);
+        User secondUser = this.getUsr(secondWorld, second);
         if (firstUser == null) {
             if (secondUser == null)
                 return 0;
@@ -636,91 +665,91 @@ public class ModularControl extends PermissionHandler {
     //Data-related methods
     @Override
     public String getRawInfoString(String world, String entryName, String path, boolean isGroup) {
-        Entry e = isGroup ? getGroupObject(world, entryName) : getUserObject(world, entryName);
+        Entry e = isGroup ? getGrp(world, entryName) : getUsr(world, entryName);
         if(e == null) return null;
         return e.getRawString(path);
     }
 
     @Override
     public Integer getRawInfoInteger(String world, String entryName, String path, boolean isGroup) {
-        Entry e = isGroup ? getGroupObject(world, entryName) : getUserObject(world, entryName);
+        Entry e = isGroup ? getGrp(world, entryName) : getUsr(world, entryName);
         if(e == null) return null;
         return e.getRawInt(path);
     }
 
     @Override
     public Double getRawInfoDouble(String world, String entryName, String path, boolean isGroup) {
-        Entry e = isGroup ? getGroupObject(world, entryName) : getUserObject(world, entryName);
+        Entry e = isGroup ? getGrp(world, entryName) : getUsr(world, entryName);
         if(e == null) return null;
         return e.getRawDouble(path);
     }
 
     @Override
     public Boolean getRawInfoBoolean(String world, String entryName, String path, boolean isGroup) {
-        Entry e = isGroup ? getGroupObject(world, entryName) : getUserObject(world, entryName);
+        Entry e = isGroup ? getGrp(world, entryName) : getUsr(world, entryName);
         if(e == null) return null;
         return e.getRawBool(path);
     }
 
     @Override
     public String getInfoString(String world, String entryName, String path, boolean isGroup) {
-        Entry e = isGroup ? getGroupObject(world, entryName) : getUserObject(world, entryName);
+        Entry e = isGroup ? getGrp(world, entryName) : getUsr(world, entryName);
         if(e == null) return null;
         return e.getString(path);
     }
 
     @Override
     public String getInfoString(String world, String entryName, String path, boolean isGroup, Comparator<String> comparator) {
-        Entry e = isGroup ? getGroupObject(world, entryName) : getUserObject(world, entryName);
+        Entry e = isGroup ? getGrp(world, entryName) : getUsr(world, entryName);
         if(e == null) return null;
         return e.getString(path, comparator);
     }
 
     @Override
     public Integer getInfoInteger(String world, String entryName, String path, boolean isGroup) {
-        Entry e = isGroup ? getGroupObject(world, entryName) : getUserObject(world, entryName);
+        Entry e = isGroup ? getGrp(world, entryName) : getUsr(world, entryName);
         if(e == null) return null;
         return e.getInt(path);
     }
 
     @Override
     public Integer getInfoInteger(String world, String entryName, String path, boolean isGroup, Comparator<Integer> comparator) {
-        Entry e = isGroup ? getGroupObject(world, entryName) : getUserObject(world, entryName);
+        Entry e = isGroup ? getGrp(world, entryName) : getUsr(world, entryName);
         if(e == null) return null;
         return e.getInt(path, comparator);
     }
 
     @Override
     public Double getInfoDouble(String world, String entryName, String path, boolean isGroup) {
-        Entry e = isGroup ? getGroupObject(world, entryName) : getUserObject(world, entryName);
+        Entry e = isGroup ? getGrp(world, entryName) : getUsr(world, entryName);
         if(e == null) return null;
         return e.getDouble(path);
     }
 
     @Override
     public Double getInfoDouble(String world, String entryName, String path, boolean isGroup, Comparator<Double> comparator) {
-        Entry e = isGroup ? getGroupObject(world, entryName) : getUserObject(world, entryName);
+        Entry e = isGroup ? getGrp(world, entryName) : getUsr(world, entryName);
         if(e == null) return null;
         return e.getDouble(path, comparator);
     }
 
     @Override
     public Boolean getInfoBoolean(String world, String entryName, String path, boolean isGroup) {
-        Entry e = isGroup ? getGroupObject(world, entryName) : getUserObject(world, entryName);
+        Entry e = isGroup ? getGrp(world, entryName) : getUsr(world, entryName);
         if(e == null) return null;
         return e.getBool(path);
     }
 
     @Override
     public Boolean getInfoBoolean(String world, String entryName, String path, boolean isGroup, Comparator<Boolean> comparator) {
-        Entry e = isGroup ? getGroupObject(world, entryName) : getUserObject(world, entryName);
+        Entry e = isGroup ? getGrp(world, entryName) : getUsr(world, entryName);
         if(e == null) return null;
         return e.getBool(path, comparator);
     }
 
     @Override
     public void addUserInfo(String world, String name, String path, Object data) {
-        User u = this.getUserObject(world, name);
+        User u = this.getUsr(world, name);
         if(u == null)
             return;
         u.setData(path, data);
@@ -728,7 +757,7 @@ public class ModularControl extends PermissionHandler {
 
     @Override
     public void removeUserInfo(String world, String name, String path) {
-        User u = this.getUserObject(world, name);
+        User u = this.getUsr(world, name);
         if(u == null)
             return;
         u.removeData(path);
@@ -736,7 +765,7 @@ public class ModularControl extends PermissionHandler {
     
     @Override
     public void addGroupInfo(String world, String group, String path, Object data) {
-        Group g = this.getGroupObject(world, group);
+        Group g = this.getGrp(world, group);
         if (g == null)
             return;
         g.setData(path, data);
@@ -744,7 +773,7 @@ public class ModularControl extends PermissionHandler {
 
     @Override
     public void removeGroupInfo(String world, String group, String path) {
-        Group g = this.getGroupObject(world, group);
+        Group g = this.getGrp(world, group);
         if (g == null)
             return;
         g.removeData(path);
