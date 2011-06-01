@@ -10,8 +10,6 @@ import com.nijiko.permissions.EntryType;
 
 public abstract class CachedStorage implements Storage {
     
-    private final Map<String, String> prefixes = new HashMap<String, String>();
-    private final Map<String, String> suffixes = new HashMap<String, String>();
     private final Map<String, Set<String>> permissions = new HashMap<String, Set<String>>();
     private final Map<String, LinkedHashSet<GroupWorld>> parents = new HashMap<String, LinkedHashSet<GroupWorld>>();
     private final Map<String, Map<String, Object>> data = new HashMap<String, Map<String, Object>>();
@@ -93,6 +91,14 @@ public abstract class CachedStorage implements Storage {
     public boolean create(String name) {
         return getWrapped().create(name);
     }
+    
+    @Override
+    public boolean delete(String name) {
+        permissions.remove(name);
+        parents.remove(name);
+        data.remove(name);
+        return getWrapped().delete(name);
+    }
 
     @Override
     public String getWorld() {
@@ -112,8 +118,6 @@ public abstract class CachedStorage implements Storage {
     @Override
     public void reload() {
         getWrapped().reload();
-        prefixes.clear();
-        suffixes.clear();
         permissions.clear();
         parents.clear();
         data.clear();

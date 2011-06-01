@@ -455,7 +455,32 @@ public class ModularControl extends PermissionHandler {
         }
         return groupSet;
     }
+    
+    public boolean deleteUser(String world, String name) {
+        User u = getUserObject(world, name);
+        if(u == null)
+            return false;
+        return u.delete();
+    }
+    
+    void delUsr(String world, String name) {
+        worldUsers.get(world).remove(name.toLowerCase());        
+    }
 
+    
+    public boolean deleteGroup(String world, String name) {
+        Group g = getGroupObject(world, name);
+        if(g == null)
+            return false;
+        return g.delete();
+    }
+    
+    void delGrp(String world, String name) {
+        worldGroups.get(world).remove(name.toLowerCase());        
+        if(defaultGroups.get(world) == getGroupObject(world, name))
+            defaultGroups.remove(world);
+    }
+    
     @Override
     public User safeGetUser(String world, String name) throws Exception {
         try {

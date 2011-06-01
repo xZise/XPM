@@ -28,7 +28,7 @@ public abstract class SqlStorage {
     private static Map<String, SqlGroupStorage> groupStores = new HashMap<String, SqlGroupStorage>();
     private static Map<String, Integer> worldMap = new HashMap<String, Integer>();
     private static List<String> create = new ArrayList<String>(8);
-    static final String getWorld = "SELECT PrWorlds.worldid FROM PrWorlds WHERE PrWorlds.worldname = ?;";
+    static final String getWorld = "SELECT worldid FROM PrWorlds WHERE worldname = ?;";
     private static PreparedStatementPool getWorldPool;
     static final String getEntry = "SELECT entryid FROM PrEntries WHERE worldid = ? AND type = ? AND name = ?;";
     private static PreparedStatementPool getEntryPool;
@@ -43,14 +43,65 @@ public abstract class SqlStorage {
     private static Connection dbConn;
 
     static {
-        create.add("CREATE TABLE IF NOT EXISTS PrWorlds (" + " worldid INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT," + " worldname VARCHAR(32) NOT NULL UNIQUE" + ")");
-        create.add("CREATE TABLE IF NOT EXISTS PrEntries (" + " entryid INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT," + " name VARCHAR(32) NOT NULL," + " worldid INTEGER NOT NULL," + " type TINYINT NOT NULL," + " CONSTRAINT NameWorld UNIQUE (name, worldid, type)," + " ENTRYINDEX" + " FOREIGN KEY(worldid) REFERENCES PrWorlds(worldid) ON DELETE CASCADE" + ")");
-        create.add("CREATE TABLE IF NOT EXISTS PrPermissions (" + " permid INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT," + " permstring VARCHAR(64) NOT NULL," + " entryid INTEGER NOT NULL," + " CONSTRAINT PrEntryPerm UNIQUE (entryid, permstring)," + " FOREIGN KEY(entryid) REFERENCES PrEntries(id) ON DELETE CASCADE" + ")");
-        create.add("CREATE TABLE IF NOT EXISTS PrInheritance (" + " uinheritid INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT," + " childid INTEGER NOT NULL," + " parentid INTEGER NOT NULL," + " CONSTRAINT PrParent UNIQUE (childid, parentid)," + " CONSTRAINT PrNoSelfInherit CHECK (childid <> parentid)," + " FOREIGN KEY(childid) REFERENCES PrEntries(id) ON DELETE CASCADE," + " FOREIGN KEY(parentid) REFERENCES PrEntries(id) ON DELETE CASCADE" + ")");
-        create.add("CREATE TABLE IF NOT EXISTS PrWorldBase (" + " worldid INTEGER NOT NULL," + " defaultid INTEGER," + " FOREIGN KEY(worldid) REFERENCES PrWorlds(worldid) ON DELETE CASCADE," + " FOREIGN KEY(defaultid) REFERENCES PrEntries(entryid) ON DELETE CASCADE" + ")");
-        create.add("CREATE TABLE IF NOT EXISTS PrData (" + " dataid INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT," + " entryid INTEGER NOT NULL ," + " path VARCHAR(64) NOT NULL," + " data VARCHAR(64) NOT NULL," + " CONSTRAINT PrDataUnique UNIQUE (entryid, path)," + " FOREIGN KEY(entryid) REFERENCES PrEntries(entryid) ON DELETE CASCADE" + ")");
-        create.add("CREATE TABLE IF NOT EXISTS PrTracks (" + " trackid INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT," + " trackname VARCHAR(64) NOT NULL UNIQUE," + " worldid INTEGER NOT NULL," + " CONSTRAINT TracksUnique UNIQUE (trackid, worldid)," + " FOREIGN KEY(worldid) REFERENCES PrWorlds(worldid) ON DELETE CASCADE" + ")");
-        create.add("CREATE TABLE IF NOT EXISTS PrTrackGroups (" + " trackgroupid INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT," + " trackid INTEGER NOT NULL," + " gid INTEGER NOT NULL," + " groupOrder INTEGER NOT NULL," + " CONSTRAINT TrackGroupsUnique UNIQUE (trackid, gid)," + " FOREIGN KEY(trackid) REFERENCES PrTracks(trackid) ON DELETE CASCADE," + " FOREIGN KEY(gid) REFERENCES PrEntries(entryid) ON DELETE CASCADE" + ")");
+        create.add("CREATE TABLE IF NOT EXISTS PrWorlds ("
+                + " worldid INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,"
+                + " worldname VARCHAR(32) NOT NULL UNIQUE"
+                + ")");
+        create.add("CREATE TABLE IF NOT EXISTS PrEntries ("
+                + " entryid INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,"
+                + " name VARCHAR(32) NOT NULL,"
+                + " worldid INTEGER NOT NULL,"
+                + " type TINYINT NOT NULL,"
+                + " CONSTRAINT NameWorld UNIQUE (name, worldid, type),"
+                + " ENTRYINDEX"
+                + " FOREIGN KEY(worldid) REFERENCES PrWorlds(worldid) ON DELETE CASCADE"
+                + ")");
+        create.add("CREATE TABLE IF NOT EXISTS PrPermissions ("
+                + " permid INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,"
+                + " permstring VARCHAR(64) NOT NULL,"
+                + " entryid INTEGER NOT NULL,"
+                + " CONSTRAINT PrEntryPerm UNIQUE (entryid, permstring),"
+                + " FOREIGN KEY(entryid) REFERENCES PrEntries(entryid) ON DELETE CASCADE"
+                + ")");
+        create.add("CREATE TABLE IF NOT EXISTS PrInheritance ("
+                + " uinheritid INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,"
+                + " childid INTEGER NOT NULL,"
+                + " parentid INTEGER NOT NULL,"
+                + " CONSTRAINT PrParent UNIQUE (childid, parentid),"
+                + " CONSTRAINT PrNoSelfInherit CHECK (childid <> parentid),"
+                + " FOREIGN KEY(childid) REFERENCES PrEntries(entryid) ON DELETE CASCADE,"
+                + " FOREIGN KEY(parentid) REFERENCES PrEntries(entryid) ON DELETE CASCADE"
+                + ")");
+        create.add("CREATE TABLE IF NOT EXISTS PrWorldBase ("
+                + " worldid INTEGER NOT NULL,"
+                + " defaultid INTEGER,"
+                + " FOREIGN KEY(worldid) REFERENCES PrWorlds(worldid) ON DELETE CASCADE,"
+                + " FOREIGN KEY(defaultid) REFERENCES PrEntries(entryid) ON DELETE CASCADE"
+                + ")");
+        create.add("CREATE TABLE IF NOT EXISTS PrData ("
+                + " dataid INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,"
+                + " entryid INTEGER NOT NULL ,"
+                + " path VARCHAR(64) NOT NULL,"
+                + " data VARCHAR(64) NOT NULL,"
+                + " CONSTRAINT PrDataUnique UNIQUE (entryid, path),"
+                + " FOREIGN KEY(entryid) REFERENCES PrEntries(entryid) ON DELETE CASCADE"
+                + ")");
+        create.add("CREATE TABLE IF NOT EXISTS PrTracks ("
+                + " trackid INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,"
+                + " trackname VARCHAR(64) NOT NULL UNIQUE,"
+                + " worldid INTEGER NOT NULL,"
+                + " CONSTRAINT TracksUnique UNIQUE (trackid, worldid),"
+                + " FOREIGN KEY(worldid) REFERENCES PrWorlds(worldid) ON DELETE CASCADE"
+                + ")");
+        create.add("CREATE TABLE IF NOT EXISTS PrTrackGroups ("
+                + " trackgroupid INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,"
+                + " trackid INTEGER NOT NULL,"
+                + " gid INTEGER NOT NULL,"
+                + " groupOrder INTEGER NOT NULL,"
+                + " CONSTRAINT TrackGroupsUnique UNIQUE (trackid, gid),"
+                + " FOREIGN KEY(trackid) REFERENCES PrTracks(trackid) ON DELETE CASCADE,"
+                + " FOREIGN KEY(gid) REFERENCES PrEntries(entryid) ON DELETE CASCADE"
+                + ")");
     }
 
     static Dbms getDbms() {
@@ -103,6 +154,9 @@ public abstract class SqlStorage {
         try {
             dbConn = SqlStorage.dbSource.getConnection();
             s = dbConn.createStatement();
+            if(dbms == Dbms.SQLITE) {
+                s.execute("PRAGMA foreign_keys = ON;");
+            }
             // TODO: Verify stuff
             String engine = dbms.equals(Dbms.MYSQL) ? " ENGINE = InnoDB;" : ";";
             for (String state : create) {
@@ -129,6 +183,7 @@ public abstract class SqlStorage {
 
     static int getWorld(String name) {
         if (worldMap.containsKey(name)) {
+            System.out.println(worldMap.get(name));
             return worldMap.get(name);
         }
         Object[] params = new Object[] { name };
@@ -139,6 +194,7 @@ public abstract class SqlStorage {
         }
         int id = -1;
         Iterator<Map<Integer, Object>> iter = results.iterator();
+        System.out.println(results);
         if (iter.hasNext()) {
             Object o = iter.next().get(1);
             if (o instanceof Integer) {
@@ -152,7 +208,7 @@ public abstract class SqlStorage {
     static int getEntry(String world, String name, boolean isGroup) {
         SqlEntryStorage ses = isGroup ? getGroupStorage(world) : getUserStorage(world);
         Integer cachedId = ses.getCachedId(name);
-        if(cachedId != null) {
+        if (cachedId != null) {
             return cachedId;
         }
         int worldid = getWorld(world);
@@ -275,7 +331,7 @@ public abstract class SqlStorage {
             }
         } catch (SQLException e) {
             e.printStackTrace();
-            return null;
+            return results;
         } finally {
             if (wrap != null)
                 wrap.close();
@@ -339,6 +395,7 @@ enum Dbms {
         case SQLITE:
             SQLiteDataSource sds = new SQLiteDataSource();
             sds.setUrl(url);
+            sds.setEnforceForeinKeys(true);
             return sds;
         }
     }

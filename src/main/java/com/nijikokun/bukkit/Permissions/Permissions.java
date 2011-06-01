@@ -366,6 +366,10 @@ public class Permissions extends JavaPlugin {
             } else if (entry == null) {
                 msg.send("&4[Permissions] User/Group does not exist.");
                 return true;
+            } else if (args[currentArg].equalsIgnoreCase("delete")) {
+                String text = entry.delete() ? "&7[Permissions] User/Group deleted." : "&4[Permissions] Deletion failed.";
+                msg.send(text);
+                return true;
             } else if (args[currentArg].equalsIgnoreCase("has")) {
                 currentArg++;
                 if (player != null && !Security.has(player, "permissions.has")) {

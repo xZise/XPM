@@ -31,6 +31,11 @@ public abstract class Entry {
         this.world = world;
     }
 
+    public boolean delete() {
+        cache.clear();
+        transientPerms.clear();
+        return getStorage().delete(name);
+    }
     public void addTransientPermission(String node) {
         if (node == null)
             return;

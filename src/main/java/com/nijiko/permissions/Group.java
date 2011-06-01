@@ -83,4 +83,10 @@ public class Group extends Entry {
     protected Storage getStorage() {
         return data;
     }
+    
+    @Override
+    public boolean delete() {
+        controller.delGrp(world, name);
+        return super.delete();
+    }
 }

@@ -35,6 +35,8 @@ public abstract class SqlEntryStorage implements Storage {
 
     protected static final String entryListText = "SELECT name, entryid FROM PrEntries WHERE worldid = ? AND type = ?;";
     static PreparedStatementPool entryListPool;
+    protected static final String entryDelText = "DELETE FROM PrEntries WHERE worldid = ? AND entryid = ?;";
+    static PreparedStatementPool entryDelPool;
 
     protected static final String dataGetText = "SELECT * FROM PrData WHERE entryid = ? AND path = ?;";
     static PreparedStatementPool dataGetPool;
@@ -52,6 +54,7 @@ public abstract class SqlEntryStorage implements Storage {
         parentAddPool = new PreparedStatementPool(dbConn, (dbms == Dbms.SQLITE ? parentAddText.replace("IGNORE", "OR IGNORE") : parentAddText), max);
         parentRemPool = new PreparedStatementPool(dbConn, parentRemText, max);
         entryListPool = new PreparedStatementPool(dbConn, entryListText, max);
+        entryDelPool = new PreparedStatementPool(dbConn, entryDelText, max);
         dataModPool = new PreparedStatementPool(dbConn, dataModText, max);
         dataDelPool = new PreparedStatementPool(dbConn, dataDelText, max);
         dataGetPool = new PreparedStatementPool(dbConn, dataGetText, max);
@@ -217,11 +220,18 @@ public abstract class SqlEntryStorage implements Storage {
     @Override
     public boolean create(String name) {
         if (!idCache.containsKey(name)) {
-            int uid = SqlStorage.getEntry(world, name, this.getType() == EntryType.GROUP);
-            idCache.put(name, uid);
+            int id = SqlStorage.getEntry(world, name, this.getType() == EntryType.GROUP);
+            idCache.put(name, id);
             return true;
         }
         return false;
+    }
+    
+    @Override
+    public boolean delete(String name) {
+        int id = idCache.remove(name);
+        int val = SqlStorage.runUpdate(entryDelPool, new Object[] {worldId, id});
+        return val != 0;        
     }
 
     @Override

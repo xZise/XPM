@@ -18,6 +18,7 @@ public interface Storage {
     public Set<String> getEntries();
     public EntryType getType();
     public boolean create(String name);
+    public boolean delete(String name);
     public String getWorld();
     
     public void forceSave();

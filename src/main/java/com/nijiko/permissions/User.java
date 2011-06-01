@@ -66,4 +66,10 @@ public class User extends Entry {
     protected Storage getStorage() {
         return data;
     }
+    
+    @Override
+    public boolean delete() {
+        controller.delUsr(world, name);
+        return super.delete();
+    }
 }

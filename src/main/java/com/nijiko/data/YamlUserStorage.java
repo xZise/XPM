@@ -207,16 +207,29 @@ public class YamlUserStorage implements UserStorage {
         template.put("groups", null);
         template.put("permissions", null);
         userConfig.setProperty("users." + name, template);
-        userConfig.save();
+        modified = true;
+        save();
         rwl.writeLock().unlock();
         return true;
     }
 
     @Override
+    public boolean delete(String name) {
+        rwl.writeLock().lock();
+        boolean exists = userConfig.getProperty("users." + name) != null;
+        userConfig.removeProperty("users." + name);
+        modified = true;
+        save();
+        rwl.writeLock().unlock();
+        return exists;
+    }
+    
+    @Override
     public void removeData(String name, String path) {
         rwl.writeLock().lock();
         userConfig.removeProperty("users." + name + ".info." + path);
-        userConfig.save();
+        modified = true;
+        save();
         rwl.writeLock().unlock();
         return;
     }
@@ -225,7 +238,8 @@ public class YamlUserStorage implements UserStorage {
     public void setData(String name, String path, Object data) {
         rwl.writeLock().lock();
         userConfig.setProperty("users." + name + ".info." + path, data);
-        userConfig.save();
+        modified = true;
+        save();
         rwl.writeLock().unlock();
         return;
     }

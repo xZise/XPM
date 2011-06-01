@@ -198,16 +198,29 @@ public class YamlGroupStorage implements GroupStorage {
         template.put("inheritance", null);
         template.put("permissions", null);
         groupConfig.setProperty("groups." + name, template);
-        groupConfig.save();
+        modified = true;
+        save();
         rwl.writeLock().unlock();
         return true;
+    }
+    
+    @Override
+    public boolean delete(String name) {
+        rwl.writeLock().lock();
+        boolean exists = groupConfig.getProperty("groups." + name) != null;
+        groupConfig.removeProperty("groups." + name);
+        modified = true;
+        save();
+        rwl.writeLock().unlock();
+        return exists;
     }
     
     @Override
     public void setData(String name, String path, Object data) {
         rwl.writeLock().lock();
         groupConfig.setProperty("groups." + name + ".info." + path, data);
-        groupConfig.save();
+        modified = true;
+        save();
         rwl.writeLock().unlock();
         return;
     }
@@ -245,11 +258,10 @@ public class YamlGroupStorage implements GroupStorage {
 
     @Override
     public void removeData(String name, String path) {
-        if (path.equalsIgnoreCase("prefix") || path.equalsIgnoreCase("suffix") || path.equalsIgnoreCase("build"))
-            throw new IllegalArgumentException("No removal of prefixes/suffixes/build values allowed via this method!");
         rwl.writeLock().lock();
         groupConfig.removeProperty("groups." + name + ".info." + path);
-        groupConfig.save();
+        modified = true;
+        save();
         rwl.writeLock().unlock();
         return;
     }
