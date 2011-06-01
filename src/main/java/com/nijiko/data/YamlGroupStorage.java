@@ -271,7 +271,9 @@ public class YamlGroupStorage implements GroupStorage {
         Object raw = getObj(name, path);
         if (raw instanceof String)
             return (String) raw;
-        return null;
+        if(raw == null)
+            return null;
+        return raw.toString();
     }
 
     @Override
@@ -279,7 +281,15 @@ public class YamlGroupStorage implements GroupStorage {
         Object raw = getObj(name, path);
         if (raw instanceof Integer)
             return (Integer) raw;
-        return null;
+        if(raw == null)
+            return null;
+        int val;
+        try {
+            val = Integer.valueOf(raw.toString());
+        } catch (NumberFormatException e) {
+            return null;
+        }
+        return val;
     }
 
     @Override
@@ -287,7 +297,15 @@ public class YamlGroupStorage implements GroupStorage {
         Object raw = getObj(name, path);
         if (raw instanceof Double)
             return (Double) raw;
-        return null;
+        if(raw == null)
+            return null;
+        double val;
+        try {
+            val = Double.valueOf(raw.toString());
+        } catch (NumberFormatException e) {
+            return null;
+        }
+        return val;
     }
 
     @Override
@@ -295,7 +313,10 @@ public class YamlGroupStorage implements GroupStorage {
         Object raw = getObj(name, path);
         if (raw instanceof Boolean)
             return (Boolean) raw;
-        return null;
+        if(raw == null)
+            return null;
+        boolean val = Boolean.valueOf(raw.toString());
+        return val;
     }
 
     private Object getObj(String name, String path) {

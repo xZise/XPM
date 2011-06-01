@@ -532,7 +532,7 @@ public class ModularControl extends PermissionHandler {
     @Override
     public Collection<Group> getGroups(String world) {
         world = getParentWorldGroup(world);
-        if (worldGroups.get(world.toLowerCase()) == null)
+        if (worldGroups.get(world) == null)
             return null;
         return worldGroups.get(world).values();
     }
