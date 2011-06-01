@@ -13,7 +13,7 @@ public class PermissionCache {
     
     public void cacheResult(CheckResult result) {
         if(result == null) return;
-        System.out.println(result);
+//        System.out.println(result);
         rwl.readLock().lock();
         if(permCache.get(result.getChecked()) == null) permCache.put(result.getChecked(), new HashSet<CheckResult>());
         permCache.get(result.getChecked()).add(result);

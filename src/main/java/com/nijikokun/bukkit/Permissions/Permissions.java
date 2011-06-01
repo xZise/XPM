@@ -460,7 +460,26 @@ public class Permissions extends JavaPlugin {
                         if (parents == null || parents.isEmpty()) {
                             text = "&4[Permissions] User/Group has no parents.";
                         } else {
-                            StringBuilder temp = new StringBuilder("&7[Permissions]&b Permissions: &c");
+                            StringBuilder temp = new StringBuilder("&7[Permissions]&b Parents: &c");
+                            for (Entry parent : parents) {
+                                temp.append(parent.toString()).append("&b,&c ");
+                            }
+                            text = temp.substring(0, temp.length() - 6);
+                        }
+                        msg.send(text);
+                        return true;
+                    } else if (args[currentArg].equalsIgnoreCase("listall")) {
+                        if (player != null && !Security.has(player, "permissions.parents.listall")) {
+                            msg.send("&4[Permissions] You do not have permissions to use this command.");
+                            return true;
+                        }
+                        //                        LinkedHashSet<GroupWorld> parents = entry.getRawParents();
+                        LinkedHashSet<Entry> parents = entry.getAncestors();
+                        String text = "&7[Permissions]&b All parents: &c";
+                        if (parents == null || parents.isEmpty()) {
+                            text = "&4[Permissions] User/Group has no parents.";
+                        } else {
+                            StringBuilder temp = new StringBuilder("&7[Permissions]&b Parents: &c");
                             for (Entry parent : parents) {
                                 temp.append(parent.toString()).append("&b,&c ");
                             }

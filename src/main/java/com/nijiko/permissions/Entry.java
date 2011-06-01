@@ -241,8 +241,8 @@ public abstract class Entry {
         return value == null ? -1 : value;
     }
 
-    public Set<Entry> getAncestors() {
-        Set<Entry> parentSet = new LinkedHashSet<Entry>();
+    public LinkedHashSet<Entry> getAncestors() {
+        LinkedHashSet<Entry> parentSet = new LinkedHashSet<Entry>();
         Queue<Entry> queue = new ArrayDeque<Entry>();
 
         // Start with the direct ancestors or the default group
