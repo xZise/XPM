@@ -62,7 +62,9 @@ public class Permissions extends JavaPlugin {
 
     /**
      * Controller for permissions and security.
+     * Use getHandler() instead.
      */
+    @Deprecated
     public static PermissionHandler Security;
 
 //    /**
@@ -459,10 +461,11 @@ public class Permissions extends JavaPlugin {
                         if (parents == null || parents.isEmpty()) {
                             text = "&4[Permissions] User/Group has no parents.";
                         } else {
+                            StringBuilder temp = new StringBuilder("&7[Permissions]&b Permissions: &c");
                             for (Entry parent : parents) {
-                                text = text + parent.toString() + "&b,&c ";
+                                temp.append(parent.toString()).append("&b,&c ");
                             }
-                            text = text.substring(0, text.length() - 6);
+                            text = temp.substring(0, temp.length() - 6);
                         }
                         msg.send(text);
                         return true;
