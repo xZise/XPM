@@ -33,18 +33,29 @@ public class PermissionCache {
         if(entry == null) return;
         if(node == null) return;
         boolean alreadyLocked = rwl.isWriteLockedByCurrentThread();
-        Set<String> relevant = Entry.relevantPerms(node);
-        String wild = node.endsWith(".*") ? node.substring(0, node.length() - 2) : null;
         if(!alreadyLocked) rwl.writeLock().lock();
-        for(Map.Entry<Entry, Set<CheckResult>> mapEntry : permCache.entrySet()) {
-            if(!mapEntry.getKey().isChildOf(entry)) continue;
-            for(Iterator<CheckResult> iter = mapEntry.getValue().iterator(); iter.hasNext();) {
-                //Check if node is relevant
-                CheckResult cached = iter.next();
-                String testNode = cached.getNode();
-                if(relevant.contains(testNode) || (wild != null && (testNode.startsWith(wild) || Entry.negationOf(testNode).startsWith(wild)))) {
-                    cached.invalidate();
+        if(node.equals("*") || node.equals("-*")) {
+            for(Map.Entry<Entry, Set<CheckResult>> mapEntry : permCache.entrySet()) {
+                if (!mapEntry.getKey().isChildOf(entry))
+                    continue;
+                for (Iterator<CheckResult> iter = mapEntry.getValue().iterator(); iter.hasNext();) {
+                    iter.next().invalidate();
                     iter.remove();
+                }
+            }
+        } else {
+            Set<String> relevant = Entry.relevantPerms(node);
+            String wild = node.endsWith(".*") ? node.substring(0, node.length() - 2) : null;
+            for(Map.Entry<Entry, Set<CheckResult>> mapEntry : permCache.entrySet()) {
+                if(!mapEntry.getKey().isChildOf(entry)) continue;
+                for(Iterator<CheckResult> iter = mapEntry.getValue().iterator(); iter.hasNext();) {
+                    //Check if node is relevant
+                    CheckResult cached = iter.next();
+                    String testNode = cached.getNode();
+                    if(relevant.contains(testNode) || (wild != null && (testNode.startsWith(wild) || Entry.negationOf(testNode).startsWith(wild)))) {
+                        cached.invalidate();
+                        iter.remove();
+                    }
                 }
             }
         }

@@ -133,7 +133,7 @@ public class Permissions extends JavaPlugin {
     @Override
     public void onDisable() {
         Security.closeAll();
-        Security = null;
+//        Security = null;
         log.info("[Permissions] (" + codename + ") saved all data.");
         this.getServer().getScheduler().cancelTasks(this);
         log.info("[Permissions] (" + codename + ") disabled successfully.");
@@ -569,18 +569,23 @@ public class Permissions extends JavaPlugin {
                                 String newValueString = args[currentArg];
                                 Object newValue;
                                 String type = "";
-                                if (newValueString.startsWith("b:")) {
-                                    newValue = Boolean.parseBoolean(newValueString.substring(2));
-                                    type = "Boolean";
-                                } else if (newValueString.startsWith("d:")) {
-                                    newValue = Double.parseDouble(newValueString.substring(2));
-                                    type = "Double";
-                                } else if (newValueString.startsWith("i:")) {
-                                    newValue = Integer.parseInt(newValueString.substring(2));
-                                    type = "Integer";
-                                } else {
-                                    newValue = newValueString;
-                                    type = "String";
+                                try {
+                                    if (newValueString.startsWith("b:")) {
+                                        newValue = Boolean.valueOf(newValueString.substring(2));
+                                        type = "Boolean";
+                                    } else if (newValueString.startsWith("d:")) {
+                                        newValue = Double.valueOf(newValueString.substring(2));
+                                        type = "Double";
+                                    } else if (newValueString.startsWith("i:")) {
+                                        newValue = Integer.valueOf(newValueString.substring(2));
+                                        type = "Integer";
+                                    } else {
+                                        newValue = newValueString;
+                                        type = "String";
+                                    }
+                                } catch (NumberFormatException e) {
+                                    msg.send("&4[Permissions]&b Error encountered when parsing value.");
+                                    return true;
                                 }
                                 entry.setData(path, newValue);
                                 msg.send("&7[Permissions]&b &a" + path + "&b set to &a" + type + " &c" + newValue.toString());

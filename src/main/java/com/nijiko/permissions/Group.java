@@ -36,16 +36,6 @@ public class Group extends Entry {
         return "Group " + name + " in " + world;
     }
 
-    @Override
-    public Set<String> getPermissions() {
-        return data.getPermissions(name);
-    }
-
-    @Override
-    public LinkedHashSet<GroupWorld> getRawParents() {
-        return data.getParents(name);
-    }
-
     public Set<String> getTracks() {
         return data.getTracks();
     }

@@ -36,6 +36,7 @@ public abstract class Entry {
         transientPerms.clear();
         return getStorage().delete(name);
     }
+
     public void addTransientPermission(String node) {
         if (node == null)
             return;
@@ -100,58 +101,60 @@ public abstract class Entry {
     }
 
     protected CheckResult has(String node, LinkedHashSet<String> relevant, LinkedHashSet<Entry> checked) {
-//        System.out.println("Checking " + this.toString() + " for node '" + node + "'.");
-//        System.out.println("Relevant permissions: " + relevant.toString());
-        
+        // System.out.println("Checking " + this.toString() + " for node '" +
+        // node + "'.");
+        // System.out.println("Relevant permissions: " + relevant.toString());
+
         if (checked.contains(this))
             return null;
         checked.add(this);
-        
+
         CheckResult cr = cache.get(node);
-        if (cr != null) {
-//            System.out.println("Final relevant cached result: " + cr.toString());
-        } else {
-            //Check own permissions
+        if (cr == null || !cr.isValid()) {
+            cache.remove(node);
+            cr = null;
+            
+            // Check own permissions
             Set<String> perms = new LinkedHashSet<String>(relevant);
             perms.retainAll(this.getPermissions());
 //            System.out.println("Relevant permissions in own permissions: " + perms.toString());
             Iterator<String> iter = perms.iterator();
             if (iter.hasNext()) {
                 String mrn = iter.next();
-//                System.out.println("Checking relevant permission: " + mrn.toString());
-                cr = new CheckResult(this, mrn, this, node);            
+//                System.out.println("Relevant permission found: " + mrn.toString());
+                cr = new CheckResult(this, mrn, this, node);
             }
-
-            //Check parent permissions
-            for (Entry e : this.getParents()) {
-//                System.out.println("Checking parent " + e.toString() + ".");
-                CheckResult parentCr = e.has(node, relevant, checked);
-                if(parentCr == null)
-                    continue;
-//                System.out.println("Result of parent check: " + parentCr.toString());
-                if(parentCr.getMostRelevantNode() != null) {
-                    cr = parentCr.setChecked(this);
-                    break;
+            if (cr == null) {
+                // Check parent permissions
+                for (Entry e : this.getParents()) {
+//                    System.out.println("Checking parent " + e.toString() + ".");
+                    CheckResult parentCr = e.has(node, relevant, checked);
+                    if (parentCr == null)
+                        continue;
+//                    System.out.println("Result of parent check: " + parentCr.toString());
+                    if (parentCr.getMostRelevantNode() != null) {
+                        cr = parentCr.setChecked(this);
+                        break;
+                    }
+                }
+                // No relevant permissions
+                if (cr == null) {
+                    cr = new CheckResult(this, null, this, node);
+//                    System.out.println("No relevant permissions found.");
                 }
             }
-            
-            //No relevant permissions
-            if(cr == null) {
-                cr = new CheckResult(this, null, this, node);
-//                System.out.println("No relevant permissions found.");
-            }
+
         }
-        
 
         cache(cr);
-        checked.remove(this);   
+        checked.remove(this);
 //        System.out.println("Check of " + this.toString() + " complete!");
 //        System.out.println("Result: " + cr.toString());
         return cr;
     }
 
     protected void cache(CheckResult cr) {
-        if(cr == null)
+        if (cr == null)
             return;
         controller.cache.cacheResult(cr);
         this.cache.put(cr.getNode(), cr);
@@ -503,7 +506,7 @@ public abstract class Entry {
         if (node == null) {
             return null;
         }
-        if(node.startsWith("-"))
+        if (node.startsWith("-"))
             return relevantPerms(negationOf(node));
         LinkedHashSet<String> relevant = new LinkedHashSet<String>();
         if (!node.endsWith(".*")) {

@@ -50,7 +50,7 @@ class CheckResult {
     
     @Override
     public String toString() {
-        return "Checked: " + checked.toString() + " , Node: " + node + " , Source: " + source.toString() + " , MRN: " + mostRelevantNode;
+        return "Checked: " + checked.toString() + " , Node: " + node + " , Source: " + source.toString() + " , MRN: " + mostRelevantNode + " , Valid: " + valid;
     }
     
     public CheckResult setNode(String node) {

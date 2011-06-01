@@ -199,7 +199,7 @@ public abstract class CachedStorage implements Storage {
 
     @Override
     public void setData(String name, String path, Object o) {
-        if (!(o instanceof Integer) || !(o instanceof Boolean) || !(o instanceof Double) || !(o instanceof String)) {
+        if (!(o instanceof Integer) && !(o instanceof Boolean) && !(o instanceof Double) && !(o instanceof String)) {
             throw new IllegalArgumentException("Only ints, bools, doubles and Strings are allowed!");
         }
         if (data.get(name) == null) {
