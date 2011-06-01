@@ -70,9 +70,7 @@ public class NotNullConfiguration extends Configuration {
 
         File parent = file.getParentFile();
         if (parent != null) {
-            if(!parent.mkdirs()) {
-                return false;
-            }
+            parent.mkdirs();
         }
 
         try {

@@ -25,6 +25,7 @@ public class YamlGroupStorage implements GroupStorage {
         this.groupConfig = groupConfig;
         this.world = world;
         this.rwl = new ReentrantReadWriteLock(false);
+        this.saveOff = !autoSave;
         reload();
     }
 
@@ -74,7 +75,7 @@ public class YamlGroupStorage implements GroupStorage {
     public void removePermission(String name, String permission) {
         rwl.writeLock().lock();
         Set<String> permissions = new HashSet<String>(groupConfig.getStringList("groups." + name + ".permissions", null));
-        permissions.add(permission);
+        permissions.remove(permission);
         groupConfig.setProperty("groups." + name + ".permissions", new LinkedList<String>(permissions));
         modified = true;
         save();

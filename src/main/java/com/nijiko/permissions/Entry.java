@@ -62,19 +62,20 @@ public abstract class Entry {
     }
 
     public void setPermission(final String permission, final boolean add) {
-        controller.cache.updatePerms(this, permission);
         if (add)
-            getStorage().addPermission(name, permission);
+            addPermission(permission);
         else
-            getStorage().removePermission(name, permission);
+            removePermission(permission);
     }
 
     public void addPermission(final String permission) {
-        this.setPermission(permission, true);
+        controller.cache.updatePerms(this, permission);
+        getStorage().addPermission(name, permission);
     }
 
     public void removePermission(final String permission) {
-        this.setPermission(permission, false);
+        controller.cache.updatePerms(this, permission);
+        getStorage().removePermission(name, permission);
     }
 
     public void addParent(Group group) {
@@ -94,53 +95,61 @@ public abstract class Entry {
     }
 
     protected CheckResult has(String node, LinkedHashSet<String> relevant, LinkedHashSet<Entry> checked) {
+//        System.out.println("Checking " + this.toString() + " for node '" + node + "'.");
+//        System.out.println("Relevant permissions: " + relevant.toString());
+        
         if (checked.contains(this))
             return null;
         checked.add(this);
-        Set<String> cacheRelevant = new LinkedHashSet<String>(relevant);
-        cacheRelevant.retainAll(cache.keySet());
+        
+        CheckResult cr = cache.get(node);
+        if (cr != null) {
+//            System.out.println("Final relevant cached result: " + cr.toString());
+        } else {
+            //Check own permissions
+            Set<String> perms = new LinkedHashSet<String>(relevant);
+            perms.retainAll(this.getPermissions());
+//            System.out.println("Relevant permissions in own permissions: " + perms.toString());
+            Iterator<String> iter = perms.iterator();
+            if (iter.hasNext()) {
+                String mrn = iter.next();
+//                System.out.println("Checking relevant permission: " + mrn.toString());
+                cr = new CheckResult(this, mrn, this, node);            
+            }
 
-        for (Iterator<String> iter = cacheRelevant.iterator(); iter.hasNext();) {
-            CheckResult cr = cache.get(iter.next());
-            if (cr.isValid())
-                return cr.setNode(node);
-            else
-                iter.remove();
-        }
-
-        Set<String> perms = new LinkedHashSet<String>(relevant); // SUGGESTION:
-                                                                 // Reuse the
-                                                                 // same LHS as
-                                                                 // cacheRelevant?
-        perms.retainAll(this.getPermissions());
-        Iterator<String> iter = perms.iterator();
-        if (iter.hasNext()) {
-            CheckResult cr = new CheckResult(this, iter.next(), this, node);
-            cache(cr);
-            return cr;
-        }
-
-        for (Entry e : this.getParents()) {
-            CheckResult parentCr = e.has(node, relevant, checked);
-            if (parentCr != null && parentCr.getMostRelevantNode() != null) {
-                CheckResult cr = parentCr.setChecked(this);
-                cache(cr);
-                return cr;
+            //Check parent permissions
+            for (Entry e : this.getParents()) {
+//                System.out.println("Checking parent " + e.toString() + ".");
+                CheckResult parentCr = e.has(node, relevant, checked);
+                if(parentCr == null)
+                    continue;
+//                System.out.println("Result of parent check: " + parentCr.toString());
+                if(parentCr.getMostRelevantNode() != null) {
+                    cr = parentCr.setChecked(this);
+                    break;
+                }
+            }
+            
+            //No relevant permissions
+            if(cr == null) {
+                cr = new CheckResult(this, null, this, node);
+//                System.out.println("No relevant permissions found.");
             }
         }
+        
 
-        CheckResult cr = new CheckResult(this, null, this, node);
         cache(cr);
-        checked.remove(this);
+        checked.remove(this);   
+//        System.out.println("Check of " + this.toString() + " complete!");
+//        System.out.println("Result: " + cr.toString());
         return cr;
     }
 
     protected void cache(CheckResult cr) {
-        String mrn = cr.getMostRelevantNode();
-        if (mrn == null)
-            mrn = negationOf(cr.getNode());
+        if(cr == null)
+            return;
         controller.cache.cacheResult(cr);
-        this.cache.put(mrn, cr);
+        this.cache.put(cr.getNode(), cr);
     }
 
     public boolean isChildOf(final Entry entry) {
@@ -489,17 +498,18 @@ public abstract class Entry {
         if (node == null) {
             return null;
         }
+        if(node.startsWith("-"))
+            return relevantPerms(negationOf(node));
         LinkedHashSet<String> relevant = new LinkedHashSet<String>();
-        if (!node.endsWith(".*"))
+        if (!node.endsWith(".*")) {
             relevant.add(node);
+            relevant.add(negationOf(node));
+        }
 
-        boolean negated = node.startsWith("-");
         String[] split = node.split("\\.");
         List<String> rev = new ArrayList<String>(split.length);
 
         StringBuilder sb = new StringBuilder();
-        if (negated)
-            sb.append("-");
         sb.append("*");
 
         for (int i = 0; i < split.length; i++) { // Skip the last one

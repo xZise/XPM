@@ -25,6 +25,7 @@ public class YamlUserStorage implements UserStorage {
         this.userConfig = userConfig;
         this.world = world;
         this.rwl = new ReentrantReadWriteLock(false);
+        this.saveOff = !autoSave;
         reload();
     }
 
@@ -60,25 +61,31 @@ public class YamlUserStorage implements UserStorage {
 
     @Override
     public void addPermission(String name, String permission) {
+//        System.out.println("Adding permission " + permission + " to " + name + " in world '" + world + "'.");
         name = name.replace('.', ','); // Fix for legacy usernames with periods
         rwl.writeLock().lock();
-        Set<String> permissions = new HashSet<String>(userConfig.getStringList("users." + name + ".permissions", null));
+        Set<String> permissions = new LinkedHashSet<String>(userConfig.getStringList("users." + name + ".permissions", null));
         permissions.add(permission);
         userConfig.setProperty("users." + name + ".permissions", new LinkedList<String>(permissions));
+//        System.out.println(userConfig.getStringList("users." + name + ".permissions", null));
         modified = true;
         save();
+//        System.out.println(userConfig.getStringList("users." + name + ".permissions", null));
         rwl.writeLock().unlock();
     }
 
     @Override
     public void removePermission(String name, String permission) {
+//        System.out.println("Removing permission " + permission + " from " + name + " in world '" + world + "'.");
         name = name.replace('.', ','); // Fix for legacy usernames with periods
         rwl.writeLock().lock();
-        Set<String> permissions = new HashSet<String>(userConfig.getStringList("users." + name + ".permissions", null));
-        permissions.add(permission);
+        Set<String> permissions = new LinkedHashSet<String>(userConfig.getStringList("users." + name + ".permissions", null));
+        permissions.remove(permission);
         userConfig.setProperty("users." + name + ".permissions", new LinkedList<String>(permissions));
+//        System.out.println(userConfig.getStringList("users." + name + ".permissions", null));
         modified = true;
         save();
+//        System.out.println(userConfig.getStringList("users." + name + ".permissions", null));
         rwl.writeLock().unlock();
     }
 
@@ -141,8 +148,10 @@ public class YamlUserStorage implements UserStorage {
             writeLocked = true;
         else
             rwl.writeLock().lock();
-        if (modified)
+        if (modified) {
+//            System.out.println("Saving world '" + world + "'.");
             userConfig.save();
+        }
         userConfig.load();
         modified = false;
         if (!writeLocked)

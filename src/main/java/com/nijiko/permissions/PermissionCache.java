@@ -13,9 +13,10 @@ public class PermissionCache {
     
     public void cacheResult(CheckResult result) {
         if(result == null) return;
+        System.out.println(result);
         rwl.readLock().lock();
-        if(permCache.get(result.getSource()) == null) permCache.put(result.getSource(), new HashSet<CheckResult>());
-        permCache.get(result.getSource()).add(result);
+        if(permCache.get(result.getChecked()) == null) permCache.put(result.getChecked(), new HashSet<CheckResult>());
+        permCache.get(result.getChecked()).add(result);
         rwl.readLock().unlock();
     }
     
@@ -40,8 +41,8 @@ public class PermissionCache {
             for(Iterator<CheckResult> iter = mapEntry.getValue().iterator(); iter.hasNext();) {
                 //Check if node is relevant
                 CheckResult cached = iter.next();
-                String testNode = cached.getMostRelevantNode();
-                if(relevant.contains(testNode) || (wild != null && testNode.startsWith(wild))) {
+                String testNode = cached.getNode();
+                if(relevant.contains(testNode) || (wild != null && (testNode.startsWith(wild) || Entry.negationOf(testNode).startsWith(wild)))) {
                     cached.invalidate();
                     iter.remove();
                 }

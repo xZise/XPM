@@ -116,7 +116,11 @@ public class ModularControl extends PermissionHandler {
         for(Map<String, Group> groups : worldGroups.values())
             for(Group g : groups.values())
                 g.clearTransientPerms();
-        SqlStorage.clearWorldCache();
+        try {
+            Class.forName("com.nijiko.data.SqlStorage");
+            SqlStorage.clearWorldCache();
+        } catch (ClassNotFoundException e) {
+        }
         
         Permissions.instance.getServer().getPluginManager().callEvent(new StorageReloadEvent());
     }
@@ -140,7 +144,11 @@ public class ModularControl extends PermissionHandler {
     public void closeAll() {
         cache.flushAll();
         this.saveAll();
-        SqlStorage.closeAll();
+        try {
+            Class.forName("com.nijiko.data.SqlStorage");
+            SqlStorage.closeAll();
+        } catch (ClassNotFoundException e) {
+        }
     }
 
     @Override

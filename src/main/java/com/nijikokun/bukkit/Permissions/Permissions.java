@@ -82,9 +82,7 @@ public class Permissions extends JavaPlugin {
         log = Logger.getLogger("Minecraft");
         Properties prop = new Properties();
         FileInputStream in = null;
-        if(!getDataFolder().mkdirs()) {
-            disable("[Permissions] Directory structure could not be created.");            
-        }
+        getDataFolder().mkdirs();
         try {
             in = new FileInputStream(new File("server.properties"));
             prop.load(in);
@@ -104,8 +102,7 @@ public class Permissions extends JavaPlugin {
 //        defaultWorld = server.getString("level-name");
 
         File storageOpt = new File("plugins" + File.separator + "Permissions" + File.separator, "storageconfig.yml");
-        if(!storageOpt.getParentFile().mkdirs())
-            disable("[Permissions] Unable to create directory structure.");            
+        storageOpt.getParentFile().mkdirs();
         if (!storageOpt.isFile())
             disable("[Permissions] storageconfig.yml is not a file.");
         if (!storageOpt.canRead())
@@ -218,29 +215,38 @@ public class Permissions extends JavaPlugin {
         }
 
         if (args[0].equalsIgnoreCase("-reload")) {
-            StringBuilder world = new StringBuilder();
-            int val = extractQuoted(args, 1, world);
-            switch(val) {
-            case -1:
-                msg.send("&4[Permissions] Argument index error.");
-                return true;
-            case -2:
-                msg.send("&4[Permissions] No ending quote found.");
-                return true;
-            }
-            return reload(sender, world.toString());
+            String world;
+            if(args.length > 1) {
+                StringBuilder tempWorld = new StringBuilder();
+                int val = extractQuoted(args, 1, tempWorld);
+                switch(val) {
+                case -1:
+                    msg.send("&4[Permissions] Argument index error.");
+                    return true;
+                case -2:
+                    msg.send("&4[Permissions] No ending quote found.");
+                    return true;
+                }
+                world = tempWorld.toString();
+            } else
+                world = "";
+            return reload(sender, world);
         } else if (args[0].equalsIgnoreCase("-load")) {
-            StringBuilder tempWorld = new StringBuilder();
-            int val = extractQuoted(args, 1, tempWorld);
-            switch(val) {
-            case -1:
-                msg.send("&4[Permissions] Argument index error.");
-                return true;
-            case -2:
-                msg.send("&4[Permissions] No ending quote found.");
-                return true;
-            }
-            String world = tempWorld.toString();
+            String world;
+            if(args.length > 1) {
+                StringBuilder tempWorld = new StringBuilder();
+                int val = extractQuoted(args, 1, tempWorld);
+                switch(val) {
+                case -1:
+                    msg.send("&4[Permissions] Argument index error.");
+                    return true;
+                case -2:
+                    msg.send("&4[Permissions] No ending quote found.");
+                    return true;
+                }
+                world = tempWorld.toString();
+            } else
+                world = "";
             try {
                 Security.forceLoadWorld(world);
             } catch (Exception e) {
@@ -390,7 +396,7 @@ public class Permissions extends JavaPlugin {
                             for (String perm : perms) {
                                 temp.append(perm).append("&b,&c ");
                             }
-                            text = temp.substring(0, text.length() - 6);
+                            text = temp.substring(0, temp.length() - 6);
                         }
                         msg.send(text);
                         return true;
@@ -404,10 +410,11 @@ public class Permissions extends JavaPlugin {
                         if (perms == null || perms.isEmpty()) {
                             text = "&4[Permissions] User/Group has no permissions.";
                         } else {
+                            StringBuilder temp = new StringBuilder("&7[Permissions]&b Permissions: &c");
                             for (String perm : perms) {
-                                text = text + perm + "&b,&c ";
+                                temp.append(perm).append("&b,&c ");
                             }
-                            text = text.substring(0, text.length() - 6);
+                            text = temp.substring(0, temp.length() - 6);
                         }
                         msg.send(text);
                         return true;
