@@ -53,8 +53,9 @@ public class Permissions extends JavaPlugin {
     static Logger log;
     public static Plugin instance;
     //    private Configuration storageConfig;
+    @Deprecated
     public static final String name = "Permissions";
-    public static final String version = "3.1";
+    public static final String version = "3.1.1";
     public static final String codename = "Yeti";
 
     public Listener l = new Listener(this);
@@ -732,7 +733,8 @@ public class Permissions extends JavaPlugin {
 
     @Override
     public String toString() {
-        return name + " version " + version + " (" + codename + ")";
+        PluginDescriptionFile pdf = this.getDescription();
+        return  pdf.getName() + " version " + pdf.getVersion() + " (" + codename + ")";
     }
 
     private String listEntries(Collection<? extends Entry> entries, String type) {

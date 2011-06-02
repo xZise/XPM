@@ -21,7 +21,7 @@ public abstract class SqlEntryStorage implements Storage {
 
     protected static final String permGetText = "SELECT permstring FROM PrPermissions WHERE entryid = ?;";
     static PreparedStatementPool permGetPool;
-    protected static final String parentGetText = "SELECT parentid FROM PrInheritance WHERE childid = ?;";
+    protected static final String parentGetText = "SELECT parentid FROM PrInheritance WHERE childid = ? ORDER BY parentorder;";
     static PreparedStatementPool parentGetPool;
 
     protected static final String permAddText = "INSERT IGNORE INTO PrPermissions (entryid, permstring) VALUES (?,?);";

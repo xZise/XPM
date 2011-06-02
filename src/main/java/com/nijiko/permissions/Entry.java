@@ -407,6 +407,19 @@ public abstract class Entry {
         getStorage().removeData(name, path);
     }
 
+    private final class StringInfoVisitor implements EntryVisitor<String> {
+        private final String path;
+
+        private StringInfoVisitor(String path) {
+            this.path = path;
+        }
+
+        @Override
+        public String value(Entry e) {
+            return e.getRawString(path);
+        }
+    }
+
     public interface EntryVisitor<T> {
         /**
          * This is the method called by the recursive checker when searching for
@@ -467,12 +480,7 @@ public abstract class Entry {
     }
 
     public String getString(final String path, Comparator<String> comparator) {
-        String value = this.recursiveCompare(new EntryVisitor<String>() {
-            @Override
-            public String value(Entry e) {
-                return e.getRawString(path);
-            }
-        }, comparator);
+        String value = this.recursiveCompare(new StringInfoVisitor(path), comparator);
         return value;
     }
 
@@ -495,11 +503,11 @@ public abstract class Entry {
     }
 
     public String getPrefix() {
-        return getString("prefix");
+        return recursiveCheck(new StringInfoVisitor("prefix"));
     }
 
     public String getSuffix() {
-        return getString("suffix");
+        return recursiveCheck(new StringInfoVisitor("suffix"));
     }
 
     public static LinkedHashSet<String> relevantPerms(String node) {
