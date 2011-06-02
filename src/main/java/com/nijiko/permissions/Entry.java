@@ -407,7 +407,46 @@ public abstract class Entry {
         getStorage().removeData(name, path);
     }
 
-    private final class StringInfoVisitor implements EntryVisitor<String> {
+    public static final class BooleanInfoVisitor implements EntryVisitor<Boolean> {
+        private final String path;
+
+        public BooleanInfoVisitor(String path) {
+            this.path = path;
+        }
+
+        @Override
+        public Boolean value(Entry e) {
+            return e.getRawBool(path);
+        }
+    }
+
+    protected static final class DoubleInfoVisitor implements EntryVisitor<Double> {
+        private final String path;
+
+        protected DoubleInfoVisitor(String path) {
+            this.path = path;
+        }
+
+        @Override
+        public Double value(Entry e) {
+            return e.getRawDouble(path);
+        }
+    }
+
+    public static final class IntegerInfoVisitor implements EntryVisitor<Integer> {
+        private final String path;
+
+        public IntegerInfoVisitor(String path) {
+            this.path = path;
+        }
+
+        @Override
+        public Integer value(Entry e) {
+            return e.getRawInt(path);
+        }
+    }
+
+    public static final class StringInfoVisitor implements EntryVisitor<String> {
         private final String path;
 
         private StringInfoVisitor(String path) {
@@ -438,12 +477,7 @@ public abstract class Entry {
     }
 
     public Integer getInt(final String path, Comparator<Integer> comparator) {
-        Integer value = this.recursiveCompare(new EntryVisitor<Integer>() {
-            @Override
-            public Integer value(Entry e) {
-                return e.getRawInt(path);
-            }
-        }, comparator);
+        Integer value = this.recursiveCompare(new IntegerInfoVisitor(path), comparator);
         return value;
     }
 
@@ -452,12 +486,7 @@ public abstract class Entry {
     }
 
     public Double getDouble(final String path, Comparator<Double> comparator) {
-        Double value = this.recursiveCompare(new EntryVisitor<Double>() {
-            @Override
-            public Double value(Entry e) {
-                return e.getRawDouble(path);
-            }
-        }, comparator);
+        Double value = this.recursiveCompare(new DoubleInfoVisitor(path), comparator);
         return value;
     }
 
@@ -466,12 +495,7 @@ public abstract class Entry {
     }
 
     public Boolean getBool(final String path, Comparator<Boolean> comparator) {
-        Boolean value = this.recursiveCompare(new EntryVisitor<Boolean>() {
-            @Override
-            public Boolean value(Entry e) {
-                return e.getRawBool(path);
-            }
-        }, comparator);
+        Boolean value = this.recursiveCompare(new BooleanInfoVisitor(path), comparator);
         return value;
     }
 
