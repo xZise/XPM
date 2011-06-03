@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.Properties;
 import java.util.Set;
@@ -76,8 +77,9 @@ public class Permissions extends JavaPlugin {
     // public static Misc Misc = new Misc();
 
     private String defaultWorld = "";
-
+    private final boolean autoComplete = true;
     private final YamlCreator yamlC;
+    private int dist = 10;
 
     public Permissions() {
         yamlC = new YamlCreator();
@@ -358,6 +360,7 @@ public class Permissions extends JavaPlugin {
             msg.send("&4[Permissions] No world specified. Defaulting to default world.");
             world = defaultWorld;
         }
+
         Entry entry = isGroup ? Security.getGroupObject(world, name) : Security.getUserObject(world, name);
         // Note that entry may be null if the user/group doesn't exist
         if (args.length > currentArg) {
@@ -381,8 +384,30 @@ public class Permissions extends JavaPlugin {
                 return true;
             } else if (entry == null) {
                 msg.send("&4[Permissions] User/Group does not exist.");
-                return true;
-            } else if (args[currentArg].equalsIgnoreCase("delete")) {
+
+                if (autoComplete) {
+                    Set<String> matches = getNames(isGroup ? Security.getGroups(world) : Security.getUsers(world));
+                    Player[] online = getServer().getOnlinePlayers();
+                    for (Player p : online) {
+                        matches.add(p.getName());
+                    }
+                    String closest = getClosest(name, matches, dist);
+
+                    if (closest != null) {
+                        msg.send("&7[Permissions]&b Using closest match &4" + closest + "&b.");
+                        name = closest;
+                        entry = isGroup ? Security.getGroupObject(world, name) : Security.getUserObject(world, name);
+                        if (entry == null) {
+                            msg.send("&4[Permissions] Closest user/group does not exist.");
+                            return true;
+                        }
+                    } else {
+                        return true;
+                    }
+                }
+
+            }
+            if (args[currentArg].equalsIgnoreCase("delete")) {
                 if (player != null && !Security.has(player, "permissions.delete")) {
                     msg.send("&4[Permissions] You do not have permissions to use this command.");
                     return true;
@@ -798,5 +823,40 @@ public class Permissions extends JavaPlugin {
         }
 
         return -2; // No ending quote
+    }
+
+    private Set<String> getNames(Collection<? extends Entry> entries) {
+        Set<String> names = new HashSet<String>();
+        for (Entry e : entries) {
+            if (e != null)
+                names.add(e.getName());
+        }
+        return names;
+    }
+
+    public static String getClosest(String word, Set<String> dict, final int threshold) {
+        if (word == null || word.isEmpty() || dict == null || dict.isEmpty()) {
+            return null;
+        }
+        if (dict.contains(word)) {
+            return word;
+        }
+        String result = null;
+        int currentDist = threshold;
+        String lw = word.toLowerCase();
+        for (String s : dict) {
+            if (s == null)
+                continue;
+            String ls = s.toLowerCase();
+            int dist;
+            if (ls.startsWith(lw)) {
+                dist = s.length() - word.length();
+                if (currentDist > dist) {
+                    result = s;
+                    currentDist = dist;
+                }
+            }
+        }
+        return result;
     }
 }
