@@ -14,7 +14,6 @@ import org.bukkit.util.config.Configuration;
 
 import com.nijiko.data.GroupStorage;
 import com.nijiko.data.GroupWorld;
-import com.nijiko.data.SqlStorage;
 import com.nijiko.data.StorageFactory;
 import com.nijiko.data.UserStorage;
 import com.nijikokun.bukkit.Permissions.Permissions;
@@ -36,14 +35,16 @@ public class ModularControl extends PermissionHandler {
     PermissionCache cache = new PermissionCache();
     
     public ModularControl(Configuration storageConfig) {
-//        System.out.println(this.getClass().getClassLoader().getClass().getName());
+//        System.out.println(this.getClass().getClassLoader());
         this.storageConfig = storageConfig;
-        StorageFactory.setConfig(storageConfig);
         loadWorldInheritance();
         int period = storageConfig.getInt("permissions.storage.reload", 6000);
         class RefreshTask implements Runnable {
             public RefreshTask() {
-//                System.out.println(this.getClass().getClassLoader().getClass().getName());
+                if(RefreshTask.class.getClassLoader() != ModularControl.class.getClassLoader()) {
+                    System.err.println("[Permissions] ClassLoader check failed.");
+                    throw new RuntimeException("RefreshTask was loaded using a different classloader.");
+                }
             }
             @Override
             public void run() {
@@ -86,8 +87,8 @@ public class ModularControl extends PermissionHandler {
 
     @Override
     public void forceLoadWorld(String world) throws Exception {
-        UserStorage userStore = StorageFactory.getUserStorage(world);
-        GroupStorage groupStore = StorageFactory.getGroupStorage(world);
+        UserStorage userStore = StorageFactory.getUserStorage(world, storageConfig);
+        GroupStorage groupStore = StorageFactory.getGroupStorage(world, storageConfig);
         load(world, userStore, groupStore);
     }
 
@@ -116,11 +117,11 @@ public class ModularControl extends PermissionHandler {
         for(Map<String, Group> groups : worldGroups.values())
             for(Group g : groups.values())
                 g.clearTransientPerms();
-        try {
-            Class.forName("com.nijiko.data.SqlStorage");
-            SqlStorage.clearWorldCache();
-        } catch (ClassNotFoundException e) {
-        }
+//        try {
+//            Class.forName("com.nijiko.data.SqlStorage");
+//            SqlStorage.clearWorldCache();
+//        } catch (ClassNotFoundException e) {
+//        }
         
         Permissions.instance.getServer().getPluginManager().callEvent(new StorageReloadEvent());
     }
@@ -144,11 +145,12 @@ public class ModularControl extends PermissionHandler {
     public void closeAll() {
         cache.flushAll();
         this.saveAll();
-        try {
-            Class.forName("com.nijiko.data.SqlStorage");
-            SqlStorage.closeAll();
-        } catch (ClassNotFoundException e) {
-        }
+        Permissions.instance.getServer().getPluginManager().callEvent(new ControlCloseEvent());
+//        try {
+//            Class.forName("com.nijiko.data.SqlStorage");
+//            SqlStorage.closeAll();
+//        } catch (ClassNotFoundException e) {
+//        }
     }
 
     @Override

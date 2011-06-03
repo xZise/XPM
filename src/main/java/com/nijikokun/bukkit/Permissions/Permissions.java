@@ -24,6 +24,8 @@ import org.bukkit.util.config.Configuration;
 import com.nijiko.MessageHelper;
 import com.nijiko.configuration.NotNullConfiguration;
 import com.nijiko.data.GroupWorld;
+import com.nijiko.data.StorageFactory;
+import com.nijiko.data.YamlCreator;
 import com.nijiko.permissions.Entry;
 import com.nijiko.permissions.Group;
 import com.nijiko.permissions.ModularControl;
@@ -31,8 +33,9 @@ import com.nijiko.permissions.PermissionHandler;
 import com.nijiko.permissions.User;
 
 /**
- * Permissions 3.x Copyright (C) 2011 Matt 'The Yeti' Burnett <admin@theyeticave.net> 
- * Original Credit & Copyright (C) 2010 Nijikokun <nijikokun@gmail.com>
+ * Permissions 3.x Copyright (C) 2011 Matt 'The Yeti' Burnett
+ * <admin@theyeticave.net> Original Credit & Copyright (C) 2010 Nijikokun
+ * <nijikokun@gmail.com>
  * 
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU Permissions Public License as published by the Free
@@ -52,31 +55,35 @@ public class Permissions extends JavaPlugin {
 
     static Logger log;
     public static Plugin instance;
-    //    private Configuration storageConfig;
+    // private Configuration storageConfig;
     @Deprecated
     public static final String name = "Permissions";
-    public static final String version = "3.1.1";
+    public static final String version = "3.1.2";
     public static final String codename = "Yeti";
 
     public Listener l = new Listener(this);
 
     /**
-     * Controller for permissions and security.
-     * Use getHandler() instead.
+     * Controller for permissions and security. Use getHandler() instead.
      */
     @Deprecated
     public static PermissionHandler Security;
 
-    //    /**
-    //     * Miscellaneous object for various functions that don't belong anywhere
-    //     * else
-    //     */
-    //    public static Misc Misc = new Misc();
+    // /**
+    // * Miscellaneous object for various functions that don't belong anywhere
+    // * else
+    // */
+    // public static Misc Misc = new Misc();
 
     private String defaultWorld = "";
 
-    //    public Permissions() {
-    //    }
+    private final YamlCreator yamlC;
+
+    public Permissions() {
+        yamlC = new YamlCreator();
+        StorageFactory.registerDefaultCreator(yamlC);
+        StorageFactory.registerCreator("YAML", yamlC);
+    }
 
     @Override
     public void onLoad() {
@@ -95,13 +102,14 @@ public class Permissions extends JavaPlugin {
             defaultWorld = "world";
         } finally {
             try {
-                if(in != null) in.close();
+                if (in != null)
+                    in.close();
             } catch (IOException e) {
                 e.printStackTrace();
             }
         }
-        //        PropertyHandler server = new PropertyHandler("server.properties");
-        //        defaultWorld = server.getString("level-name");
+        // PropertyHandler server = new PropertyHandler("server.properties");
+        // defaultWorld = server.getString("level-name");
 
         File storageOpt = new File("plugins" + File.separator + "Permissions" + File.separator, "storageconfig.yml");
         storageOpt.getParentFile().mkdirs();
@@ -112,7 +120,7 @@ public class Permissions extends JavaPlugin {
         if (!storageOpt.exists())
             try {
                 System.out.println("[Permissions] Creating storageconfig.yml.");
-                if(!storageOpt.createNewFile()) {
+                if (!storageOpt.createNewFile()) {
                     disable("[Permissions] Unable to create storageconfig.yml!");
                 }
             } catch (IOException e) {
@@ -120,21 +128,21 @@ public class Permissions extends JavaPlugin {
                 disable("[Permissions] storageconfig.yml could not be created.");
                 return;
             }
-            Configuration storageConfig = new NotNullConfiguration(storageOpt);
-            storageConfig.load();
-            //        this.storageConfig = storageConfig;
+        Configuration storageConfig = new NotNullConfiguration(storageOpt);
+        storageConfig.load();
+        // this.storageConfig = storageConfig;
 
-            // Setup Permission
-            setupPermissions(storageConfig);
+        // Setup Permission
+        setupPermissions(storageConfig);
 
-            // Enabled
-            log.info("[Permissions] (" + codename + ") was initialized.");
+        // Enabled
+        log.info("[Permissions] (" + codename + ") was initialized.");
     }
 
     @Override
     public void onDisable() {
         Security.closeAll();
-//        Security = null;
+        // Security = null;
         log.info("[Permissions] (" + codename + ") saved all data.");
         this.getServer().getScheduler().cancelTasks(this);
         log.info("[Permissions] (" + codename + ") disabled successfully.");
@@ -142,11 +150,12 @@ public class Permissions extends JavaPlugin {
     }
 
     private void disable(String error) {
-        if(error != null)
+        if (error != null)
             log.severe(error);
         log.info("[Permissions] Shutting down Permissions due to error(s).");
         getServer().getPluginManager().disablePlugin(this);
     }
+
     /**
      * Alternative method of grabbing Permissions.Security <br />
      * <br />
@@ -165,20 +174,24 @@ public class Permissions extends JavaPlugin {
     }
 
     public void setupPermissions(Configuration storageConfig) {
-        Security = new ModularControl(storageConfig);
-        Security.setDefaultWorld(defaultWorld);
         try {
+            Security = new ModularControl(storageConfig);
+            Security.setDefaultWorld(defaultWorld);
             Security.load();
-        } catch (Exception e) {
-            e.printStackTrace();
+        } catch (Throwable t) {
+            t.printStackTrace();
             disable("[Permissions] Unable to load permission data.");
             return;
         }
-        //        getServer().getServicesManager().register(PermissionHandler.class, Security, this, ServicePriority.Normal);
+        // getServer().getServicesManager().register(PermissionHandler.class,
+        // Security, this, ServicePriority.Normal);
     }
 
     @Override
     public void onEnable() {
+
+        StorageFactory.registerDefaultCreator(yamlC);
+        StorageFactory.registerCreator("YAML", yamlC);
 
         PluginDescriptionFile description = getDescription();
         // Enabled
@@ -218,10 +231,10 @@ public class Permissions extends JavaPlugin {
 
         if (args[0].equalsIgnoreCase("-reload")) {
             String world;
-            if(args.length > 1) {
+            if (args.length > 1) {
                 StringBuilder tempWorld = new StringBuilder();
                 int val = extractQuoted(args, 1, tempWorld);
-                switch(val) {
+                switch (val) {
                 case -1:
                     msg.send("&4[Permissions] Argument index error.");
                     return true;
@@ -235,10 +248,10 @@ public class Permissions extends JavaPlugin {
             return reload(sender, world);
         } else if (args[0].equalsIgnoreCase("-load")) {
             String world;
-            if(args.length > 1) {
+            if (args.length > 1) {
                 StringBuilder tempWorld = new StringBuilder();
                 int val = extractQuoted(args, 1, tempWorld);
-                switch(val) {
+                switch (val) {
                 case -1:
                     msg.send("&4[Permissions] Argument index error.");
                     return true;
@@ -282,7 +295,7 @@ public class Permissions extends JavaPlugin {
                 if (args.length > 2) {
                     StringBuilder tempWorld = new StringBuilder();
                     int val = extractQuoted(args, 2, tempWorld);
-                    switch(val) {
+                    switch (val) {
                     case -1:
                         msg.send("&4[Permissions] Argument index error.");
                         return true;
@@ -326,10 +339,12 @@ public class Permissions extends JavaPlugin {
         if (args.length > currentArg && args[currentArg].startsWith("w:")) {
             StringBuilder tempWorld = new StringBuilder();
             String[] tempArgs = new String[args.length];
-            System.arraycopy(args, 0, tempArgs, 0, args.length); //XXX: Temp solution for w: prefix
+            System.arraycopy(args, 0, tempArgs, 0, args.length); // XXX: Temp
+                                                                 // solution for
+                                                                 // w: prefix
             tempArgs[currentArg] = tempArgs[currentArg].substring(2);
             currentArg = extractQuoted(tempArgs, currentArg, tempWorld);
-            switch(currentArg) {
+            switch (currentArg) {
             case -1:
                 msg.send("&4[Permissions] Argument index error.");
                 return true;
@@ -340,8 +355,8 @@ public class Permissions extends JavaPlugin {
             world = tempWorld.toString();
         }
         if (world == null) {
-            msg.send("&4[Permissions] No world specified.");
-            return true;
+            msg.send("&4[Permissions] No world specified. Defaulting to default world.");
+            world = defaultWorld;
         }
         Entry entry = isGroup ? Security.getGroupObject(world, name) : Security.getUserObject(world, name);
         // Note that entry may be null if the user/group doesn't exist
@@ -368,6 +383,10 @@ public class Permissions extends JavaPlugin {
                 msg.send("&4[Permissions] User/Group does not exist.");
                 return true;
             } else if (args[currentArg].equalsIgnoreCase("delete")) {
+                if (player != null && !Security.has(player, "permissions.delete")) {
+                    msg.send("&4[Permissions] You do not have permissions to use this command.");
+                    return true;
+                }
                 String text = entry.delete() ? "&7[Permissions] User/Group deleted." : "&4[Permissions] Deletion failed.";
                 msg.send(text);
                 return true;
@@ -377,7 +396,7 @@ public class Permissions extends JavaPlugin {
                     msg.send("&4[Permissions] You do not have permissions to use this command.");
                     return true;
                 }
-                if(args.length > currentArg) {
+                if (args.length > currentArg) {
                     String permission = args[currentArg];
                     boolean has = entry.hasPermission(permission);
                     msg.send("&7[Permissions]&b User/Group " + (has ? "has" : "does not have") + " that permission.");
@@ -424,7 +443,7 @@ public class Permissions extends JavaPlugin {
                         }
                         msg.send(text);
                         return true;
-                    }  else if (args[currentArg].equalsIgnoreCase("add") || args[currentArg].equalsIgnoreCase("remove")) {
+                    } else if (args[currentArg].equalsIgnoreCase("add") || args[currentArg].equalsIgnoreCase("remove")) {
                         boolean add = args[currentArg].equalsIgnoreCase("add");
 
                         String permNode = add ? "permissions.perms.add" : "permissions.perms.remove";
@@ -459,7 +478,8 @@ public class Permissions extends JavaPlugin {
                             msg.send("&4[Permissions] You do not have permissions to use this command.");
                             return true;
                         }
-                        //                        LinkedHashSet<GroupWorld> parents = entry.getRawParents();
+                        // LinkedHashSet<GroupWorld> parents =
+                        // entry.getRawParents();
                         LinkedHashSet<Entry> parents = entry.getParents();
                         String text = "&7[Permissions]&b Parents: &c";
                         if (parents == null || parents.isEmpty()) {
@@ -478,7 +498,8 @@ public class Permissions extends JavaPlugin {
                             msg.send("&4[Permissions] You do not have permissions to use this command.");
                             return true;
                         }
-                        //                        LinkedHashSet<GroupWorld> parents = entry.getRawParents();
+                        // LinkedHashSet<GroupWorld> parents =
+                        // entry.getRawParents();
                         LinkedHashSet<Entry> parents = entry.getAncestors();
                         String text = "&7[Permissions]&b All parents: &c";
                         if (parents == null || parents.isEmpty()) {
@@ -494,7 +515,7 @@ public class Permissions extends JavaPlugin {
                         return true;
                     } else if (args[currentArg].equalsIgnoreCase("add") || args[currentArg].equalsIgnoreCase("remove")) {
                         boolean add = args[currentArg].equalsIgnoreCase("add");
-                        String permNode = add ? "permissions.perms.add" : "permissions.perms.remove";
+                        String permNode = add ? "permissions.parents.add" : "permissions.parents.remove";
                         if (player != null && !Security.has(player, permNode)) {
                             msg.send("&4[Permissions] You do not have permissions to use this command.");
                             return true;
@@ -507,7 +528,7 @@ public class Permissions extends JavaPlugin {
                             if (args.length > (++currentArg)) {
                                 StringBuilder tempWorld = new StringBuilder();
                                 currentArg = extractQuoted(args, currentArg, tempWorld);
-                                switch(currentArg) {
+                                switch (currentArg) {
                                 case -1:
                                     msg.send("&4[Permissions] Argument index error.");
                                     return true;
@@ -623,10 +644,15 @@ public class Permissions extends JavaPlugin {
                         if (args.length > currentArg && args[currentArg].startsWith("w:")) {
                             StringBuilder tempWorld = new StringBuilder();
                             String[] tempArgs = new String[args.length];
-                            System.arraycopy(args, 0, tempArgs, 0, args.length); //XXX: Temp solution for w: prefix
+                            System.arraycopy(args, 0, tempArgs, 0, args.length); // XXX:
+                                                                                 // Temp
+                                                                                 // solution
+                                                                                 // for
+                                                                                 // w:
+                                                                                 // prefix
                             tempArgs[currentArg] = tempArgs[currentArg].substring(2);
                             currentArg = extractQuoted(tempArgs, currentArg, tempWorld);
-                            switch(currentArg) {
+                            switch (currentArg) {
                             case -1:
                                 msg.send("&4[Permissions] Argument index error.");
                                 return true;
@@ -680,7 +706,7 @@ public class Permissions extends JavaPlugin {
             }
 
             msg.send("&b/permissions &a(g:)<target> (w:<world>) [perms|parents] [list|add|remove] ...");
-            msg.send("&b/permissions &a(g:)<target> (w:<world>) info [get|set|remove] ...");     
+            msg.send("&b/permissions &a(g:)<target> (w:<world>) info [get|set|remove] ...");
             msg.send("&b/permissions &a(g:)<target> (w:<world>) [prefix|suffix|build] [get|set] ...");
         }
 
@@ -695,7 +721,7 @@ public class Permissions extends JavaPlugin {
 
         if (arg == null || arg.equals("")) {
 
-            if (p!=null&&!Security.has(p.getWorld().getName(), p.getName(), "permissions.reload.default")) {
+            if (p != null && !Security.has(p.getWorld().getName(), p.getName(), "permissions.reload.default")) {
                 p.sendMessage(ChatColor.RED + "[Permissions] You lack the necessary permissions to perform this action.");
                 return true;
             }
@@ -707,7 +733,7 @@ public class Permissions extends JavaPlugin {
 
         if (arg.equalsIgnoreCase("all")) {
 
-            if (p!=null&&!Security.has(p.getWorld().getName(), p.getName(), "permissions.reload.all")) {
+            if (p != null && !Security.has(p.getWorld().getName(), p.getName(), "permissions.reload.all")) {
                 p.sendMessage(ChatColor.RED + "[Permissions] You lack the necessary permissions to perform this action.");
                 return true;
             }
@@ -717,8 +743,7 @@ public class Permissions extends JavaPlugin {
             return true;
         }
 
-
-        if (p!=null&&!Security.has(p.getWorld().getName(), p.getName(), "permissions.reload."+arg)) {
+        if (p != null && !Security.has(p.getWorld().getName(), p.getName(), "permissions.reload." + arg)) {
             p.sendMessage(ChatColor.RED + "[Permissions] You lack the necessary permissions to perform this action.");
             return true;
         }
@@ -734,7 +759,7 @@ public class Permissions extends JavaPlugin {
     @Override
     public String toString() {
         PluginDescriptionFile pdf = this.getDescription();
-        return  pdf.getName() + " version " + pdf.getVersion() + " (" + codename + ")";
+        return pdf.getName() + " version " + pdf.getVersion() + " (" + codename + ")";
     }
 
     private String listEntries(Collection<? extends Entry> entries, String type) {
@@ -754,24 +779,24 @@ public class Permissions extends JavaPlugin {
     }
 
     private int extractQuoted(String[] args, int currentArg, StringBuilder target) {
-        if(args.length <= currentArg)
-            return -1; //Args array too small
+        if (args.length <= currentArg)
+            return -1; // Args array too small
         target.append(args[currentArg]);
-        currentArg ++;
-        if(target.charAt(0) != '"')
+        currentArg++;
+        if (target.charAt(0) != '"')
             return currentArg;
 
-        target.deleteCharAt(0); //Delete the starting quote
+        target.deleteCharAt(0); // Delete the starting quote
 
-        while(args.length > currentArg) {
+        while (args.length > currentArg) {
             target.append(" ").append(args[currentArg]);
             currentArg++;
-            if(target.charAt(target.length() - 1) == '"') {
+            if (target.charAt(target.length() - 1) == '"') {
                 target.deleteCharAt(target.length() - 1);
                 return currentArg;
             }
         }
 
-        return -2; //No ending quote
+        return -2; // No ending quote
     }
 }
