@@ -11,6 +11,7 @@ import java.util.Set;
 import java.util.logging.Logger;
 
 import org.bukkit.ChatColor;
+import org.bukkit.World;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
@@ -55,11 +56,11 @@ import com.nijiko.permissions.User;
 public class Permissions extends JavaPlugin {
 
     static Logger log;
-    public static Plugin instance;
+    public static Permissions instance;
     // private Configuration storageConfig;
     @Deprecated
     public static final String name = "Permissions";
-    public static final String version = "3.1.2";
+    public static final String version = "3.1.3";
     public static final String codename = "Yeti";
 
     public Listener l = new Listener(this);
@@ -80,6 +81,7 @@ public class Permissions extends JavaPlugin {
     private final boolean autoComplete = true;
     private final YamlCreator yamlC;
     private int dist = 10;
+    private final PrWorldListener wListener = new PrWorldListener();
 
     public Permissions() {
         yamlC = new YamlCreator();
@@ -180,6 +182,10 @@ public class Permissions extends JavaPlugin {
             Security = new ModularControl(storageConfig);
             Security.setDefaultWorld(defaultWorld);
             Security.load();
+//            System.out.println(getServer().getWorlds());
+            for(World w : getServer().getWorlds()) {
+                Security.loadWorld(w.getName());
+            }
         } catch (Throwable t) {
             t.printStackTrace();
             disable("[Permissions] Unable to load permission data.");
@@ -201,6 +207,7 @@ public class Permissions extends JavaPlugin {
 
         this.getServer().getPluginManager().registerEvent(Event.Type.BLOCK_PLACE, l, Priority.High, this);
         this.getServer().getPluginManager().registerEvent(Event.Type.BLOCK_BREAK, l, Priority.High, this);
+        this.getServer().getPluginManager().registerEvent(Event.Type.WORLD_LOAD, wListener, Priority.High, this);
     }
 
     @Override

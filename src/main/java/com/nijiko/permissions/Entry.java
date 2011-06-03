@@ -95,12 +95,12 @@ public abstract class Entry {
     }
 
     public boolean hasPermission(String permission) {
-        CheckResult cr = has(permission, relevantPerms(permission), new LinkedHashSet<Entry>());
+        CheckResult cr = has(permission, relevantPerms(permission), new LinkedHashSet<Entry>(), world);
         // System.out.println(cr);
         return cr.getResult();
     }
 
-    protected CheckResult has(String node, LinkedHashSet<String> relevant, LinkedHashSet<Entry> checked) {
+    protected CheckResult has(String node, LinkedHashSet<String> relevant, LinkedHashSet<Entry> checked, String world) {
         // System.out.println("Checking " + this.toString() + " for node '" +
         // node + "'.");
         // System.out.println("Relevant permissions: " + relevant.toString());
@@ -126,9 +126,9 @@ public abstract class Entry {
             }
             if (cr == null) {
                 // Check parent permissions
-                for (Entry e : this.getParents()) {
+                for (Entry e : this.getParents(world)) {
 //                    System.out.println("Checking parent " + e.toString() + ".");
-                    CheckResult parentCr = e.has(node, relevant, checked);
+                    CheckResult parentCr = e.has(node, relevant, checked, world);
                     if (parentCr == null)
                         continue;
 //                    System.out.println("Result of parent check: " + parentCr.toString());
