@@ -301,7 +301,7 @@ public abstract class Entry {
     }
 
     public boolean canBuild() {
-        Boolean value = this.getBool("build");
+        Boolean value = this.recursiveCheck(new BooleanInfoVisitor("build"));
         return value == null ? false : value;
     }
 
@@ -420,7 +420,7 @@ public abstract class Entry {
         }
     }
 
-    protected static final class DoubleInfoVisitor implements EntryVisitor<Double> {
+    public static final class DoubleInfoVisitor implements EntryVisitor<Double> {
         private final String path;
 
         protected DoubleInfoVisitor(String path) {
