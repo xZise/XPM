@@ -221,13 +221,13 @@ public class ModularControl extends PermissionHandler {
         return user ? userStorageInheritance.containsKey(world) ? userStorageInheritance.get(world) : null : groupStorageInheritance.containsKey(world) ? groupStorageInheritance.get(world) : null;
     }
 
-    private UserStorage getUserStorage(String world) {
+    UserStorage getUserStorage(String world) {
         if (world == null)
             return null;
         return this.userStores.get(getParentWorldUser(world));
     }
 
-    private GroupStorage getGroupStorage(String world) {
+    GroupStorage getGroupStorage(String world) {
         if (world == null)
             return null;
         return this.groupStores.get(getParentWorldGroup(world));
@@ -593,6 +593,13 @@ public class ModularControl extends PermissionHandler {
 //        return worldGroups.get(world).get(name.toLowerCase());
     }
     //Parent-related methods
+    
+    public Set<String> getTracks(String world) {
+        GroupStorage gs = getGroupStorage(world);
+        if(gs == null)
+            return null;
+        return gs.getTracks();
+    }
     @Override
     public boolean inGroup(String world, String name, String groupWorld, String group) {
         world = getParentWorldUser(world);

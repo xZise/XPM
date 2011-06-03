@@ -281,6 +281,7 @@ public abstract class PermissionHandler {
     public abstract Collection<Group> getGroups(String world);
 
     //Parent-related methods
+    public abstract Set<String> getTracks(String world);
     /**
      * Checks if user is in specified group. Includes inherited groups.
      * @param world World of both the user and the group

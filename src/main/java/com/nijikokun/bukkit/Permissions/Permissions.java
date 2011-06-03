@@ -56,7 +56,7 @@ import com.nijiko.permissions.User;
 public class Permissions extends JavaPlugin {
 
     static Logger log;
-    public static Permissions instance;
+    public static Plugin instance;
     // private Configuration storageConfig;
     @Deprecated
     public static final String name = "Permissions";
@@ -207,7 +207,7 @@ public class Permissions extends JavaPlugin {
 
         this.getServer().getPluginManager().registerEvent(Event.Type.BLOCK_PLACE, l, Priority.High, this);
         this.getServer().getPluginManager().registerEvent(Event.Type.BLOCK_BREAK, l, Priority.High, this);
-        this.getServer().getPluginManager().registerEvent(Event.Type.WORLD_LOAD, wListener, Priority.High, this);
+        this.getServer().getPluginManager().registerEvent(Event.Type.WORLD_LOAD, wListener, Priority.Monitor, this);
     }
 
     @Override
@@ -695,19 +695,16 @@ public class Permissions extends JavaPlugin {
                             parentWorld = tempWorld.toString();
                             currentArg++;
                         }
-                        Group group = Security.getGroupObject(parentWorld, parentName);
-                        if (group == null) {
-                            msg.send("&4[Permissions] No such group.");
-                            return true;
-                        }
+                        GroupWorld group = new GroupWorld(parentWorld, parentName);
+                        
                         if (!user.inGroup(parentWorld, parentName)) {
                             msg.send("&4[Permissions] User not in specified group.");
                             return true;
                         }
                         if (args.length > currentArg) {
                             String track = args[currentArg];
-                            Set<String> tracks = group.getTracks();
-                            if (tracks == null) {
+                            Set<String> tracks = Security.getTracks(world);
+                            if (tracks == null || tracks.isEmpty()) {
                                 msg.send("&4[Permissions] No tracks in specified world.");
                                 return true;
                             }

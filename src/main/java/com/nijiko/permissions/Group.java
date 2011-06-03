@@ -1,8 +1,5 @@
 package com.nijiko.permissions;
 
-import java.util.LinkedHashSet;
-import java.util.LinkedList;
-import java.util.ListIterator;
 import java.util.Set;
 
 import com.nijiko.data.GroupStorage;
@@ -40,35 +37,6 @@ public class Group extends Entry {
         return data.getTracks();
     }
 
-    public GroupWorld getPrevRank(String trackName) {
-        LinkedList<GroupWorld> track = data.getTrack(trackName);
-        if (track != null)
-            for (ListIterator<GroupWorld> iter = track.listIterator(); iter.hasNext();) {
-                GroupWorld gw = iter.next();
-                if (gw.getWorld().equals(world) && gw.getName().equalsIgnoreCase(name)) {
-                    iter.previous();
-                    if(iter.hasPrevious())
-                        return iter.previous();
-                    else
-                        iter.next();
-                }
-            }
-        return null;
-    }
-
-    public GroupWorld getNextRank(String trackName) {
-        LinkedList<GroupWorld> track = data.getTrack(trackName);
-        if (track != null)
-            for (ListIterator<GroupWorld> iter = track.listIterator(); iter.hasNext();) {
-                GroupWorld gw = iter.next();
-                if (gw.getWorld().equals(world) && gw.getName().equalsIgnoreCase(name)) {
-                    if (iter.hasNext())
-                        return iter.next();
-                }
-            }
-        return null;
-    }
-
     @Override
     protected Storage getStorage() {
         return data;
@@ -78,5 +46,9 @@ public class Group extends Entry {
     public boolean delete() {
         controller.delGrp(world, name);
         return super.delete();
+    }
+    
+    public GroupWorld toGroupWorld() {
+        return new GroupWorld(world, name);
     }
 }

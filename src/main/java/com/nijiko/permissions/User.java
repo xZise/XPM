@@ -1,7 +1,10 @@
 package com.nijiko.permissions;
 
 import java.util.LinkedHashSet;
+import java.util.LinkedList;
+import java.util.ListIterator;
 
+import com.nijiko.data.GroupStorage;
 import com.nijiko.data.GroupWorld;
 import com.nijiko.data.Storage;
 import com.nijiko.data.UserStorage;
@@ -28,30 +31,51 @@ public class User extends Entry {
         return "User " + name + " in " + world;
     }
     
-    public void demote(Group group, String track) {
-        if(group==null) return;
-        if(!this.getParents().contains(group)) return;
-        GroupWorld prevRank = group.getPrevRank(track);
-        if(prevRank == null) return;
+    public void demote(GroupWorld groupW, String track) {
+        if(groupW==null) return;
+        if(!this.getRawParents().contains(groupW)) return;
         
-        if(this.getRawParents().contains(prevRank)) return;
-        Group prev = controller.getGroupObject(prevRank.getWorld(), prevRank.getName());
-        if(prev==null) return;
-        this.removeParent(group);
-        this.addParent(prev);
+        GroupStorage gStore = controller.getGroupStorage(world);
+        if(gStore == null)
+            return;
+        LinkedList<GroupWorld> trackGroups = gStore.getTrack(track);
+        if(trackGroups == null)
+            return;
+        for (ListIterator<GroupWorld> iter = trackGroups.listIterator(); iter.hasNext();) {
+            GroupWorld gw = iter.next();
+            if (gw.getWorld().equals(world) && gw.getName().equalsIgnoreCase(name)) {
+                iter.previous();
+                if(iter.hasPrevious()) {
+                    GroupWorld prev = iter.previous();
+                    data.removeParent(name, gw.getWorld(), gw.getName());
+                    data.addParent(name, prev.getWorld(), prev.getName());
+                }
+                else
+                    iter.next();
+            }
+        }
     }
     
-    public void promote(Group group, String track) {
-        if(group==null) return;
-        if(!this.getParents().contains(group)) return;
-        GroupWorld nextRank = group.getNextRank(track);
-        if(nextRank==null)return;
-        if(this.getRawParents().contains(nextRank)) return;
-        Group prev = controller.getGroupObject(nextRank.getWorld(), nextRank.getName());
-        if (prev == null)
+    public void promote(GroupWorld groupW, String track) {
+        if(groupW==null) return;
+        if(!this.getRawParents().contains(groupW)) return;
+        
+        GroupStorage gStore = controller.getGroupStorage(world);
+        if(gStore == null)
             return;
-        this.removeParent(group);
-        this.addParent(prev);
+        LinkedList<GroupWorld> trackGroups = gStore.getTrack(track);
+        if(trackGroups == null)
+            return;
+        for (ListIterator<GroupWorld> iter = trackGroups.listIterator(); iter.hasNext();) {
+            GroupWorld gw = iter.next();
+            if (gw.getWorld().equals(world) && gw.getName().equalsIgnoreCase(name)) {
+                if(iter.hasNext()) {
+                    GroupWorld next = iter.next();
+                    data.removeParent(name, gw.getWorld(), gw.getName());
+                    data.addParent(name, next.getWorld(), next.getName());
+                }
+            }
+        }
     }
     
     @Override
