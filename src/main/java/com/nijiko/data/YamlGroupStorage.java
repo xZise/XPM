@@ -32,8 +32,12 @@ public class YamlGroupStorage implements GroupStorage {
     @Override
     public Set<String> getPermissions(String name) {
         rwl.readLock().lock();
-        List<String> rawPerms = groupConfig.getStringList("groups." + name + ".permissions", null);
-        rwl.readLock().unlock();
+        List<String> rawPerms;
+        try {
+            rawPerms = groupConfig.getStringList("groups." + name + ".permissions", null);
+        } finally {
+            rwl.readLock().unlock();
+        }
         Set<String> permissions = new HashSet<String>();
         if (rawPerms != null && !rawPerms.isEmpty())
             permissions.addAll(rawPerms);
@@ -42,14 +46,17 @@ public class YamlGroupStorage implements GroupStorage {
 
     @Override
     public LinkedHashSet<GroupWorld> getParents(String name) {
+        List<String> rawParents = null;
         rwl.readLock().lock();
-        List<String> rawParents = groupConfig.getStringList("groups." + name + ".inheritance", null);
-        rwl.readLock().unlock();
+        try {
+            rawParents = groupConfig.getStringList("groups." + name + ".inheritance", null);
+        } finally {
+            rwl.readLock().unlock();
+        }
         LinkedHashSet<GroupWorld> parents = new LinkedHashSet<GroupWorld>(rawParents.size());
         for (String raw : rawParents) {
             String[] split = raw.split(",", 2); // Split into at most 2 parts
-            // ("world,blah" -> "world",
-            // "blah")("blah" -> "blah")
+            // ("world,blah" -> "world", "blah")("blah" -> "blah")
             if (split.length == 0)
                 continue;
             if (split.length == 1)
@@ -63,60 +70,74 @@ public class YamlGroupStorage implements GroupStorage {
     @Override
     public void addPermission(String name, String permission) {
         rwl.writeLock().lock();
-        Set<String> permissions = new HashSet<String>(groupConfig.getStringList("groups." + name + ".permissions", null));
-        permissions.add(permission);
-        groupConfig.setProperty("groups." + name + ".permissions", new LinkedList<String>(permissions));
-        modified = true;
-        save();
-        rwl.writeLock().unlock();
+        try {
+            Set<String> permissions = new HashSet<String>(groupConfig.getStringList("groups." + name + ".permissions", null));
+            permissions.add(permission);
+            groupConfig.setProperty("groups." + name + ".permissions", new LinkedList<String>(permissions));
+            modified = true;
+            save();
+        } finally {
+            rwl.writeLock().unlock();
+        }
     }
 
     @Override
     public void removePermission(String name, String permission) {
         rwl.writeLock().lock();
-        Set<String> permissions = new HashSet<String>(groupConfig.getStringList("groups." + name + ".permissions", null));
-        permissions.remove(permission);
-        groupConfig.setProperty("groups." + name + ".permissions", new LinkedList<String>(permissions));
-        modified = true;
-        save();
-        rwl.writeLock().unlock();
+        try {
+            Set<String> permissions = new HashSet<String>(groupConfig.getStringList("groups." + name + ".permissions", null));
+            permissions.remove(permission);
+            groupConfig.setProperty("groups." + name + ".permissions", new LinkedList<String>(permissions));
+            modified = true;
+            save();
+        } finally {
+            rwl.writeLock().unlock();
+        }
     }
 
     @Override
     public void addParent(String name, String groupWorld, String groupName) {
         rwl.writeLock().lock();
-        Set<String> permissions = new HashSet<String>(groupConfig.getStringList("groups." + name + ".inheritance", null));
-        if (groupWorld == null || this.world.equalsIgnoreCase(groupWorld))
-            permissions.add(groupName);
-        else
-            permissions.add(groupWorld + "," + groupName);
-        groupConfig.setProperty("groups." + name + ".inheritance", new LinkedList<String>(permissions));
-        modified = true;
-        save();
-        rwl.writeLock().unlock();
-
+        try {
+            Set<String> parents = new HashSet<String>(groupConfig.getStringList("groups." + name + ".inheritance", null));
+            if (groupWorld == null || this.world.equalsIgnoreCase(groupWorld))
+                parents.add(groupName);
+            else
+                parents.add(groupWorld + "," + groupName);
+            groupConfig.setProperty("groups." + name + ".inheritance", new LinkedList<String>(parents));
+            modified = true;
+            save();
+        } finally {
+            rwl.writeLock().unlock();
+        }
     }
 
     @Override
     public void removeParent(String name, String groupWorld, String groupName) {
         rwl.writeLock().lock();
-        Set<String> permissions = new HashSet<String>(groupConfig.getStringList("groups." + name + ".inheritance", null));
-        if (groupWorld == null || this.world.equalsIgnoreCase(groupWorld))
-            permissions.remove(groupName);
-        else
-            permissions.remove(groupWorld + "," + groupName);
-        groupConfig.setProperty("groups." + name + ".inheritance", new LinkedList<String>(permissions));
-        modified = true;
-        save();
-        rwl.writeLock().unlock();
-
+        try {
+            Set<String> parents = new HashSet<String>(groupConfig.getStringList("groups." + name + ".inheritance", null));
+            if (groupWorld == null || this.world.equalsIgnoreCase(groupWorld))
+                parents.remove(groupName);
+            else
+                parents.remove(groupWorld + "," + groupName);
+            groupConfig.setProperty("groups." + name + ".inheritance", new LinkedList<String>(parents));
+            modified = true;
+            save();
+        } finally {
+            rwl.writeLock().unlock();
+        }
     }
 
     @Override
     public Set<String> getEntries() {
         rwl.readLock().lock();
-        List<String> rawGroups = groupConfig.getKeys("groups");
-        rwl.readLock().unlock();
+        List<String> rawGroups = null;
+        try {
+            rawGroups = groupConfig.getKeys("groups");
+        } finally {
+            rwl.readLock().unlock();
+        }
         Set<String> users = rawGroups == null ? new LinkedHashSet<String>() : new LinkedHashSet<String>(rawGroups);
         return users;
     }
@@ -128,108 +149,131 @@ public class YamlGroupStorage implements GroupStorage {
 
     @Override
     public void forceSave() {
-        boolean writeLocked = false;
-        if (rwl.isWriteLockedByCurrentThread())
-            writeLocked = true;
-        else
-            rwl.writeLock().lock();
-        if (modified)
-            groupConfig.save();
-        groupConfig.load();
-        modified = false;
-        if (!writeLocked)
+        rwl.writeLock().lock();
+        try {
+            if (modified)
+                groupConfig.save();
+            groupConfig.load();
+            modified = false;
+        } finally {
             rwl.writeLock().unlock();
+        }
     }
 
     @Override
     public void save() {
-        boolean writeLocked = false;
-        if (rwl.isWriteLockedByCurrentThread())
-            writeLocked = true;
-        else
-            rwl.readLock().lock();
-        if (saveOff)
-            return;
-        if (!writeLocked)
+        rwl.readLock().lock();
+        try {
+            if (!saveOff)
+                forceSave();
+        } finally {
             rwl.readLock().unlock();
-        forceSave();
+        }
     }
 
     @Override
     public void reload() {
         rwl.writeLock().lock();
+        try {
+            groupConfig.load();
+            modified = false;
+        } finally {
+            rwl.writeLock().unlock();
+        }
         // System.out.println("Reloading group config for world \""+world+"\".");
-        groupConfig.load();
-        modified = false;
-        rwl.writeLock().unlock();
     }
 
     @Override
     public boolean isAutoSave() {
         rwl.readLock().lock();
-        boolean save = saveOff;
-        rwl.readLock().unlock();
+        boolean save = true;
+        try {
+            save = saveOff;
+        } finally {
+            rwl.readLock().unlock();
+        }
         return save;
     }
 
     @Override
     public void setAutoSave(boolean autoSave) {
         rwl.writeLock().lock();
-        saveOff = autoSave;
-        rwl.writeLock().unlock();
+        try {
+            saveOff = autoSave;            
+        } finally {
+            rwl.writeLock().unlock();
+        }
     }
 
     @Override
     public boolean isDefault(String name) {
+        boolean isDefault = false;
         rwl.readLock().lock();
-        boolean isDefault = groupConfig.getBoolean("groups." + name + ".default", false);
-        rwl.readLock().unlock();
+        try {
+            isDefault = groupConfig.getBoolean("groups." + name + ".default", false);
+        } finally {
+            rwl.readLock().unlock();
+        }
         return isDefault;
     }
 
     @Override
     public boolean create(String name) {
+        boolean created = false;
         rwl.writeLock().lock();
-        if (groupConfig.getProperty("groups." + name) != null) {
+        try {
+            if (groupConfig.getProperty("groups." + name) == null) {
+                Map<String, Object> template = new HashMap<String, Object>();
+                template.put("inheritance", null);
+                template.put("permissions", null);
+                groupConfig.setProperty("groups." + name, template);
+                modified = true;
+                created = true;
+                save();
+            }
+        } finally {
             rwl.writeLock().unlock();
-            return false;
         }
-        Map<String, Object> template = new HashMap<String, Object>();
-        template.put("inheritance", null);
-        template.put("permissions", null);
-        groupConfig.setProperty("groups." + name, template);
-        modified = true;
-        save();
-        rwl.writeLock().unlock();
-        return true;
+        return created;
     }
     
     @Override
     public boolean delete(String name) {
+        boolean exists = false;
         rwl.writeLock().lock();
-        boolean exists = groupConfig.getProperty("groups." + name) != null;
-        groupConfig.removeProperty("groups." + name);
-        modified = true;
-        save();
-        rwl.writeLock().unlock();
+        try {
+            exists = groupConfig.getProperty("groups." + name) != null;
+            groupConfig.removeProperty("groups." + name);
+            modified = true;
+            save();
+        } finally {
+            rwl.writeLock().unlock();
+        }
         return exists;
     }
     
     @Override
     public void setData(String name, String path, Object data) {
         rwl.writeLock().lock();
-        groupConfig.setProperty("groups." + name + ".info." + path, data);
-        modified = true;
-        save();
-        rwl.writeLock().unlock();
+        try {
+            groupConfig.setProperty("groups." + name + ".info." + path, data);
+            modified = true;
+            save();
+        } finally {
+            rwl.writeLock().unlock();
+        }
         return;
     }
 
     @Override
     public Set<String> getTracks() {
+        List<String> rawTracks = null;
         rwl.readLock().lock();
-        List<String> rawTracks = groupConfig.getKeys("tracks");
-        rwl.readLock().unlock();
+        try {
+            rawTracks = groupConfig.getKeys("tracks");            
+        } finally {
+            rwl.readLock().unlock();
+        }
         if (rawTracks == null)
             return null;
         return new HashSet<String>(rawTracks);
@@ -237,10 +281,15 @@ public class YamlGroupStorage implements GroupStorage {
 
     @Override
     public LinkedList<GroupWorld> getTrack(String trackName) {
+        List<String> rawGroups = null;
         rwl.readLock().lock();
-        List<String> rawGroups = groupConfig.getStringList("tracks." + trackName, null);
-        rwl.readLock().unlock();
-
+        try {
+            rawGroups = groupConfig.getStringList("tracks." + trackName, null);
+        } finally {
+            rwl.readLock().unlock();
+        }
+        if(rawGroups == null)
+            return null;
         LinkedHashSet<GroupWorld> track = new LinkedHashSet<GroupWorld>(rawGroups.size());
         for (String raw : rawGroups) {
             String[] split = raw.split(",", 2); // Split into at most 2 parts
@@ -259,11 +308,13 @@ public class YamlGroupStorage implements GroupStorage {
     @Override
     public void removeData(String name, String path) {
         rwl.writeLock().lock();
-        groupConfig.removeProperty("groups." + name + ".info." + path);
-        modified = true;
-        save();
-        rwl.writeLock().unlock();
-        return;
+        try {
+            groupConfig.removeProperty("groups." + name + ".info." + path);
+            modified = true;
+            save();
+        } finally {
+            rwl.writeLock().unlock();
+        }
     }
 
     @Override

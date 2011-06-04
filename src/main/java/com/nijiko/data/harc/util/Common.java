@@ -88,7 +88,7 @@ public class Common {
     }
 
     public List<String> readFile(String s) {
-        InputStream is = null;
+//        InputStream is = null;
         BufferedReader br = null;
         String line;
         ArrayList<String> list = new ArrayList<String>();
@@ -106,8 +106,8 @@ public class Common {
                 if (br != null)
                     br.close();
 
-                if (is != null)
-                    is.close();
+//                if (is != null)
+//                    is.close();
             } catch (IOException e) {
                 System.out.println("Couldn't close file connection: " + e);
             }

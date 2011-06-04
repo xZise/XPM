@@ -32,18 +32,26 @@ public class YamlUserStorage implements UserStorage {
     @Override
     public Set<String> getPermissions(String name) {
         name = name.replace('.', ','); // Fix for legacy usernames with periods
+        Set<String> permissions;
         rwl.readLock().lock();
-        Set<String> permissions = new HashSet<String>(userConfig.getStringList("users." + name + ".permissions", null));
-        rwl.readLock().unlock();
+        try {
+            permissions = new HashSet<String>(userConfig.getStringList("users." + name + ".permissions", null));
+        } finally {
+            rwl.readLock().unlock();
+        }
         return permissions;
     }
 
     @Override
     public LinkedHashSet<GroupWorld> getParents(String name) {
         name = name.replace('.', ','); // Fix for legacy usernames with periods
+        List<String> rawParents;
         rwl.readLock().lock();
-        List<String> rawParents = userConfig.getStringList("users." + name + ".groups", null);
-        rwl.readLock().unlock();
+        try {
+            rawParents = userConfig.getStringList("users." + name + ".groups", null);
+        } finally {
+            rwl.readLock().unlock();
+        }
         LinkedHashSet<GroupWorld> parents = new LinkedHashSet<GroupWorld>(rawParents.size());
         for (String raw : rawParents) {
             String[] split = raw.split(",", 2); // Split into at most 2 parts
@@ -61,47 +69,60 @@ public class YamlUserStorage implements UserStorage {
 
     @Override
     public void addPermission(String name, String permission) {
-//        System.out.println("Adding permission " + permission + " to " + name + " in world '" + world + "'.");
+        // System.out.println("Adding permission " + permission + " to " + name
+        // + " in world '" + world + "'.");
         name = name.replace('.', ','); // Fix for legacy usernames with periods
+        Set<String> permissions;
         rwl.writeLock().lock();
-        Set<String> permissions = new LinkedHashSet<String>(userConfig.getStringList("users." + name + ".permissions", null));
-        permissions.add(permission);
-        userConfig.setProperty("users." + name + ".permissions", new LinkedList<String>(permissions));
-//        System.out.println(userConfig.getStringList("users." + name + ".permissions", null));
-        modified = true;
-        save();
-//        System.out.println(userConfig.getStringList("users." + name + ".permissions", null));
-        rwl.writeLock().unlock();
+        try {
+            permissions = new LinkedHashSet<String>(userConfig.getStringList("users." + name + ".permissions", null));
+            permissions.add(permission);
+            userConfig.setProperty("users." + name + ".permissions", new LinkedList<String>(permissions));
+            modified = true;
+            save();
+        } finally {
+            rwl.writeLock().unlock();            
+        }
+        // System.out.println(userConfig.getStringList("users." + name +
+        // ".permissions", null));
+        // System.out.println(userConfig.getStringList("users." + name +
+        // ".permissions", null));
     }
 
     @Override
     public void removePermission(String name, String permission) {
-//        System.out.println("Removing permission " + permission + " from " + name + " in world '" + world + "'.");
+        // System.out.println("Removing permission " + permission + " from " +
+        // name + " in world '" + world + "'.");
         name = name.replace('.', ','); // Fix for legacy usernames with periods
+        Set<String> permissions;
         rwl.writeLock().lock();
-        Set<String> permissions = new LinkedHashSet<String>(userConfig.getStringList("users." + name + ".permissions", null));
-        permissions.remove(permission);
-        userConfig.setProperty("users." + name + ".permissions", new LinkedList<String>(permissions));
-//        System.out.println(userConfig.getStringList("users." + name + ".permissions", null));
-        modified = true;
-        save();
-//        System.out.println(userConfig.getStringList("users." + name + ".permissions", null));
-        rwl.writeLock().unlock();
+        try {
+            permissions = new LinkedHashSet<String>(userConfig.getStringList("users." + name + ".permissions", null));
+            permissions.remove(permission);
+            userConfig.setProperty("users." + name + ".permissions", new LinkedList<String>(permissions));
+            modified = true;
+            save();
+        } finally {
+            rwl.writeLock().unlock();            
+        }
     }
 
     @Override
     public void addParent(String name, String groupWorld, String groupName) {
         name = name.replace('.', ','); // Fix for legacy usernames with periods
         rwl.writeLock().lock();
-        Set<String> permissions = new HashSet<String>(userConfig.getStringList("users." + name + ".groups", null));
-        if (groupWorld == null || this.world.equalsIgnoreCase(groupWorld))
-            permissions.add(groupName);
-        else
-            permissions.add(groupWorld + "," + groupName);
-        userConfig.setProperty("users." + name + ".groups", new LinkedList<String>(permissions));
-        modified = true;
-        save();
-        rwl.writeLock().unlock();
+        try {
+            Set<String> parents = new HashSet<String>(userConfig.getStringList("users." + name + ".groups", null));
+            if (groupWorld == null || this.world.equalsIgnoreCase(groupWorld))
+                parents.add(groupName);
+            else
+                parents.add(groupWorld + "," + groupName);
+            userConfig.setProperty("users." + name + ".groups", new LinkedList<String>(parents));
+            modified = true;
+            save();
+        } finally {
+            rwl.writeLock().unlock();
+        }
 
     }
 
@@ -109,23 +130,29 @@ public class YamlUserStorage implements UserStorage {
     public void removeParent(String name, String groupWorld, String groupName) {
         name = name.replace('.', ','); // Fix for legacy usernames with periods
         rwl.writeLock().lock();
-        Set<String> permissions = new HashSet<String>(userConfig.getStringList("users." + name + ".groups", null));
-        if (groupWorld == null || this.world.equalsIgnoreCase(groupWorld))
-            permissions.remove(groupName);
-        else
-            permissions.remove(groupWorld + "," + groupName);
-        userConfig.setProperty("users." + name + ".groups", new LinkedList<String>(permissions));
-        modified = true;
-        save();
-        rwl.writeLock().unlock();
-
+        try {
+            Set<String> parents = new HashSet<String>(userConfig.getStringList("users." + name + ".groups", null));
+            if (groupWorld == null || this.world.equalsIgnoreCase(groupWorld))
+                parents.remove(groupName);
+            else
+                parents.remove(groupWorld + "," + groupName);
+            userConfig.setProperty("users." + name + ".groups", new LinkedList<String>(parents));
+            modified = true;
+            save();
+        } finally {
+            rwl.writeLock().unlock();
+        }
     }
 
     @Override
     public Set<String> getEntries() {
         rwl.readLock().lock();
-        List<String> rawUsers = userConfig.getKeys("users");
-        rwl.readLock().unlock();
+        List<String> rawUsers = null;
+        try {
+            rawUsers = userConfig.getKeys("users");
+        } finally {
+            rwl.readLock().unlock();
+        }
         Set<String> users = new HashSet<String>();
         if (rawUsers != null)
             for (String username : rawUsers) {
@@ -143,114 +170,132 @@ public class YamlUserStorage implements UserStorage {
 
     @Override
     public void forceSave() {
-        boolean writeLocked = false;
-        if (rwl.isWriteLockedByCurrentThread())
-            writeLocked = true;
-        else
-            rwl.writeLock().lock();
-        if (modified) {
-//            System.out.println("Saving world '" + world + "'.");
-            userConfig.save();
-        }
-        userConfig.load();
-        modified = false;
-        if (!writeLocked)
+        rwl.writeLock().lock();
+        try {
+            if (modified) {
+                // System.out.println("Saving world '" + world + "'.");
+                userConfig.save();
+            }
+            userConfig.load();
+            modified = false;
+        } finally {
             rwl.writeLock().unlock();
+        }
     }
 
     @Override
     public void save() {
-        boolean writeLocked = false;
-        if (rwl.isWriteLockedByCurrentThread())
-            writeLocked = true;
-        else
-            rwl.readLock().lock();
-        if (saveOff)
-            return;
-        if (!writeLocked)
+        rwl.readLock().lock();
+        try {
+            if (saveOff)
+                return;
+            forceSave();
+        } finally {
             rwl.readLock().unlock();
-        forceSave();
+        }
     }
 
     @Override
     public void reload() {
         rwl.writeLock().lock();
+        try {
+            userConfig.load();
+            modified = false;
+        } finally {
+            rwl.writeLock().unlock();
+        }
         // System.out.println("Reloading user config for world \""+world+"\".");
-        userConfig.load();
-        modified = false;
-        rwl.writeLock().unlock();
     }
 
     @Override
     public boolean isAutoSave() {
         rwl.readLock().lock();
-        boolean save = saveOff;
-        rwl.readLock().unlock();
+        boolean save = true;
+        try {
+            save = saveOff;
+        } finally {
+            rwl.readLock().unlock();
+        }
         return save;
     }
 
     @Override
     public void setAutoSave(boolean autoSave) {
         rwl.writeLock().lock();
-        saveOff = autoSave;
-        rwl.writeLock().unlock();
+        try {
+            saveOff = autoSave;
+        } finally {
+            rwl.writeLock().unlock();
+        }
     }
 
     @Override
     public boolean create(String name) {
+        boolean created = false;
         rwl.writeLock().lock();
-        if (userConfig.getProperty("users." + name) != null) {
+        try {
+            if (userConfig.getProperty("users." + name) == null) {
+                Map<String, Object> template = new HashMap<String, Object>();
+                template.put("groups", null);
+                template.put("permissions", null);
+                userConfig.setProperty("users." + name, template);
+                save();
+                modified = true;
+                created = true;
+            }            
+        } finally {
             rwl.writeLock().unlock();
-            return false;
         }
-        Map<String, Object> template = new HashMap<String, Object>();
-        template.put("groups", null);
-        template.put("permissions", null);
-        userConfig.setProperty("users." + name, template);
-        modified = true;
-        save();
-        rwl.writeLock().unlock();
-        return true;
+        return created;
     }
 
     @Override
     public boolean delete(String name) {
         rwl.writeLock().lock();
-        boolean exists = userConfig.getProperty("users." + name) != null;
-        userConfig.removeProperty("users." + name);
-        modified = true;
-        save();
-        rwl.writeLock().unlock();
+        boolean exists = false;
+        try {
+            exists = userConfig.getProperty("users." + name) != null;
+            userConfig.removeProperty("users." + name);
+            modified = true;
+            save();
+        } finally {
+            rwl.writeLock().unlock();
+        }
         return exists;
     }
-    
+
     @Override
     public void removeData(String name, String path) {
         rwl.writeLock().lock();
-        userConfig.removeProperty("users." + name + ".info." + path);
-        modified = true;
-        save();
-        rwl.writeLock().unlock();
+        try {
+            userConfig.removeProperty("users." + name + ".info." + path);
+            modified = true;
+            save();
+        } finally {
+            rwl.writeLock().unlock();
+        }
         return;
     }
 
     @Override
     public void setData(String name, String path, Object data) {
         rwl.writeLock().lock();
-        userConfig.setProperty("users." + name + ".info." + path, data);
-        modified = true;
-        save();
-        rwl.writeLock().unlock();
+        try {
+            userConfig.setProperty("users." + name + ".info." + path, data);
+            modified = true;
+            save();
+        } finally {
+            rwl.writeLock().unlock();
+        }
         return;
     }
-
 
     @Override
     public String getString(String name, String path) {
         Object raw = getObj(name, path);
         if (raw instanceof String)
             return (String) raw;
-        if(raw == null)
+        if (raw == null)
             return null;
         return raw.toString();
     }
@@ -260,7 +305,7 @@ public class YamlUserStorage implements UserStorage {
         Object raw = getObj(name, path);
         if (raw instanceof Integer)
             return (Integer) raw;
-        if(raw == null)
+        if (raw == null)
             return null;
         int val;
         try {
@@ -276,7 +321,7 @@ public class YamlUserStorage implements UserStorage {
         Object raw = getObj(name, path);
         if (raw instanceof Double)
             return (Double) raw;
-        if(raw == null)
+        if (raw == null)
             return null;
         double val;
         try {
@@ -292,7 +337,7 @@ public class YamlUserStorage implements UserStorage {
         Object raw = getObj(name, path);
         if (raw instanceof Boolean)
             return (Boolean) raw;
-        if(raw == null)
+        if (raw == null)
             return null;
         boolean val = Boolean.valueOf(raw.toString());
         return val;
@@ -300,8 +345,12 @@ public class YamlUserStorage implements UserStorage {
 
     private Object getObj(String name, String path) {
         rwl.readLock().lock();
-        Object data = userConfig.getProperty("users." + name + ".info." + path);
-        rwl.readLock().unlock();
+        Object data = null;
+        try {
+            data = userConfig.getProperty("users." + name + ".info." + path);            
+        } finally {
+            rwl.readLock().unlock();
+        }
         return data;
     }
 

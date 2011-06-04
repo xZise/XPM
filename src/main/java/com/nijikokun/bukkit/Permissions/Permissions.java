@@ -78,7 +78,7 @@ public class Permissions extends JavaPlugin {
     // public static Misc Misc = new Misc();
 
     private String defaultWorld = "";
-    private final boolean autoComplete = true;
+    private static final boolean autoComplete = true;
     private final YamlCreator yamlC;
     private int dist = 10;
     private final PrWorldListener wListener = new PrWorldListener();

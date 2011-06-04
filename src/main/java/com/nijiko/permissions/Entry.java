@@ -1,5 +1,6 @@
 package com.nijiko.permissions;
 
+import java.io.Serializable;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -512,7 +513,7 @@ public abstract class Entry {
     /**
      * Simple comparator to order objects by natural ordering
      */
-    public static class SimpleComparator<T extends Comparable<T>> implements Comparator<T> {
+    public static class SimpleComparator<T extends Comparable<T>> implements Comparator<T>, Serializable {
         @Override
         public int compare(T o1, T o2) {
             if (o1 == null) {
