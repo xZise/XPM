@@ -55,7 +55,7 @@ import com.nijiko.permissions.User;
 
 public class Permissions extends JavaPlugin {
 
-    public static Logger log;
+    protected static final Logger log = Logger.getLogger("Minecraft.Permissions");
     public static Plugin instance;
     // private Configuration storageConfig;
     @Deprecated
@@ -63,13 +63,15 @@ public class Permissions extends JavaPlugin {
     public static final String version = "3.1.4";
     public static final String codename = "Yeti";
 
-    public Listener l = new Listener(this);
+    public Listener buildListener = new Listener(this);
 
     /**
      * Controller for permissions and security. Use getHandler() instead.
      */
     @Deprecated
     public static PermissionHandler Security;
+    
+//    private PermissionHandler controller;
 
     // /**
     // * Miscellaneous object for various functions that don't belong anywhere
@@ -82,6 +84,7 @@ public class Permissions extends JavaPlugin {
     private final YamlCreator yamlC;
     private int dist = 10;
     private final PrWorldListener wListener = new PrWorldListener();
+//    protected String pluginInternalName = "Permissions";
 
     public Permissions() {
         yamlC = new YamlCreator();
@@ -92,7 +95,6 @@ public class Permissions extends JavaPlugin {
     @Override
     public void onLoad() {
         instance = this;
-        log = Logger.getLogger("Minecraft");
         Properties prop = new Properties();
         FileInputStream in = null;
         getDataFolder().mkdirs();
@@ -106,8 +108,9 @@ public class Permissions extends JavaPlugin {
             defaultWorld = "world";
         } finally {
             try {
-                if (in != null)
+                if (in != null) {
                     in.close();
+                }
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -117,11 +120,7 @@ public class Permissions extends JavaPlugin {
 
         File storageOpt = new File("plugins" + File.separator + "Permissions" + File.separator, "storageconfig.yml");
         storageOpt.getParentFile().mkdirs();
-        if (!storageOpt.isFile())
-            disable("[Permissions] storageconfig.yml is not a file.");
-        if (!storageOpt.canRead())
-            disable("[Permissions] storageconfig.yml cannot be read.");
-        if (!storageOpt.exists())
+        if (!storageOpt.exists()) {
             try {
                 System.out.println("[Permissions] Creating storageconfig.yml.");
                 if (!storageOpt.createNewFile()) {
@@ -132,6 +131,9 @@ public class Permissions extends JavaPlugin {
                 disable("[Permissions] storageconfig.yml could not be created.");
                 return;
             }
+        }
+        if (!storageOpt.isFile() || !storageOpt.canRead())
+            disable("[Permissions] storageconfig.yml is not a file or is not readable.");
         Configuration storageConfig = new NotNullConfiguration(storageOpt);
         storageConfig.load();
         // this.storageConfig = storageConfig;
@@ -145,8 +147,9 @@ public class Permissions extends JavaPlugin {
 
     @Override
     public void onDisable() {
-        Security.closeAll();
-        // Security = null;
+        log.info("[Permissions] (" + codename + ") saving data...");
+        this.getHandler().closeAll();
+        // getHandler() = null;
         log.info("[Permissions] (" + codename + ") saved all data.");
         this.getServer().getScheduler().cancelTasks(this);
         log.info("[Permissions] (" + codename + ") disabled successfully.");
@@ -161,7 +164,7 @@ public class Permissions extends JavaPlugin {
     }
 
     /**
-     * Alternative method of grabbing Permissions.Security <br />
+     * Returns the PermissionHandler instance.<br />
      * <br />
      * <blockquote>
      * 
@@ -180,11 +183,11 @@ public class Permissions extends JavaPlugin {
     public void setupPermissions(Configuration storageConfig) {
         try {
             Security = new ModularControl(storageConfig);
-            Security.setDefaultWorld(defaultWorld);
-            Security.load();
-//            System.out.println(getServer().getWorlds());
+            getHandler().setDefaultWorld(defaultWorld);
+            getHandler().load();
+            //            System.out.println(getServer().getWorlds());
             for(World w : getServer().getWorlds()) {
-                Security.loadWorld(w.getName());
+                getHandler().loadWorld(w.getName());
             }
         } catch (Throwable t) {
             t.printStackTrace();
@@ -192,12 +195,11 @@ public class Permissions extends JavaPlugin {
             return;
         }
         // getServer().getServicesManager().register(PermissionHandler.class,
-        // Security, this, ServicePriority.Normal);
+        // getHandler(), this, ServicePriority.Normal);
     }
 
     @Override
     public void onEnable() {
-
         StorageFactory.registerDefaultCreator(yamlC);
         StorageFactory.registerCreator("YAML", yamlC);
 
@@ -205,8 +207,8 @@ public class Permissions extends JavaPlugin {
         // Enabled
         log.info("[" + description.getName() + "] version [" + description.getVersion() + "] (" + codename + ")  loaded");
 
-        this.getServer().getPluginManager().registerEvent(Event.Type.BLOCK_PLACE, l, Priority.High, this);
-        this.getServer().getPluginManager().registerEvent(Event.Type.BLOCK_BREAK, l, Priority.High, this);
+        this.getServer().getPluginManager().registerEvent(Event.Type.BLOCK_PLACE, buildListener, Priority.High, this);
+        this.getServer().getPluginManager().registerEvent(Event.Type.BLOCK_BREAK, buildListener, Priority.High, this);
         this.getServer().getPluginManager().registerEvent(Event.Type.WORLD_LOAD, wListener, Priority.Monitor, this);
     }
 
@@ -225,7 +227,7 @@ public class Permissions extends JavaPlugin {
                 msg.send("&7-------[ &fPermissions&7 ]-------");
                 msg.send("&7Currently running version: &f[" + pdfFile.getVersion() + "] (" + codename + ")");
 
-                if (Security.has(player.getWorld().getName(), player.getName(), "permissions.reload")) {
+                if (getHandler().has(player.getWorld().getName(), player.getName(), "permissions.reload")) {
                     msg.send("&7Reload with: &f/permissions &a-reload &e<world>");
                     msg.send("&fLeave &e<world> blank to reload default world.");
                 }
@@ -272,7 +274,7 @@ public class Permissions extends JavaPlugin {
             } else
                 world = "";
             try {
-                Security.forceLoadWorld(world);
+                getHandler().forceLoadWorld(world);
             } catch (Exception e) {
                 msg.send("&4[Permissions] Error occured while loading world.");
                 e.printStackTrace();
@@ -283,11 +285,11 @@ public class Permissions extends JavaPlugin {
         } else if (args[0].equalsIgnoreCase("-list")) {
             if (args.length > 1) {
                 if (args[1].equalsIgnoreCase("worlds")) {
-                    if (player != null && !Security.has(player, "permissions.list.worlds")) {
+                    if (player != null && !getHandler().has(player, "permissions.list.worlds")) {
                         msg.send("&4[Permissions] You do not have permissions to use this command.");
                         return true;
                     }
-                    Set<String> worlds = Security.getWorlds();
+                    Set<String> worlds = getHandler().getWorlds();
                     StringBuilder text = new StringBuilder();
                     if (worlds.isEmpty()) {
                         text.append("&4[Permissions] No worlds loaded.");
@@ -314,19 +316,19 @@ public class Permissions extends JavaPlugin {
                     }
                     String world = tempWorld.toString();
                     if (args[1].equalsIgnoreCase("users")) {
-                        if (player != null && !Security.has(player, "permissions.list.users")) {
+                        if (player != null && !getHandler().has(player, "permissions.list.users")) {
                             msg.send("&4[Permissions] You do not have permissions to use this command.");
                             return true;
                         }
-                        Collection<User> users = Security.getUsers(world);
+                        Collection<User> users = getHandler().getUsers(world);
                         msg.send(listEntries(users, "Users"));
                         return true;
                     } else if (args[1].equalsIgnoreCase("groups")) {
-                        if (player != null && !Security.has(player, "permissions.list.groups")) {
+                        if (player != null && !getHandler().has(player, "permissions.list.groups")) {
                             msg.send("&4[Permissions] You do not have permissions to use this command.");
                             return true;
                         }
-                        Collection<Group> groups = Security.getGroups(world);
+                        Collection<Group> groups = getHandler().getGroups(world);
                         msg.send(listEntries(groups, "Groups"));
                         return true;
                     }
@@ -349,8 +351,8 @@ public class Permissions extends JavaPlugin {
             StringBuilder tempWorld = new StringBuilder();
             String[] tempArgs = new String[args.length];
             System.arraycopy(args, 0, tempArgs, 0, args.length); // XXX: Temp
-                                                                 // solution for
-                                                                 // w: prefix
+            // solution for
+            // w: prefix
             tempArgs[currentArg] = tempArgs[currentArg].substring(2);
             currentArg = extractQuoted(tempArgs, currentArg, tempWorld);
             switch (currentArg) {
@@ -368,11 +370,11 @@ public class Permissions extends JavaPlugin {
             world = defaultWorld;
         }
 
-        Entry entry = isGroup ? Security.getGroupObject(world, name) : Security.getUserObject(world, name);
+        Entry entry = isGroup ? getHandler().getGroupObject(world, name) : getHandler().getUserObject(world, name);
         // Note that entry may be null if the user/group doesn't exist
         if (args.length > currentArg) {
             if (args[currentArg].equalsIgnoreCase("create")) {
-                if (player != null && !Security.has(player, "permissions.create")) {
+                if (player != null && !getHandler().has(player, "permissions.create")) {
                     msg.send("&4[Permissions] You do not have permissions to use this command.");
                     return true;
                 }
@@ -381,7 +383,7 @@ public class Permissions extends JavaPlugin {
                     return true;
                 }
                 try {
-                    entry = isGroup ? Security.safeGetGroup(world, name) : Security.safeGetUser(world, name);
+                    entry = isGroup ? getHandler().safeGetGroup(world, name) : getHandler().safeGetUser(world, name);
                 } catch (Exception e) {
                     e.printStackTrace();
                     msg.send("&4[Permissions] Error creating user/group.");
@@ -393,7 +395,7 @@ public class Permissions extends JavaPlugin {
                 msg.send("&4[Permissions] User/Group does not exist.");
 
                 if (autoComplete) {
-                    Set<String> matches = getNames(isGroup ? Security.getGroups(world) : Security.getUsers(world));
+                    Set<String> matches = getNames(isGroup ? getHandler().getGroups(world) : getHandler().getUsers(world));
                     Player[] online = getServer().getOnlinePlayers();
                     for (Player p : online) {
                         matches.add(p.getName());
@@ -403,7 +405,7 @@ public class Permissions extends JavaPlugin {
                     if (closest != null) {
                         msg.send("&7[Permissions]&b Using closest match &4" + closest + "&b.");
                         name = closest;
-                        entry = isGroup ? Security.getGroupObject(world, name) : Security.getUserObject(world, name);
+                        entry = isGroup ? getHandler().getGroupObject(world, name) : getHandler().getUserObject(world, name);
                         if (entry == null) {
                             msg.send("&4[Permissions] Closest user/group does not exist.");
                             return true;
@@ -415,7 +417,7 @@ public class Permissions extends JavaPlugin {
 
             }
             if (args[currentArg].equalsIgnoreCase("delete")) {
-                if (player != null && !Security.has(player, "permissions.delete")) {
+                if (player != null && !getHandler().has(player, "permissions.delete")) {
                     msg.send("&4[Permissions] You do not have permissions to use this command.");
                     return true;
                 }
@@ -424,7 +426,7 @@ public class Permissions extends JavaPlugin {
                 return true;
             } else if (args[currentArg].equalsIgnoreCase("has")) {
                 currentArg++;
-                if (player != null && !Security.has(player, "permissions.has")) {
+                if (player != null && !getHandler().has(player, "permissions.has")) {
                     msg.send("&4[Permissions] You do not have permissions to use this command.");
                     return true;
                 }
@@ -440,7 +442,7 @@ public class Permissions extends JavaPlugin {
                 currentArg++;
                 if (args.length > currentArg) {
                     if (args[currentArg].equalsIgnoreCase("list")) {
-                        if (player != null && !Security.has(player, "permissions.perms.list")) {
+                        if (player != null && !getHandler().has(player, "permissions.perms.list")) {
                             msg.send("&4[Permissions] You do not have permissions to use this command.");
                             return true;
                         }
@@ -458,7 +460,7 @@ public class Permissions extends JavaPlugin {
                         msg.send(text);
                         return true;
                     } else if (args[currentArg].equalsIgnoreCase("listall")) {
-                        if (player != null && !Security.has(player, "permissions.perms.listall")) {
+                        if (player != null && !getHandler().has(player, "permissions.perms.listall")) {
                             msg.send("&4[Permissions] You do not have permissions to use this command.");
                             return true;
                         }
@@ -479,7 +481,7 @@ public class Permissions extends JavaPlugin {
                         boolean add = args[currentArg].equalsIgnoreCase("add");
 
                         String permNode = add ? "permissions.perms.add" : "permissions.perms.remove";
-                        if (player != null && !Security.has(player, permNode)) {
+                        if (player != null && !getHandler().has(player, permNode)) {
                             msg.send("&4[Permissions] You do not have permissions to use this command.");
                             return true;
                         }
@@ -506,7 +508,7 @@ public class Permissions extends JavaPlugin {
                 currentArg++;
                 if (args.length > currentArg) {
                     if (args[currentArg].equalsIgnoreCase("list")) {
-                        if (player != null && !Security.has(player, "permissions.parents.list")) {
+                        if (player != null && !getHandler().has(player, "permissions.parents.list")) {
                             msg.send("&4[Permissions] You do not have permissions to use this command.");
                             return true;
                         }
@@ -526,7 +528,7 @@ public class Permissions extends JavaPlugin {
                         msg.send(text);
                         return true;
                     } else if (args[currentArg].equalsIgnoreCase("listall")) {
-                        if (player != null && !Security.has(player, "permissions.parents.listall")) {
+                        if (player != null && !getHandler().has(player, "permissions.parents.listall")) {
                             msg.send("&4[Permissions] You do not have permissions to use this command.");
                             return true;
                         }
@@ -548,7 +550,7 @@ public class Permissions extends JavaPlugin {
                     } else if (args[currentArg].equalsIgnoreCase("add") || args[currentArg].equalsIgnoreCase("remove")) {
                         boolean add = args[currentArg].equalsIgnoreCase("add");
                         String permNode = add ? "permissions.parents.add" : "permissions.parents.remove";
-                        if (player != null && !Security.has(player, permNode)) {
+                        if (player != null && !getHandler().has(player, permNode)) {
                             msg.send("&4[Permissions] You do not have permissions to use this command.");
                             return true;
                         }
@@ -576,7 +578,7 @@ public class Permissions extends JavaPlugin {
                             if (!add && !parents.contains(new GroupWorld(parentWorld, parentName)))
                                 text = "&4[Permissions] User/Group does not have such a parent.";
                             else {
-                                Group parent = Security.getGroupObject(parentWorld, parentName);
+                                Group parent = getHandler().getGroupObject(parentWorld, parentName);
                                 if (parent == null) {
                                     text = "&4[Permissions] No such group exists.";
                                 } else {
@@ -601,7 +603,7 @@ public class Permissions extends JavaPlugin {
                     String choice = args[currentArg];
                     if (choice.equalsIgnoreCase("get")) {
                         currentArg++;
-                        if (player != null && !Security.has(player, "permissions.info.get")) {
+                        if (player != null && !getHandler().has(player, "permissions.info.get")) {
                             msg.send("&4[Permissions] You do not have permissions to use this command.");
                             return true;
                         }
@@ -612,7 +614,7 @@ public class Permissions extends JavaPlugin {
                         }
                     } else if (choice.equalsIgnoreCase("set")) {
                         currentArg++;
-                        if (player != null && !Security.has(player, "permissions.info.set")) {
+                        if (player != null && !getHandler().has(player, "permissions.info.set")) {
                             msg.send("&4[Permissions] You do not have permissions to use this command.");
                             return true;
                         }
@@ -648,7 +650,7 @@ public class Permissions extends JavaPlugin {
                         }
                     } else if (choice.equalsIgnoreCase("remove")) {
                         currentArg++;
-                        if (player != null && !Security.has(player, "permissions.info.remove")) {
+                        if (player != null && !getHandler().has(player, "permissions.info.remove")) {
                             msg.send("&4[Permissions] You do not have permissions to use this command.");
                             return true;
                         }
@@ -677,11 +679,11 @@ public class Permissions extends JavaPlugin {
                             StringBuilder tempWorld = new StringBuilder();
                             String[] tempArgs = new String[args.length];
                             System.arraycopy(args, 0, tempArgs, 0, args.length); // XXX:
-                                                                                 // Temp
-                                                                                 // solution
-                                                                                 // for
-                                                                                 // w:
-                                                                                 // prefix
+                            // Temp
+                            // solution
+                            // for
+                            // w:
+                            // prefix
                             tempArgs[currentArg] = tempArgs[currentArg].substring(2);
                             currentArg = extractQuoted(tempArgs, currentArg, tempWorld);
                             switch (currentArg) {
@@ -696,14 +698,14 @@ public class Permissions extends JavaPlugin {
                             currentArg++;
                         }
                         GroupWorld group = new GroupWorld(parentWorld, parentName);
-                        
+
                         if (!user.inGroup(parentWorld, parentName)) {
                             msg.send("&4[Permissions] User not in specified group.");
                             return true;
                         }
                         if (args.length > currentArg) {
                             String track = args[currentArg];
-                            Set<String> tracks = Security.getTracks(world);
+                            Set<String> tracks = getHandler().getTracks(world);
                             if (tracks == null || tracks.isEmpty()) {
                                 msg.send("&4[Permissions] No tracks in specified world.");
                                 return true;
@@ -713,7 +715,7 @@ public class Permissions extends JavaPlugin {
                                 return true;
                             }
                             String permNode = isPromote ? "permissions.promote." + track : "permission.demote." + track;
-                            if (player != null && !Security.has(player, permNode)) {
+                            if (player != null && !getHandler().has(player, permNode)) {
                                 msg.send("&4[Permissions] You do not have permissions to use this command.");
                                 return true;
                             }
@@ -750,34 +752,34 @@ public class Permissions extends JavaPlugin {
 
         if (arg == null || arg.equals("")) {
 
-            if (p != null && !Security.has(p.getWorld().getName(), p.getName(), "permissions.reload.default")) {
+            if (p != null && !getHandler().has(p.getWorld().getName(), p.getName(), "permissions.reload.default")) {
                 p.sendMessage(ChatColor.RED + "[Permissions] You lack the necessary permissions to perform this action.");
                 return true;
             }
 
-            Security.reload(defaultWorld);
+            getHandler().reload(defaultWorld);
             sender.sendMessage(ChatColor.GRAY + "[Permissions] Default world reloaded.");
             return true;
         }
 
         if (arg.equalsIgnoreCase("all")) {
 
-            if (p != null && !Security.has(p.getWorld().getName(), p.getName(), "permissions.reload.all")) {
+            if (p != null && !getHandler().has(p.getWorld().getName(), p.getName(), "permissions.reload.all")) {
                 p.sendMessage(ChatColor.RED + "[Permissions] You lack the necessary permissions to perform this action.");
                 return true;
             }
 
-            Security.reload();
+            getHandler().reload();
             sender.sendMessage(ChatColor.GRAY + "[Permissions] All worlds reloaded.");
             return true;
         }
 
-        if (p != null && !Security.has(p.getWorld().getName(), p.getName(), "permissions.reload." + arg)) {
+        if (p != null && !getHandler().has(p.getWorld().getName(), p.getName(), "permissions.reload." + arg)) {
             p.sendMessage(ChatColor.RED + "[Permissions] You lack the necessary permissions to perform this action.");
             return true;
         }
 
-        if (Security.reload(arg))
+        if (getHandler().reload(arg))
             sender.sendMessage(ChatColor.GRAY + "[Permissions] Reload of World " + arg + " completed.");
         else
             sender.sendMessage(ChatColor.GRAY + "[Permissions] World " + arg + " does not exist.");
