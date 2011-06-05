@@ -81,7 +81,7 @@ public class YamlUserStorage implements UserStorage {
             modified = true;
             save();
         } finally {
-            rwl.writeLock().unlock();            
+            rwl.writeLock().unlock();
         }
         // System.out.println(userConfig.getStringList("users." + name +
         // ".permissions", null));
@@ -103,7 +103,7 @@ public class YamlUserStorage implements UserStorage {
             modified = true;
             save();
         } finally {
-            rwl.writeLock().unlock();            
+            rwl.writeLock().unlock();
         }
     }
 
@@ -238,10 +238,10 @@ public class YamlUserStorage implements UserStorage {
                 template.put("groups", null);
                 template.put("permissions", null);
                 userConfig.setProperty("users." + name, template);
-                save();
                 modified = true;
                 created = true;
-            }            
+                save();
+            }
         } finally {
             rwl.writeLock().unlock();
         }
@@ -346,7 +346,7 @@ public class YamlUserStorage implements UserStorage {
         rwl.readLock().lock();
         Object data = null;
         try {
-            data = userConfig.getProperty("users." + name + ".info." + path);            
+            data = userConfig.getProperty("users." + name + ".info." + path);
         } finally {
             rwl.readLock().unlock();
         }

@@ -33,25 +33,27 @@ public class ModularControl extends PermissionHandler {
     private Configuration storageConfig;
     private String defaultWorld = "";
     PermissionCache cache = new PermissionCache();
+
+    class RefreshTask implements Runnable {
+        @Override
+        public void run() {
+            storageReload();
+        }
+    }
+    
+    static {
+        if(RefreshTask.class.getClassLoader() != ModularControl.class.getClassLoader()) {
+            System.err.println("[Permissions] ClassLoader check failed.");
+            throw new RuntimeException("RefreshTask was loaded using a different classloader.");
+        }
+    }
     
     public ModularControl(Configuration storageConfig) {
 //        System.out.println(this.getClass().getClassLoader());
         this.storageConfig = storageConfig;
         loadWorldInheritance();
         int period = storageConfig.getInt("permissions.storage.reload", 6000);
-        class RefreshTask implements Runnable {
-            public RefreshTask() {
-                if(RefreshTask.class.getClassLoader() != ModularControl.class.getClassLoader()) {
-                    System.err.println("[Permissions] ClassLoader check failed.");
-                    throw new RuntimeException("RefreshTask was loaded using a different classloader.");
-                }
-            }
-            @Override
-            public void run() {
-                storageReload();
-            }
-        }
-        Permissions.instance.getServer().getScheduler().scheduleAsyncRepeatingTask(Permissions.instance, new RefreshTask(), period, period);
+        Permissions.instance.getServer().getScheduler().scheduleAsyncRepeatingTask(Permissions.instance, this.new RefreshTask(), period, period);
     }
     
     //World manipulation methods
@@ -566,7 +568,7 @@ public class ModularControl extends PermissionHandler {
     }
 
     private User getUsr(String world, String name) {
-        world = getParentWorldUser(world);
+//        world = getParentWorldUser(world);
         try {
             User u = safeGetUser(world, name);
             return u;
@@ -580,7 +582,7 @@ public class ModularControl extends PermissionHandler {
     }
 
     private Group getGrp(String world, String name) {
-        world = getParentWorldGroup(world);
+//        world = getParentWorldGroup(world);
         try {
             Group g = safeGetGroup(world, name);
             return g;

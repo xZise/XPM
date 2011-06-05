@@ -274,29 +274,31 @@ public abstract class Entry {
 
         return parentSet;
     }
+    
+    static class GroupChecker implements EntryVisitor<Boolean> {
+        protected final String world;
+        protected final String group;
 
+        GroupChecker(String world, String group) {
+            this.world = world;
+            this.group = group;
+        }
+
+        @Override
+        public Boolean value(Entry e) {
+            if (e instanceof Group) {
+                Group g = (Group) e;
+                if (g.world != null && g.name != null && g.world.equals(world) && g.name.equalsIgnoreCase(group))
+                    return true;
+            }
+            return null;
+        }
+    }
+    
     public boolean inGroup(String world, String group) {
         if (this.getType() == EntryType.GROUP && this.world.equalsIgnoreCase(world) && this.name.equalsIgnoreCase(group))
             return true;
-        class GroupChecker implements EntryVisitor<Boolean> {
-            protected final String world;
-            protected final String group;
-
-            GroupChecker(String world, String group) {
-                this.world = world;
-                this.group = group;
-            }
-
-            @Override
-            public Boolean value(Entry e) {
-                if (e instanceof Group) {
-                    Group g = (Group) e;
-                    if (g.world != null && g.name != null && g.world.equals(world) && g.name.equalsIgnoreCase(group))
-                        return true;
-                }
-                return null;
-            }
-        }
+        
         Boolean val = this.recursiveCheck(new GroupChecker(world, group));
         return val == null ? false : val;
     }

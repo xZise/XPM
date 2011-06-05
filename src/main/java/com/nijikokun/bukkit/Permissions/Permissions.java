@@ -60,7 +60,7 @@ public class Permissions extends JavaPlugin {
     // private Configuration storageConfig;
     @Deprecated
     public static final String name = "Permissions";
-    public static final String version = "3.1.4";
+    public static final String version = "3.1.5";
     public static final String codename = "Yeti";
 
     public Listener buildListener = new Listener(this);
@@ -84,6 +84,8 @@ public class Permissions extends JavaPlugin {
     private final YamlCreator yamlC;
     private int dist = 10;
     private final PrWorldListener wListener = new PrWorldListener();
+    
+    private boolean errorFlag = false;
 //    protected String pluginInternalName = "Permissions";
 
     public Permissions() {
@@ -132,8 +134,11 @@ public class Permissions extends JavaPlugin {
                 return;
             }
         }
-        if (!storageOpt.isFile() || !storageOpt.canRead())
+        if (!storageOpt.isFile() || !storageOpt.canRead()) {
             disable("[Permissions] storageconfig.yml is not a file or is not readable.");
+            return;
+        }
+        
         Configuration storageConfig = new NotNullConfiguration(storageOpt);
         storageConfig.load();
         // this.storageConfig = storageConfig;
@@ -147,10 +152,12 @@ public class Permissions extends JavaPlugin {
 
     @Override
     public void onDisable() {
-        log.info("[Permissions] (" + codename + ") saving data...");
-        this.getHandler().closeAll();
-        // getHandler() = null;
-        log.info("[Permissions] (" + codename + ") saved all data.");
+        if(!errorFlag) {
+            log.info("[Permissions] (" + codename + ") saving data...");
+            this.getHandler().closeAll();
+            // getHandler() = null;
+            log.info("[Permissions] (" + codename + ") saved all data.");
+        }
         this.getServer().getScheduler().cancelTasks(this);
         log.info("[Permissions] (" + codename + ") disabled successfully.");
         return;
@@ -159,8 +166,8 @@ public class Permissions extends JavaPlugin {
     private void disable(String error) {
         if (error != null)
             log.severe(error);
-        log.info("[Permissions] Shutting down Permissions due to error(s).");
-        getServer().getPluginManager().disablePlugin(this);
+        log.severe("[Permissions] Shutting down Permissions due to error(s).");
+        this.errorFlag = true;
     }
 
     /**
@@ -200,6 +207,10 @@ public class Permissions extends JavaPlugin {
 
     @Override
     public void onEnable() {
+        if(errorFlag) {
+          getServer().getPluginManager().disablePlugin(this);
+          return;
+        }
         StorageFactory.registerDefaultCreator(yamlC);
         StorageFactory.registerCreator("YAML", yamlC);
 
@@ -738,7 +749,6 @@ public class Permissions extends JavaPlugin {
 
             msg.send("&b/permissions &a(g:)<target> (w:<world>) [perms|parents] [list|add|remove] ...");
             msg.send("&b/permissions &a(g:)<target> (w:<world>) info [get|set|remove] ...");
-            msg.send("&b/permissions &a(g:)<target> (w:<world>) [prefix|suffix|build] [get|set] ...");
         }
 
         return false;
