@@ -55,12 +55,12 @@ import com.nijiko.permissions.User;
 
 public class Permissions extends JavaPlugin {
 
-    static Logger log;
+    public static Logger log;
     public static Plugin instance;
     // private Configuration storageConfig;
     @Deprecated
     public static final String name = "Permissions";
-    public static final String version = "3.1.3";
+    public static final String version = "3.1.4";
     public static final String codename = "Yeti";
 
     public Listener l = new Listener(this);
