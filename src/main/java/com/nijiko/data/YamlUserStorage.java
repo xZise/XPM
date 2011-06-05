@@ -187,9 +187,8 @@ public class YamlUserStorage implements UserStorage {
     public void save() {
         rwl.readLock().lock();
         try {
-            if (saveOff)
-                return;
-            forceSave();
+            if (!saveOff)
+                forceSave();
         } finally {
             rwl.readLock().unlock();
         }
