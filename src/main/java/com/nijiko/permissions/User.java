@@ -43,7 +43,7 @@ public class User extends Entry {
             return;
         for (ListIterator<GroupWorld> iter = trackGroups.listIterator(); iter.hasNext();) {
             GroupWorld gw = iter.next();
-            if (gw.getWorld().equals(world) && gw.getName().equalsIgnoreCase(name)) {
+            if (gw.equals(groupW)) {
                 iter.previous();
                 if(iter.hasPrevious()) {
                     GroupWorld prev = iter.previous();
@@ -68,7 +68,7 @@ public class User extends Entry {
             return;
         for (ListIterator<GroupWorld> iter = trackGroups.listIterator(); iter.hasNext();) {
             GroupWorld gw = iter.next();
-            if (gw.getWorld().equals(world) && gw.getName().equalsIgnoreCase(name)) {
+            if (gw.equals(groupW)) {
                 if(iter.hasNext()) {
                     GroupWorld next = iter.next();
                     data.removeParent(name, gw.getWorld(), gw.getName());

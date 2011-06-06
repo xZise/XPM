@@ -233,9 +233,11 @@ public abstract class Entry {
         LinkedHashSet<Group> groupParents = controller.stringToGroups(getRawParents(), world);
         LinkedHashSet<Entry> parents = new LinkedHashSet<Entry>();
         parents.addAll(groupParents);
-        Entry global = this.getType() == EntryType.USER ? controller.getUserObject("*", name) : controller.getGroupObject("*", name);
-        if (global != null)
-            parents.add(global);
+        if(!this.world.equals("*")) {
+            Entry global = this.getType() == EntryType.USER ? controller.getUserObject("*", name) : controller.getGroupObject("*", name);
+            if (global != null)
+                parents.add(global);
+        }
         String parentWorld = controller.getWorldParent(world, this.getType() == EntryType.USER);
         if (parentWorld != null) {
             Entry inherited = this.getType() == EntryType.USER ? controller.getUserObject(parentWorld, name) : controller.getGroupObject(parentWorld, name);

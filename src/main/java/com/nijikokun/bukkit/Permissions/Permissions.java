@@ -706,11 +706,11 @@ public class Permissions extends JavaPlugin {
                                 return true;
                             }
                             parentWorld = tempWorld.toString();
-                            currentArg++;
+//                            currentArg++;
                         }
                         GroupWorld group = new GroupWorld(parentWorld, parentName);
 
-                        if (!user.inGroup(parentWorld, parentName)) {
+                        if (!user.inGroup(parentWorld, parentName) && !parentWorld.equals("?")) {
                             msg.send("&4[Permissions] User not in specified group.");
                             return true;
                         }

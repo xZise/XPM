@@ -419,5 +419,30 @@ public abstract class PermissionHandler {
     public abstract String getGroupSuffix(String world, String group);
     @Deprecated
     public abstract boolean canGroupBuild(String world, String group);
+    
+    //Cache methods are no longer available
+//    @Deprecated
+//    public void setCache(String world, Map<String, Boolean> Cache) {
+//    }
+//    @Deprecated
+//    public void setCacheItem(String world, String player, String permission, boolean data){
+//    }
+//    @Deprecated
+//    public Map<String, Boolean> getCache(String world){
+//        return null;
+//    }
+//    @Deprecated
+//    public boolean getCacheItem(String world, String player, String permission){
+//        return false;
+//    }
+//    @Deprecated
+//    public void removeCachedItem(String world, String player, String permission){
+//    }
+//    @Deprecated
+//    public void clearCache(String world){
+//    }
+//    @Deprecated
+//    public void clearAllCache(){
+//    }
 
 }
