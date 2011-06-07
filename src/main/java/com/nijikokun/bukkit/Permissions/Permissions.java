@@ -35,22 +35,13 @@ import com.nijiko.permissions.PermissionHandler;
 import com.nijiko.permissions.User;
 
 /**
- * Permissions 3.x Copyright (C) 2011 Matt 'The Yeti' Burnett
- * <admin@theyeticave.net> Original Credit & Copyright (C) 2010 Nijikokun
- * <nijikokun@gmail.com>
+ * Permissions 3.x Copyright (C) 2011 Matt 'The Yeti' Burnett <admin@theyeticave.net> Original Credit & Copyright (C) 2010 Nijikokun <nijikokun@gmail.com>
  * 
- * This program is free software: you can redistribute it and/or modify it under
- * the terms of the GNU Permissions Public License as published by the Free
- * Software Foundation, either version 2 of the License, or (at your option) any
- * later version.
+ * This program is free software: you can redistribute it and/or modify it under the terms of the GNU Permissions Public License as published by the Free Software Foundation, either version 2 of the License, or (at your option) any later version.
  * 
- * This program is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Permissions Public License for more
- * details.
+ * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU Permissions Public License for more details.
  * 
- * You should have received a copy of the GNU Permissions Public License along
- * with this program. If not, see <http://www.gnu.org/licenses/>.
+ * You should have received a copy of the GNU Permissions Public License along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
 public class Permissions extends JavaPlugin {
@@ -70,8 +61,8 @@ public class Permissions extends JavaPlugin {
      */
     @Deprecated
     public static PermissionHandler Security;
-    
-//    private PermissionHandler controller;
+
+    // private PermissionHandler controller;
 
     // /**
     // * Miscellaneous object for various functions that don't belong anywhere
@@ -84,9 +75,10 @@ public class Permissions extends JavaPlugin {
     private final YamlCreator yamlC;
     private int dist = 10;
     private final PrWorldListener wListener = new PrWorldListener();
-    
+
     private boolean errorFlag = false;
-//    protected String pluginInternalName = "Permissions";
+
+    // protected String pluginInternalName = "Permissions";
 
     public Permissions() {
         yamlC = new YamlCreator();
@@ -138,7 +130,7 @@ public class Permissions extends JavaPlugin {
             disable("[Permissions] storageconfig.yml is not a file or is not readable.");
             return;
         }
-        
+
         Configuration storageConfig = new NotNullConfiguration(storageOpt);
         storageConfig.load();
         // this.storageConfig = storageConfig;
@@ -152,7 +144,7 @@ public class Permissions extends JavaPlugin {
 
     @Override
     public void onDisable() {
-        if(!errorFlag) {
+        if (!errorFlag) {
             log.info("[Permissions] (" + codename + ") saving data...");
             this.getHandler().closeAll();
             // getHandler() = null;
@@ -192,8 +184,8 @@ public class Permissions extends JavaPlugin {
             Security = new ModularControl(storageConfig);
             getHandler().setDefaultWorld(defaultWorld);
             getHandler().load();
-            //            System.out.println(getServer().getWorlds());
-            for(World w : getServer().getWorlds()) {
+            // System.out.println(getServer().getWorlds());
+            for (World w : getServer().getWorlds()) {
                 getHandler().loadWorld(w.getName());
             }
         } catch (Throwable t) {
@@ -207,9 +199,9 @@ public class Permissions extends JavaPlugin {
 
     @Override
     public void onEnable() {
-        if(errorFlag) {
-          getServer().getPluginManager().disablePlugin(this);
-          return;
+        if (errorFlag) {
+            getServer().getPluginManager().disablePlugin(this);
+            return;
         }
         StorageFactory.registerDefaultCreator(yamlC);
         StorageFactory.registerCreator("YAML", yamlC);
@@ -233,6 +225,11 @@ public class Permissions extends JavaPlugin {
             player = (Player) sender;
         }
 
+        if(Security == null) {
+            msg.send("&4[Permissions] Permissions was unable to load data during server load.");
+            msg.send("&4[Permissions] Please post the the portion of your server log since the server start/reload in the forums thread.");
+            return true;            
+        }
         if (args.length == 0) {
             if (player != null) {
                 msg.send("&7-------[ &fPermissions&7 ]-------");
@@ -677,6 +674,10 @@ public class Permissions extends JavaPlugin {
                 msg.send("&b/permissions &a(g:)<target> (w:<world>) info get <path>");
                 msg.send("&b/permissions &a(g:)<target> (w:<world>) info set <path> (i:|d:|b:)<data>");
                 return true;
+            } else if (args[currentArg].equalsIgnoreCase("dumpcache")) {
+                msg.send("&7[Permissions]&b Cache: &f");
+                msg.send(entry.getCache().toString());
+                return true;
             } else if (entry instanceof User) {
                 User user = (User) entry;
                 if (args[currentArg].equalsIgnoreCase("promote") || args[currentArg].equalsIgnoreCase("demote")) {
@@ -689,12 +690,7 @@ public class Permissions extends JavaPlugin {
                         if (args.length > currentArg && args[currentArg].startsWith("w:")) {
                             StringBuilder tempWorld = new StringBuilder();
                             String[] tempArgs = new String[args.length];
-                            System.arraycopy(args, 0, tempArgs, 0, args.length); // XXX:
-                            // Temp
-                            // solution
-                            // for
-                            // w:
-                            // prefix
+                            System.arraycopy(args, 0, tempArgs, 0, args.length); // XXX: Temp solution for w: prefix
                             tempArgs[currentArg] = tempArgs[currentArg].substring(2);
                             currentArg = extractQuoted(tempArgs, currentArg, tempWorld);
                             switch (currentArg) {
@@ -706,7 +702,7 @@ public class Permissions extends JavaPlugin {
                                 return true;
                             }
                             parentWorld = tempWorld.toString();
-//                            currentArg++;
+                            // currentArg++;
                         }
                         GroupWorld group = new GroupWorld(parentWorld, parentName);
 

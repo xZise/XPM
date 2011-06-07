@@ -3,6 +3,7 @@ package com.nijiko.permissions;
 import java.io.Serializable;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.Deque;
 import java.util.HashMap;
@@ -18,6 +19,7 @@ import java.util.Set;
 import com.nijiko.data.GroupWorld;
 import com.nijiko.data.Storage;
 
+//TODO: Cleanup and docs
 public abstract class Entry {
 
     protected ModularControl controller;
@@ -56,6 +58,10 @@ public abstract class Entry {
         transientPerms.clear();
     }
 
+    public Map<String, CheckResult> getCache() {
+        return Collections.unmodifiableMap(cache);
+    }
+    
     protected abstract Storage getStorage();
 
     public Set<String> getPermissions() {
@@ -260,9 +266,10 @@ public abstract class Entry {
         LinkedHashSet<Entry> parents = getParents();
         if (parents != null && parents.size() > 0)
             queue.addAll(parents);
-        else if (this instanceof User)
-            queue.add(controller.getDefaultGroup(world));
-
+        else if (this instanceof User) {
+            Group def = controller.getDefaultGroup(world);
+            if(def != null) queue.add(def);
+        }
         // Poll the queue
         while (queue.peek() != null) {
             Entry entry = queue.poll();
@@ -518,6 +525,11 @@ public abstract class Entry {
      * Simple comparator to order objects by natural ordering
      */
     public static class SimpleComparator<T extends Comparable<T>> implements Comparator<T>, Serializable {
+        /**
+         * 
+         */
+        private static final long serialVersionUID = -2712787010868605898L;
+
         @Override
         public int compare(T o1, T o2) {
             if (o1 == null) {
