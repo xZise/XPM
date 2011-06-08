@@ -66,7 +66,7 @@ public abstract class Entry {
 
     public Set<String> getPermissions() {
         Set<String> perms = new HashSet<String>(getStorage().getPermissions(name));
-        perms.addAll(transientPerms);
+        resolvePerms(perms, transientPerms);
         return perms;
     }
 
@@ -210,24 +210,24 @@ public abstract class Entry {
     }
 
     protected static Set<String> resolvePerms(Set<String> perms, Set<String> rawPerms) {
-        Set<String> newPerms = new HashSet<String>();
-        for (String perm : rawPerms) {
-            if (perm.isEmpty())
+        for (Iterator<String> rawIter = rawPerms.iterator();rawIter.hasNext();) {
+            String perm = rawIter.next();
+            if (perm.isEmpty()) {
+                rawIter.remove();
                 continue;
-            if (perm.endsWith("*")) // Wildcards
-            {
+            }
+            
+            if (perm.endsWith("*")) { // Wildcards            
                 String wild = perm.substring(0, perm.length() - 1);
-                String oppWild = perm.startsWith("-") ? wild.substring(1) : "-" + wild;
+                String oppWild = negationOf(perm).substring(0, perm.length() - 1);
                 for (Iterator<String> itr = perms.iterator(); itr.hasNext();) {
                     String candidate = itr.next();
                     if (candidate.startsWith(oppWild) || candidate.startsWith(wild))
                         itr.remove();
                 }
             }
-
-            newPerms.add(perm);
         }
-        perms.addAll(newPerms);
+        perms.addAll(rawPerms);
         return perms;
     }
 
