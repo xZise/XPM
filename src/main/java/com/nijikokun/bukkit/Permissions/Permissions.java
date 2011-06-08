@@ -706,7 +706,7 @@ public class Permissions extends JavaPlugin {
                         }
                         GroupWorld group = new GroupWorld(parentWorld, parentName);
 
-                        if (!user.inGroup(parentWorld, parentName) && !parentWorld.equals("?")) {
+                        if (!parentWorld.equals("?") && !user.inGroup(parentWorld, parentName)) {
                             msg.send("&4[Permissions] User not in specified group.");
                             return true;
                         }

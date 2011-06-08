@@ -106,6 +106,7 @@ public class ModularControl extends PermissionHandler {
     }
 
     private void storageReload() {
+        saveAll();
         cache.flushAll();
         for (UserStorage store : userStores.values()) {
             store.reload();
@@ -160,20 +161,20 @@ public class ModularControl extends PermissionHandler {
         UserStorage userStore = getUserStorage(world);
         GroupStorage groupStore = getGroupStorage(world);
         if (userStore != null)
-            userStore.save();
+            userStore.forceSave();
         if (groupStore != null)
-            groupStore.save();
+            groupStore.forceSave();
     }
 
     @Override
     public void saveAll() {
         Collection<UserStorage> userStoreColl = this.userStores.values();
         for (UserStorage userStore : userStoreColl) {
-            userStore.save();
+            userStore.forceSave();
         }
         Collection<GroupStorage> groupStoreColl = this.groupStores.values();
         for (GroupStorage groupStore : groupStoreColl) {
-            groupStore.save();
+            groupStore.forceSave();
         }
     }
     

@@ -25,7 +25,7 @@ public abstract class Entry {
     protected ModularControl controller;
     protected String name;
     protected String world;
-    protected Map<String, CheckResult> cache = new HashMap<String, CheckResult>();
+    protected Map<String, Map<String, CheckResult>> cache = new HashMap<String, Map<String, CheckResult>>();
     protected Set<String> transientPerms = new HashSet<String>();
 
     Entry(ModularControl controller, String name, String world) {
@@ -58,7 +58,7 @@ public abstract class Entry {
         transientPerms.clear();
     }
 
-    public Map<String, CheckResult> getCache() {
+    public Map<String, Map<String, CheckResult>> getCache() {
         return Collections.unmodifiableMap(cache);
     }
     
@@ -108,16 +108,19 @@ public abstract class Entry {
     }
 
     protected CheckResult has(String node, LinkedHashSet<String> relevant, LinkedHashSet<Entry> checked, String world) {
-        // System.out.println("Checking " + this.toString() + " for node '" +
-        // node + "'.");
+//         System.out.println("Checki/ng " + this.toString() + " for node '" + node + "'.");
         // System.out.println("Relevant permissions: " + relevant.toString());
 
         if (checked.contains(this))
             return null;
         checked.add(this);
 
-        CheckResult cr = cache.get(node);
+        if(cache.get(world) == null)
+            cache.put(world, new HashMap<String, CheckResult>());
+        CheckResult cr = cache.get(world).get(node);
+//        System.out.println("Cached result: " + cr);
         if (cr == null || !cr.isValid()) {
+//            System.out.println("Invalid cached result.");
             cache.remove(node);
             cr = null;
             
@@ -150,7 +153,7 @@ public abstract class Entry {
 //                    System.out.println("No relevant permissions found.");
                 }
             }
-            cache(cr);
+            cache(world, cr);
         }
 
         checked.remove(this);
@@ -159,11 +162,13 @@ public abstract class Entry {
         return cr;
     }
 
-    protected void cache(CheckResult cr) {
+    protected void cache(String world, CheckResult cr) {
         if (cr == null)
             return;
+        if(cache.get(world) == null)
+            cache.put(world, new HashMap<String, CheckResult>());
         controller.cache.cacheResult(cr);
-        this.cache.put(cr.getNode(), cr);
+        this.cache.get(world).put(cr.getNode(), cr);
     }
 
     public boolean isChildOf(final Entry entry) {
@@ -205,6 +210,7 @@ public abstract class Entry {
         if (chain.contains(this))
             chain.remove(this);
         resolvePerms(perms, this.getPermissions());
+        resolvePerms(perms, transientPerms);
         return perms;
     }
 

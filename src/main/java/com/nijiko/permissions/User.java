@@ -41,17 +41,14 @@ public class User extends Entry {
         LinkedList<GroupWorld> trackGroups = gStore.getTrack(track);
         if(trackGroups == null)
             return;
-        for (ListIterator<GroupWorld> iter = trackGroups.listIterator(); iter.hasNext();) {
-            GroupWorld gw = iter.next();
+        for (ListIterator<GroupWorld> iter = trackGroups.listIterator(trackGroups.size() - 1); iter.hasPrevious();) {
+            GroupWorld gw = iter.previous();
             if (gw.equals(groupW)) {
-                iter.previous();
                 if(iter.hasPrevious()) {
                     GroupWorld prev = iter.previous();
                     data.removeParent(name, gw.getWorld(), gw.getName());
                     data.addParent(name, prev.getWorld(), prev.getName());
                 }
-                else
-                    iter.next();
             }
         }
     }
