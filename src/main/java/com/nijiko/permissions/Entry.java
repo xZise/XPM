@@ -150,10 +150,9 @@ public abstract class Entry {
 //                    System.out.println("No relevant permissions found.");
                 }
             }
-
+            cache(cr);
         }
 
-        cache(cr);
         checked.remove(this);
 //        System.out.println("Check of " + this.toString() + " complete!");
 //        System.out.println("Result: " + cr.toString());
