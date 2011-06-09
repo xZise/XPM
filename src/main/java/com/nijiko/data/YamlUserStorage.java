@@ -10,11 +10,12 @@ import java.util.Set;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import org.bukkit.util.config.Configuration;
+import org.bukkit.util.config.ConfigurationNode;
 
 import com.nijiko.permissions.EntryType;
 
 public class YamlUserStorage implements UserStorage {
-    private final Configuration userConfig;
+    protected final Configuration userConfig;
     private final ReentrantReadWriteLock rwl;
     private boolean modified;
     private final String world;
@@ -25,7 +26,41 @@ public class YamlUserStorage implements UserStorage {
         this.userConfig = userConfig;
         this.world = world;
         this.rwl = new ReentrantReadWriteLock(false);
-        this.saveOff = !autoSave;
+        this.saveOff = !autoSave;        
+        
+        for(String user : this.getEntries()) {
+            ConfigurationNode node = userConfig.getNode("users." + user);
+            
+            if(userConfig.getProperty("groups") == null) {
+                LinkedHashSet<String> groups = new LinkedHashSet<String>();
+                
+                String mainGroup = node.getString("group");
+                if(mainGroup != null)
+                    groups.add(mainGroup);
+                
+                List<String> subgroups = node.getStringList("subgroups", null);
+                for(String subgroup : subgroups) {
+                    if(subgroup != null && !subgroup.isEmpty())
+                        groups.add(subgroup);
+                }
+                
+                node.removeProperty("group");
+                node.removeProperty("subgroups");
+                
+                node.setProperty("groups", new LinkedList<String>(groups));
+            }
+
+            LinkedHashSet<String> perms = new LinkedHashSet<String>();
+            List<String> oldperms = node.getStringList("permissions", null);
+            for(String oldperm : oldperms) {
+                if(oldperm != null && !oldperm.isEmpty()) {
+                    perms.add(oldperm.startsWith("+") ? oldperm.substring(1) : oldperm);
+                }
+            }
+            node.setProperty("permissions", new LinkedList<String>(perms));
+        }
+        
+        userConfig.save();
         reload();
     }
 
