@@ -19,6 +19,10 @@ public class User extends Entry {
             System.out.println("Creating user " + name);
             data.create(name);
         }
+        if(this.getRawParents().isEmpty()) {
+            Group g = controller.getDefaultGroup(world);
+            if(g != null) this.addParent(g);
+        }
     }
 
     @Override
@@ -75,14 +79,6 @@ public class User extends Entry {
         }
     }
     
-    @Override
-    public LinkedHashSet<Entry> getParents(String world) {
-        LinkedHashSet<Entry> parents = super.getParents(world);
-        Group def = controller.getDefaultGroup(this.world);
-        if(parents.isEmpty() && def != null) parents.add(def);
-        return parents;
-    }
-
     @Override
     protected Storage getStorage() {
         return data;

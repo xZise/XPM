@@ -281,6 +281,13 @@ public class Permissions extends JavaPlugin {
                 world = tempWorld.toString();
             } else
                 world = "";
+            
+
+            if (player != null && !getHandler().has(player, "permissions.load."+world)) {
+                msg.send("&4[Permissions] You do not have permissions to use this command.");
+                return true;
+            }
+            
             try {
                 getHandler().forceLoadWorld(world);
             } catch (Exception e) {

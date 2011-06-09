@@ -271,10 +271,6 @@ public abstract class Entry {
         LinkedHashSet<Entry> parents = getParents();
         if (parents != null && parents.size() > 0)
             queue.addAll(parents);
-        else if (this instanceof User) {
-            Group def = controller.getDefaultGroup(world);
-            if(def != null) queue.add(def);
-        }
         // Poll the queue
         while (queue.peek() != null) {
             Entry entry = queue.poll();

@@ -28,10 +28,12 @@ public class YamlUserStorage implements UserStorage {
         this.rwl = new ReentrantReadWriteLock(false);
         this.saveOff = !autoSave;        
         
+        userConfig.load();
+        
         for(String user : this.getEntries()) {
             ConfigurationNode node = userConfig.getNode("users." + user);
             
-            if(userConfig.getProperty("groups") == null) {
+            if(node.getProperty("groups") == null) {
                 LinkedHashSet<String> groups = new LinkedHashSet<String>();
                 
                 String mainGroup = node.getString("group");
