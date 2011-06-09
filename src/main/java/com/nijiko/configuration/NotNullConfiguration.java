@@ -24,6 +24,8 @@ import org.yaml.snakeyaml.reader.UnicodeReader;
  * @author rcjrrjcr
  * 
  */
+
+//TODO: Fix got pulled in B#710 and CB#841. Remove when RB is released.
 public class NotNullConfiguration extends Configuration {
     private Yaml yaml;
     private File file;
