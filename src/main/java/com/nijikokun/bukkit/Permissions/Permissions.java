@@ -131,7 +131,7 @@ public class Permissions extends JavaPlugin {
             return;
         }
 
-        Configuration storageConfig = new NotNullConfiguration(storageOpt);
+        Configuration storageConfig = new Configuration(storageOpt);
         storageConfig.load();
         // this.storageConfig = storageConfig;
 
@@ -225,10 +225,10 @@ public class Permissions extends JavaPlugin {
             player = (Player) sender;
         }
 
-        if(Security == null) {
+        if (Security == null) {
             msg.send("&4[Permissions] Permissions was unable to load data during server load.");
             msg.send("&4[Permissions] Please post the the portion of your server log since the server start/reload in the forums thread.");
-            return true;            
+            return true;
         }
         if (args.length == 0) {
             if (player != null) {
@@ -281,13 +281,12 @@ public class Permissions extends JavaPlugin {
                 world = tempWorld.toString();
             } else
                 world = "";
-            
 
-            if (player != null && !getHandler().has(player, "permissions.load."+world)) {
+            if (player != null && !getHandler().has(player, "permissions.load." + world)) {
                 msg.send("&4[Permissions] You do not have permissions to use this command.");
                 return true;
             }
-            
+
             try {
                 getHandler().forceLoadWorld(world);
             } catch (Exception e) {
@@ -682,6 +681,10 @@ public class Permissions extends JavaPlugin {
                 msg.send("&b/permissions &a(g:)<target> (w:<world>) info set <path> (i:|d:|b:)<data>");
                 return true;
             } else if (args[currentArg].equalsIgnoreCase("dumpcache")) {
+                if (player != null && !getHandler().has(player, "permissions.debug.dumpcache")) {
+                    msg.send("&4[Permissions] You do not have permissions to use this command.");
+                    return true;
+                }
                 msg.send("&7[Permissions]&b Cache: &f");
                 msg.send(entry.getCache().toString());
                 return true;
@@ -717,33 +720,35 @@ public class Permissions extends JavaPlugin {
                             msg.send("&4[Permissions] User not in specified group.");
                             return true;
                         }
+                        
+                        String track = null;
                         if (args.length > currentArg) {
-                            String track = args[currentArg];
-                            Set<String> tracks = getHandler().getTracks(world);
-                            if (tracks == null || tracks.isEmpty()) {
-                                msg.send("&4[Permissions] No tracks in specified world.");
-                                return true;
-                            }
-                            if (!tracks.contains(track)) {
-                                msg.send("&4[Permissions] Specified track does not exist.");
-                                return true;
-                            }
-                            String permNode = isPromote ? "permissions.promote." + track : "permission.demote." + track;
-                            if (player != null && !getHandler().has(player, permNode)) {
-                                msg.send("&4[Permissions] You do not have permissions to use this command.");
-                                return true;
-                            }
-                            if (isPromote)
-                                user.promote(group, track);
-                            else
-                                user.demote(group, track);
-                            String text = isPromote ? "&7[Permissions]&b User promoted along track " + track + "." : "&7[Permissions]&7 User demoted along track " + track + ".";
-                            msg.send(text);
+                            track = args[currentArg];
+                        }
+                        Set<String> tracks = getHandler().getTracks(world);
+                        if (tracks == null || tracks.isEmpty()) {
+                            msg.send("&4[Permissions] No tracks in specified world.");
                             return true;
                         }
-                        msg.send("&4[Permissions] Syntax: /permissions <target> (w:<world>) [promote|demote] <parent> (w:<parentworld>) <track>");
+                        if (!tracks.contains(track)) {
+                            msg.send("&4[Permissions] Specified track does not exist.");
+                            return true;
+                        }
+                        String permNode = track == null ? isPromote ? "permissions.promote" : "permissions.demote" : isPromote ? "permissions.promote." + track : "permission.demote." + track;
+                        if (player != null && !getHandler().has(player, permNode)) {
+                            msg.send("&4[Permissions] You do not have permissions to use this command.");
+                            return true;
+                        }
+                        if (isPromote)
+                            user.promote(group, track);
+                        else
+                            user.demote(group, track);
+                        String text = isPromote ? "&7[Permissions]&b User promoted along track " + track + "." : "&7[Permissions]&7 User demoted along track " + track + ".";
+                        msg.send(text);
                         return true;
                     }
+                    msg.send("&4[Permissions] Syntax: /permissions <target> (w:<world>) [promote|demote] <parent> (w:<parentworld>) <track>");
+                    return true;
                 }
 
                 msg.send("&7[Permissions] Syntax: ");

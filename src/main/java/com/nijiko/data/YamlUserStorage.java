@@ -34,6 +34,7 @@ public class YamlUserStorage implements UserStorage {
             ConfigurationNode node = userConfig.getNode("users." + user);
             
             if(node.getProperty("groups") == null) {
+                System.out.println("[Permissions] Converting GM/2.x syntax files...");
                 LinkedHashSet<String> groups = new LinkedHashSet<String>();
                 
                 String mainGroup = node.getString("group");
@@ -50,16 +51,17 @@ public class YamlUserStorage implements UserStorage {
                 node.removeProperty("subgroups");
                 
                 node.setProperty("groups", new LinkedList<String>(groups));
-            }
 
-            LinkedHashSet<String> perms = new LinkedHashSet<String>();
-            List<String> oldperms = node.getStringList("permissions", null);
-            for(String oldperm : oldperms) {
-                if(oldperm != null && !oldperm.isEmpty()) {
-                    perms.add(oldperm.startsWith("+") ? oldperm.substring(1) : oldperm);
+                LinkedHashSet<String> perms = new LinkedHashSet<String>();
+                List<String> oldperms = node.getStringList("permissions", null);
+                for(String oldperm : oldperms) {
+                    if(oldperm != null && !oldperm.isEmpty()) {
+                        perms.add(oldperm.startsWith("+") ? oldperm.substring(1) : oldperm);
+                    }
                 }
+                node.setProperty("permissions", new LinkedList<String>(perms));
+                System.out.println("[Permissions] Conversion complete!");
             }
-            node.setProperty("permissions", new LinkedList<String>(perms));
         }
         
         userConfig.save();

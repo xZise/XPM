@@ -1,6 +1,5 @@
 package com.nijiko.permissions;
 
-import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.ListIterator;
 

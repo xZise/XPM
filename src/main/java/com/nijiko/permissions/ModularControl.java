@@ -249,13 +249,6 @@ public class ModularControl extends PermissionHandler {
         this.groupStores.put(groupStore.getWorld(), groupStore);
 
         defaultGroups.remove(groupWorld);
-        Map<String, User> users = new HashMap<String, User>();
-        Set<String> userNames = userStore.getEntries();
-        for (String userName : userNames) {
-            User user = new User(this, userStore, userName, userWorld, false);
-            users.put(userName.toLowerCase(), user);
-        }
-        worldUsers.put(world, users);
 
         HashMap<String, Group> groups = new HashMap<String, Group>();
         Set<String> groupNames = groupStore.getEntries();
@@ -266,6 +259,14 @@ public class ModularControl extends PermissionHandler {
                 defaultGroups.put(groupWorld, group);
         }
         worldGroups.put(world, groups);
+        
+        Map<String, User> users = new HashMap<String, User>();
+        Set<String> userNames = userStore.getEntries();
+        for (String userName : userNames) {
+            User user = new User(this, userStore, userName, userWorld, false);
+            users.put(userName.toLowerCase(), user);
+        }
+        worldUsers.put(world, users);
         
         Permissions.instance.getServer().getPluginManager().callEvent(new WorldConfigLoadEvent(world));
     }

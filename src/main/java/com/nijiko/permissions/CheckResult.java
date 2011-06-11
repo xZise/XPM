@@ -57,4 +57,50 @@ class CheckResult {
         if(!valid || node == null) return null;
         return new CheckResult(source, mostRelevantNode, checked, node); 
     }
+
+    @Override
+    public int hashCode() {
+        final int prime = 31;
+        int result = 1;
+        result = prime * result + ((checked == null) ? 0 : checked.hashCode());
+        result = prime * result + ((mostRelevantNode == null) ? 0 : mostRelevantNode.hashCode());
+        result = prime * result + ((node == null) ? 0 : node.hashCode());
+        result = prime * result + ((source == null) ? 0 : source.hashCode());
+        result = prime * result + (valid ? 1231 : 1237);
+        return result;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj)
+            return true;
+        if (obj == null)
+            return false;
+        if (getClass() != obj.getClass())
+            return false;
+        CheckResult other = (CheckResult) obj;
+        if (checked == null) {
+            if (other.checked != null)
+                return false;
+        } else if (!checked.equals(other.checked))
+            return false;
+        if (mostRelevantNode == null) {
+            if (other.mostRelevantNode != null)
+                return false;
+        } else if (!mostRelevantNode.equals(other.mostRelevantNode))
+            return false;
+        if (node == null) {
+            if (other.node != null)
+                return false;
+        } else if (!node.equals(other.node))
+            return false;
+        if (source == null) {
+            if (other.source != null)
+                return false;
+        } else if (!source.equals(other.source))
+            return false;
+        if (valid != other.valid)
+            return false;
+        return true;
+    }
 }

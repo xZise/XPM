@@ -589,4 +589,48 @@ public abstract class Entry {
     public static String negationOf(String node) {
         return node == null ? null : node.startsWith("-") ? node.substring(1) : "-" + node;
     }
+
+    @Override
+    public int hashCode() {
+        final int prime = 31;
+        int result = 1;
+        result = prime * result + ((name == null) ? 0 : name.hashCode());
+        result = prime * result + ((world == null) ? 0 : world.hashCode());
+        EntryType type = getType();
+        result = prime * result + ((type == null) ? 0 : type.hashCode());
+        return result;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj)
+            return true;
+        if (obj == null)
+            return false;
+        if(!(obj instanceof Entry))
+            return false;
+        
+        Entry other = (Entry) obj;
+
+        if (name == null) {
+            if (other.name != null)
+                return false;
+        } else if (!name.equals(other.name))
+            return false;
+
+        if (world == null) {
+            if (other.world != null)
+                return false;
+        } else if (!world.equals(other.world))
+            return false;
+        
+        EntryType type = getType();
+        EntryType otherType = other.getType();
+        if (type == null) {
+            if (otherType != null)
+                return false;
+        } else if (!type.equals(otherType))
+            return false;
+        return true;
+    }
 }

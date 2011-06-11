@@ -1,5 +1,6 @@
 package com.nijiko.data;
 
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
@@ -199,7 +200,7 @@ public class YamlGroupStorage implements GroupStorage {
     public void setAutoSave(boolean autoSave) {
         rwl.writeLock().lock();
         try {
-            saveOff = autoSave;            
+            saveOff = autoSave;
         } finally {
             rwl.writeLock().unlock();
         }
@@ -236,7 +237,7 @@ public class YamlGroupStorage implements GroupStorage {
         }
         return created;
     }
-    
+
     @Override
     public boolean delete(String name) {
         boolean exists = false;
@@ -251,7 +252,7 @@ public class YamlGroupStorage implements GroupStorage {
         }
         return exists;
     }
-    
+
     @Override
     public void setData(String name, String path, Object data) {
         rwl.writeLock().lock();
@@ -270,12 +271,12 @@ public class YamlGroupStorage implements GroupStorage {
         List<String> rawTracks = null;
         rwl.readLock().lock();
         try {
-            rawTracks = groupConfig.getKeys("tracks");            
+            rawTracks = groupConfig.getKeys("tracks");
         } finally {
             rwl.readLock().unlock();
         }
         if (rawTracks == null)
-            return null;
+            rawTracks = Arrays.asList((String) null);
         return new HashSet<String>(rawTracks);
     }
 
@@ -284,11 +285,17 @@ public class YamlGroupStorage implements GroupStorage {
         List<String> rawGroups = null;
         rwl.readLock().lock();
         try {
-            rawGroups = groupConfig.getStringList("tracks." + trackName, null);
+            if (trackName == null) {
+                rawGroups = groupConfig.getStringList("tracks", null);
+
+            } else {
+                rawGroups = groupConfig.getStringList("tracks." + trackName, null);
+            }
         } finally {
             rwl.readLock().unlock();
         }
-        if(rawGroups == null)
+        
+        if (rawGroups == null)
             return null;
         LinkedHashSet<GroupWorld> track = new LinkedHashSet<GroupWorld>(rawGroups.size());
         for (String raw : rawGroups) {
@@ -322,7 +329,7 @@ public class YamlGroupStorage implements GroupStorage {
         Object raw = getObj(name, path);
         if (raw instanceof String)
             return (String) raw;
-        if(raw == null)
+        if (raw == null)
             return null;
         return raw.toString();
     }
@@ -332,7 +339,7 @@ public class YamlGroupStorage implements GroupStorage {
         Object raw = getObj(name, path);
         if (raw instanceof Integer)
             return (Integer) raw;
-        if(raw == null)
+        if (raw == null)
             return null;
         int val;
         try {
@@ -348,7 +355,7 @@ public class YamlGroupStorage implements GroupStorage {
         Object raw = getObj(name, path);
         if (raw instanceof Double)
             return (Double) raw;
-        if(raw == null)
+        if (raw == null)
             return null;
         double val;
         try {
@@ -364,7 +371,7 @@ public class YamlGroupStorage implements GroupStorage {
         Object raw = getObj(name, path);
         if (raw instanceof Boolean)
             return (Boolean) raw;
-        if(raw == null)
+        if (raw == null)
             return null;
         boolean val = Boolean.valueOf(raw.toString());
         return val;

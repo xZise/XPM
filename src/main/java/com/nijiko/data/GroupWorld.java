@@ -12,24 +12,11 @@ public class GroupWorld {
 
     @Override
     public int hashCode() {
-        int hashWorld = world != null ? world.hashCode() : 0;
-        int hashName = group != null ? group.hashCode() : 0;
-
-        return (hashWorld + hashName) * hashName + hashWorld;
-    }
-
-    @Override
-    public boolean equals(Object other) {
-        if (other instanceof GroupWorld) {
-            GroupWorld otherPair = (GroupWorld) other;
-            return ((this.world == otherPair.world || (this.world != null
-                    && otherPair.world != null && this.world
-                    .equals(otherPair.world))) && (this.group == otherPair.group || (this.group != null
-                    && otherPair.group != null && this.group
-                    .equals(otherPair.group))));
-        }
-
-        return false;
+        final int prime = 31;
+        int result = 1;
+        result = prime * result + ((group == null) ? 0 : group.hashCode());
+        result = prime * result + ((world == null) ? 0 : world.hashCode());
+        return result;
     }
 
     @Override
@@ -51,5 +38,27 @@ public class GroupWorld {
 
     public void setName(String group) {
         this.group = group;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj)
+            return true;
+        if (obj == null)
+            return false;
+        if (getClass() != obj.getClass())
+            return false;
+        GroupWorld other = (GroupWorld) obj;
+        if (group == null) {
+            if (other.group != null)
+                return false;
+        } else if (!group.equals(other.group))
+            return false;
+        if (world == null) {
+            if (other.world != null)
+                return false;
+        } else if (!world.equals(other.world))
+            return false;
+        return true;
     }
 }

@@ -5,7 +5,6 @@ import java.io.IOException;
 
 import org.bukkit.util.config.Configuration;
 
-import com.nijiko.configuration.NotNullConfiguration;
 import com.nijikokun.bukkit.Permissions.Permissions;
 
 public class YamlCreator implements StorageCreator {
@@ -31,7 +30,7 @@ public class YamlCreator implements StorageCreator {
             throw new IOException("User config for world " + world + " cannot be read.");
         if (!userFile.canWrite())
             throw new IOException("User config for world " + world + " cannot be written to.");
-        return new YamlUserStorage(new NotNullConfiguration(userFile), world, reload, autosave);
+        return new YamlUserStorage(new Configuration(userFile), world, reload, autosave);
     }
 
     @Override
@@ -55,7 +54,7 @@ public class YamlCreator implements StorageCreator {
             throw new IOException("Group config for world " + world + " cannot be read.");
         if (!groupFile.canWrite())
             throw new IOException("Group config for world " + world + " cannot be written to.");
-        return new YamlGroupStorage(new NotNullConfiguration(groupFile), world, reload, autosave);
+        return new YamlGroupStorage(new Configuration(groupFile), world, reload, autosave);
     }
 
 }

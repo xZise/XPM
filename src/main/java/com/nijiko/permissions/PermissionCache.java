@@ -16,10 +16,13 @@ public class PermissionCache {
             return;
         // System.out.println(result);
         rwl.readLock().lock();
-        if (permCache.get(result.getChecked()) == null)
-            permCache.put(result.getChecked(), new HashSet<CheckResult>());
-        permCache.get(result.getChecked()).add(result);
-        rwl.readLock().unlock();
+        try {
+            if (permCache.get(result.getChecked()) == null)
+                permCache.put(result.getChecked(), new HashSet<CheckResult>());
+            permCache.get(result.getChecked()).add(result);
+        } finally {
+            rwl.readLock().unlock();
+        }
     }
 
     public void flushAll() {
