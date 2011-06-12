@@ -108,8 +108,6 @@ public abstract class Entry {
     }
 
     protected CheckResult has(String node, LinkedHashSet<String> relevant, LinkedHashSet<Entry> checked, String world) {
-//         System.out.println("Checki/ng " + this.toString() + " for node '" + node + "'.");
-        // System.out.println("Relevant permissions: " + relevant.toString());
 
         if (checked.contains(this))
             return null;
@@ -117,48 +115,42 @@ public abstract class Entry {
 
         if(cache.get(world) == null)
             cache.put(world, new HashMap<String, CheckResult>());
+        
         CheckResult cr = cache.get(world).get(node);
-//        System.out.println("Cached result: " + cr);
         if (cr == null || !cr.isValid()) {
-//            System.out.println("Invalid cached result.");
             cache.remove(node);
             cr = null;
             
             // Check own permissions
-            Set<String> perms = new LinkedHashSet<String>(relevant);
-            perms.retainAll(this.getPermissions());
-//            System.out.println("Relevant permissions in own permissions: " + perms.toString());
-            Iterator<String> iter = perms.iterator();
-            if (iter.hasNext()) {
-                String mrn = iter.next();
-//                System.out.println("Relevant permission found: " + mrn.toString());
-                cr = new CheckResult(this, mrn, this, node);
+            Set<String> perms = this.getPermissions();
+            for(String mrn : relevant) {
+                if(perms.contains(mrn)) {
+                    cr = new CheckResult(this, mrn, this, node);
+                    break;
+                }
             }
+            
             if (cr == null) {
                 // Check parent permissions
                 for (Entry e : this.getParents(world)) {
-//                    System.out.println("Checking parent " + e.toString() + ".");
                     CheckResult parentCr = e.has(node, relevant, checked, world);
                     if (parentCr == null)
                         continue;
-//                    System.out.println("Result of parent check: " + parentCr.toString());
                     if (parentCr.getMostRelevantNode() != null) {
                         cr = parentCr.setChecked(this);
                         break;
                     }
                 }
-                // No relevant permissions
+                
                 if (cr == null) {
+                    // No relevant permissions
                     cr = new CheckResult(this, null, this, node);
-//                    System.out.println("No relevant permissions found.");
                 }
             }
             cache(world, cr);
         }
 
         checked.remove(this);
-//        System.out.println("Check of " + this.toString() + " complete!");
-//        System.out.println("Result: " + cr.toString());
         return cr;
     }
 

@@ -96,10 +96,14 @@ public class PermissionCache {
         }
         rwl.writeLock().lock();
         try {
-            for (Map.Entry<Entry, Set<CheckResult>> mapEntry : permCache.entrySet())
-                if (mapEntry.getKey().getWorld().equals(world))
+            for(Iterator<Map.Entry<Entry, Set<CheckResult>>> iter = permCache.entrySet().iterator();iter.hasNext();) {
+                Map.Entry<Entry, Set<CheckResult>> mapEntry = iter.next();
+                if (mapEntry.getKey().getWorld().equals(world)){
                     for (CheckResult cr : mapEntry.getValue())
                         cr.invalidate();
+                    iter.remove();
+                }                
+            }
         } finally {
             rwl.writeLock().unlock();
         }

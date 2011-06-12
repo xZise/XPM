@@ -5,6 +5,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.Properties;
 import java.util.Set;
@@ -24,7 +25,6 @@ import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.util.config.Configuration;
 
 import com.nijiko.MessageHelper;
-import com.nijiko.configuration.NotNullConfiguration;
 import com.nijiko.data.GroupWorld;
 import com.nijiko.data.StorageFactory;
 import com.nijiko.data.YamlCreator;
@@ -51,7 +51,7 @@ public class Permissions extends JavaPlugin {
     // private Configuration storageConfig;
     @Deprecated
     public static final String name = "Permissions";
-    public static final String version = "3.1.5";
+    public static final String version = "3.1.6";
     public static final String codename = "Yeti";
 
     public Listener buildListener = new Listener(this);
@@ -63,12 +63,6 @@ public class Permissions extends JavaPlugin {
     public static PermissionHandler Security;
 
     // private PermissionHandler controller;
-
-    // /**
-    // * Miscellaneous object for various functions that don't belong anywhere
-    // * else
-    // */
-    // public static Misc Misc = new Misc();
 
     private String defaultWorld = "";
     private static final boolean autoComplete = true;
@@ -692,62 +686,66 @@ public class Permissions extends JavaPlugin {
                 User user = (User) entry;
                 if (args[currentArg].equalsIgnoreCase("promote") || args[currentArg].equalsIgnoreCase("demote")) {
                     boolean isPromote = args[currentArg].equalsIgnoreCase("promote");
-                    currentArg++;
-                    if (args.length > currentArg) {
-                        String parentName = args[currentArg];
-                        String parentWorld = world;
-                        currentArg++;
-                        if (args.length > currentArg && args[currentArg].startsWith("w:")) {
-                            StringBuilder tempWorld = new StringBuilder();
-                            String[] tempArgs = new String[args.length];
-                            System.arraycopy(args, 0, tempArgs, 0, args.length); // XXX: Temp solution for w: prefix
-                            tempArgs[currentArg] = tempArgs[currentArg].substring(2);
-                            currentArg = extractQuoted(tempArgs, currentArg, tempWorld);
-                            switch (currentArg) {
-                            case -1:
-                                msg.send("&4[Permissions] Argument index error.");
-                                return true;
-                            case -2:
-                                msg.send("&4[Permissions] No ending quote found.");
-                                return true;
-                            }
-                            parentWorld = tempWorld.toString();
-                            // currentArg++;
-                        }
-                        GroupWorld group = new GroupWorld(parentWorld, parentName);
-
-                        if (!parentWorld.equals("?") && !user.inGroup(parentWorld, parentName)) {
-                            msg.send("&4[Permissions] User not in specified group.");
-                            return true;
-                        }
-                        
-                        String track = null;
-                        if (args.length > currentArg) {
-                            track = args[currentArg];
-                        }
-                        Set<String> tracks = getHandler().getTracks(world);
-                        if (tracks == null || tracks.isEmpty()) {
-                            msg.send("&4[Permissions] No tracks in specified world.");
-                            return true;
-                        }
-                        if (!tracks.contains(track)) {
-                            msg.send("&4[Permissions] Specified track does not exist.");
-                            return true;
-                        }
-                        String permNode = track == null ? isPromote ? "permissions.promote" : "permissions.demote" : isPromote ? "permissions.promote." + track : "permission.demote." + track;
-                        if (player != null && !getHandler().has(player, permNode)) {
-                            msg.send("&4[Permissions] You do not have permissions to use this command.");
-                            return true;
-                        }
-                        if (isPromote)
-                            user.promote(group, track);
-                        else
-                            user.demote(group, track);
-                        String text = isPromote ? "&7[Permissions]&b User promoted along track " + track + "." : "&7[Permissions]&7 User demoted along track " + track + ".";
-                        msg.send(text);
+                    if (player != null && !getHandler().has(player, isPromote ? "permissions.promote" : "permissions.demote")) {
+                        msg.send("&4[Permissions] You do not have permissions to use this command.");
                         return true;
                     }
-                    msg.send("&4[Permissions] Syntax: /permissions <target> (w:<world>) [promote|demote] <parent> (w:<parentworld>) <track>");
+                    currentArg++;
+
+                    String trackName = null;
+                    String parentName = null;
+                    String parentWorld = world;
+                    if (args.length > currentArg) {
+                        String temp = args[currentArg];
+                        if (temp.startsWith("t:"))
+                            trackName = temp;
+                        else
+                            parentName = temp;
+                        currentArg++;
+                    }
+
+                    Set<String> tracks = getHandler().getTracks(world);
+                    if (tracks == null || tracks.isEmpty()) {
+                        msg.send("&4[Permissions] No tracks in specified world.");
+                        return true;
+                    }
+                    if (!tracks.contains(trackName)) {
+                        msg.send("&4[Permissions] Specified track does not exist.");
+                        return true;
+                    }
+
+                    GroupWorld targetParent = null;
+
+                    boolean inOneGroup = false;
+                    Set<GroupWorld> parents = user.getRawParents();
+                    inOneGroup = !(parents.size() > 1);
+
+                    if (inOneGroup) {
+                        Iterator<GroupWorld> iter = parents.iterator();
+                        if (iter.hasNext()) {
+                            targetParent = iter.next();
+                        }
+                    } else {
+                        if (parentName == null) {
+                            if (args.length > currentArg) {
+                                parentName = args[currentArg];
+                                currentArg++;
+                            } else {
+                                msg.send("&4[Permissions] Unable to resolve parent group.");
+                                return true;
+                            }
+                        }
+                        if (args.length > currentArg) {
+                            parentWorld = args[currentArg];
+                        }
+                        targetParent = new GroupWorld(parentWorld, parentName);
+                    }
+                    if (isPromote)
+                        user.promote(targetParent, trackName);
+                    else
+                        user.demote(targetParent, trackName);
+
+                    msg.send("&4[Permissions] Syntax: /permissions <target> (w:<world>) [promote|demote] (t:<track>) (<parent>) (w:<parentworld>)");
                     return true;
                 }
 

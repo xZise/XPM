@@ -14,13 +14,14 @@ public class User extends Entry {
     User(ModularControl controller, UserStorage data, String name, String world, boolean create) {
         super(controller, name, world);
         this.data = data;
-        if(create) {
+        if (create) {
             System.out.println("Creating user " + name);
             data.create(name);
         }
-        if(this.getRawParents().isEmpty()) {
+        if (this.getRawParents().isEmpty()) {
             Group g = controller.getDefaultGroup(world);
-            if(g != null) this.addParent(g);
+            if (g != null)
+                this.addParent(g);
         }
     }
 
@@ -33,21 +34,24 @@ public class User extends Entry {
     public String toString() {
         return "User " + name + " in " + world;
     }
-    
+
     public void demote(GroupWorld groupW, String track) {
-        if(groupW==null) return;
-        if(!this.getRawParents().contains(groupW)) return;
-        
+        // Demote's code is slightly different from promote's as in promote, groupW can be null, so the user can be bumped up to the first entry in the track, but there's no equivalent for demotion.
+        if (groupW == null)
+            return;
+        if (!this.getRawParents().contains(groupW))
+            return;
+
         GroupStorage gStore = controller.getGroupStorage(world);
-        if(gStore == null)
+        if (gStore == null)
             return;
         LinkedList<GroupWorld> trackGroups = gStore.getTrack(track);
-        if(trackGroups == null)
+        if (trackGroups == null)
             return;
         for (ListIterator<GroupWorld> iter = trackGroups.listIterator(trackGroups.size() - 1); iter.hasPrevious();) {
             GroupWorld gw = iter.previous();
             if (gw.equals(groupW)) {
-                if(iter.hasPrevious()) {
+                if (iter.hasPrevious()) {
                     GroupWorld prev = iter.previous();
                     data.removeParent(name, gw.getWorld(), gw.getName());
                     data.addParent(name, prev.getWorld(), prev.getName());
@@ -55,34 +59,41 @@ public class User extends Entry {
             }
         }
     }
-    
+
     public void promote(GroupWorld groupW, String track) {
-        if(groupW==null) return;
-        if(!this.getRawParents().contains(groupW)) return;
-        
+        if (groupW != null && !this.getRawParents().contains(groupW))
+            return;
+
         GroupStorage gStore = controller.getGroupStorage(world);
-        if(gStore == null)
+        if (gStore == null)
             return;
         LinkedList<GroupWorld> trackGroups = gStore.getTrack(track);
-        if(trackGroups == null)
+        if (trackGroups == null)
             return;
         for (ListIterator<GroupWorld> iter = trackGroups.listIterator(); iter.hasNext();) {
             GroupWorld gw = iter.next();
+
+            if (groupW == null) {
+                data.addParent(name, gw.getWorld(), gw.getName());
+                break;
+            }
+
             if (gw.equals(groupW)) {
-                if(iter.hasNext()) {
+                if (iter.hasNext()) {
                     GroupWorld next = iter.next();
                     data.removeParent(name, gw.getWorld(), gw.getName());
                     data.addParent(name, next.getWorld(), next.getName());
+                    break;
                 }
             }
         }
     }
-    
+
     @Override
     protected Storage getStorage() {
         return data;
     }
-    
+
     @Override
     public boolean delete() {
         controller.delUsr(world, name);
