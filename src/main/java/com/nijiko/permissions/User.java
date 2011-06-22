@@ -14,7 +14,7 @@ public class User extends Entry {
     User(ModularControl controller, UserStorage data, String name, String world, boolean create) {
         super(controller, name, world);
         this.data = data;
-        if (create) {
+        if (create && !world.equals("?")) {
             System.out.println("Creating user " + name);
             data.create(name);
         }

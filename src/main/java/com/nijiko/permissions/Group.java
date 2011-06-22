@@ -13,7 +13,7 @@ public class Group extends Entry {
     Group(ModularControl controller, GroupStorage data, String name, String world, boolean create) {
         super(controller, name, world);
         this.data = data;
-        if (create) {
+        if (create && !world.equals("?")) {
             System.out.println("Creating group " + name);
             data.create(name);
         }

@@ -450,16 +450,19 @@ public class ModularControl extends PermissionHandler {
         LinkedHashSet<Group> groupSet = new LinkedHashSet<Group>();
         for (GroupWorld raw : raws) {
             String rawWorld = raw.getWorld();
-            if(rawWorld.equals("?")) {
+            if(rawWorld.equals("?") && overrideWorld != null) {
                 rawWorld = overrideWorld;
             }
             String world = getParentWorldGroup(rawWorld);
-            Map<String, Group> gMap = this.worldGroups.get(world);
-            if (gMap != null) {
-                Group g = gMap.get(raw.getName().toLowerCase());
-                if (g != null)
-                    groupSet.add(g);
-            }
+            Group g = this.getGrp(world, raw.getName());
+            if(g != null)
+                groupSet.add(g);
+//            Map<String, Group> gMap = this.worldGroups.get(world);
+//            if (gMap != null) {
+//                Group g = gMap.get(raw.getName().toLowerCase());
+//                if (g != null)
+//                    groupSet.add(g);
+//            }
         }
         return groupSet;
     }
@@ -508,14 +511,16 @@ public class ModularControl extends PermissionHandler {
 
     @Override
     public Group safeGetGroup(String world, String name) throws Exception {
-        try {
-            loadWorld(world);
-        } catch (Exception e) {
-            throw new Exception("Error creating group " + name + " in world " + world + " due to storage problems!", e);
+        if(!world.equals("?")) {
+            try {
+                loadWorld(world);
+            } catch (Exception e) {
+                throw new Exception("Error creating group " + name + " in world " + world + " due to storage problems!", e);
+            }
+            world = getParentWorldGroup(world);
+            if (groupStorageMirrorings.get(world) != null)
+                world = groupStorageMirrorings.get(world);
         }
-        world = getParentWorldGroup(world);
-        if (groupStorageMirrorings.get(world) != null)
-            world = groupStorageMirrorings.get(world);
         if (this.worldGroups.get(world) == null)
             this.worldGroups.put(world, new HashMap<String, Group>());
         if (this.worldGroups.get(world).get(name.toLowerCase()) == null)
@@ -600,6 +605,7 @@ public class ModularControl extends PermissionHandler {
     }
     //Parent-related methods
     
+    @Override
     public Set<String> getTracks(String world) {
         GroupStorage gs = getGroupStorage(world);
         if(gs == null)

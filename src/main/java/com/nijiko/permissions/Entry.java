@@ -61,7 +61,7 @@ public abstract class Entry {
     public Map<String, Map<String, CheckResult>> getCache() {
         return Collections.unmodifiableMap(cache);
     }
-    
+
     protected abstract Storage getStorage();
 
     public Set<String> getPermissions() {
@@ -113,23 +113,26 @@ public abstract class Entry {
             return null;
         checked.add(this);
 
-        if(cache.get(world) == null)
+        CheckResult cr = null;
+        if (cache.get(world) != null) {
             cache.put(world, new HashMap<String, CheckResult>());
+            cr = cache.get(world).get(node);
+            if (cr == null || !cr.isValid()) {
+                cache.remove(node);
+                cr = null;
+            }
+        }
         
-        CheckResult cr = cache.get(world).get(node);
-        if (cr == null || !cr.isValid()) {
-            cache.remove(node);
-            cr = null;
-            
+        if (cr == null) {
             // Check own permissions
             Set<String> perms = this.getPermissions();
-            for(String mrn : relevant) {
-                if(perms.contains(mrn)) {
-                    cr = new CheckResult(this, mrn, this, node);
+            for (String mrn : relevant) {
+                if (perms.contains(mrn)) {
+                    cr = new CheckResult(this, mrn, this, node, world);
                     break;
                 }
             }
-            
+
             if (cr == null) {
                 // Check parent permissions
                 for (Entry e : this.getParents(world)) {
@@ -141,20 +144,20 @@ public abstract class Entry {
                         break;
                     }
                 }
-                
+
                 if (cr == null) {
                     // No relevant permissions
-                    cr = new CheckResult(this, null, this, node);
+                    cr = new CheckResult(this, null, this, node, world);
                 }
             }
-            cache(world, cr);
+            cache(cr);
         }
 
         checked.remove(this);
         return cr;
     }
 
-    protected void cache(String world, CheckResult cr) {
+    protected void cache(CheckResult cr) {
         if (cr == null)
             return;
         if(cache.get(world) == null)
@@ -170,6 +173,18 @@ public abstract class Entry {
             @Override
             public Boolean value(Entry e) {
                 if (entry.equals(e))
+                    return true;
+                return null;
+            }
+        });
+        return val == null ? false : val;
+    }
+
+    boolean isChildOf(final GroupWorld gw) {
+        Boolean val = recursiveCheck(new EntryVisitor<Boolean>() {
+            @Override
+            public Boolean value(Entry e) {
+                if (e.getRawParents().contains(gw))
                     return true;
                 return null;
             }
@@ -207,14 +222,14 @@ public abstract class Entry {
     }
 
     protected static Set<String> resolvePerms(Set<String> perms, Set<String> rawPerms) {
-        for (Iterator<String> rawIter = rawPerms.iterator();rawIter.hasNext();) {
+        for (Iterator<String> rawIter = rawPerms.iterator(); rawIter.hasNext();) {
             String perm = rawIter.next();
             if (perm.isEmpty()) {
                 rawIter.remove();
                 continue;
             }
-            
-            if (perm.endsWith("*")) { // Wildcards            
+
+            if (perm.endsWith("*")) { // Wildcards
                 String wild = perm.substring(0, perm.length() - 1);
                 String oppWild = negationOf(perm).substring(0, perm.length() - 1);
                 for (Iterator<String> itr = perms.iterator(); itr.hasNext();) {
@@ -232,11 +247,15 @@ public abstract class Entry {
         return getParents(world);
     }
 
+    protected LinkedHashSet<Entry> getUnspecialisedParents() {
+        return getParents(null);
+    }
+
     public LinkedHashSet<Entry> getParents(String world) {
         LinkedHashSet<Group> groupParents = controller.stringToGroups(getRawParents(), world);
         LinkedHashSet<Entry> parents = new LinkedHashSet<Entry>();
         parents.addAll(groupParents);
-        if(!this.world.equals("*")) {
+        if (!this.world.equals("*")) {
             Entry global = this.getType() == EntryType.USER ? controller.getUserObject("*", name) : controller.getGroupObject("*", name);
             if (global != null)
                 parents.add(global);
@@ -276,7 +295,7 @@ public abstract class Entry {
 
         return parentSet;
     }
-    
+
     static class GroupChecker implements EntryVisitor<Boolean> {
         protected final String world;
         protected final String group;
@@ -296,11 +315,11 @@ public abstract class Entry {
             return null;
         }
     }
-    
+
     public boolean inGroup(String world, String group) {
         if (this.getType() == EntryType.GROUP && this.world.equalsIgnoreCase(world) && this.name.equalsIgnoreCase(group))
             return true;
-        
+
         Boolean val = this.recursiveCheck(new GroupChecker(world, group));
         return val == null ? false : val;
     }
@@ -466,13 +485,11 @@ public abstract class Entry {
 
     public interface EntryVisitor<T> {
         /**
-         * This is the method called by the recursive checker when searching for
-         * a value. If the recursion is to be stopped, return a non-null value.
+         * This is the method called by the recursive checker when searching for a value. If the recursion is to be stopped, return a non-null value.
          * 
          * @param g
          *            Group to test
-         * @return Null if recursion should continue, any applicable value
-         *         otherwise
+         * @return Null if recursion should continue, any applicable value otherwise
          */
         T value(Entry e);
     }
@@ -599,9 +616,9 @@ public abstract class Entry {
             return true;
         if (obj == null)
             return false;
-        if(!(obj instanceof Entry))
+        if (!(obj instanceof Entry))
             return false;
-        
+
         Entry other = (Entry) obj;
 
         if (name == null) {
@@ -615,7 +632,7 @@ public abstract class Entry {
                 return false;
         } else if (!world.equals(other.world))
             return false;
-        
+
         EntryType type = getType();
         EntryType otherType = other.getType();
         if (type == null) {
