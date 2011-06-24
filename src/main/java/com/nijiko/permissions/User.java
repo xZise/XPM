@@ -1,5 +1,6 @@
 package com.nijiko.permissions;
 
+import java.util.Set;
 import java.util.LinkedList;
 import java.util.ListIterator;
 
@@ -98,5 +99,17 @@ public class User extends Entry {
     public boolean delete() {
         controller.delUsr(world, name);
         return super.delete();
+    }
+
+    public Group getPrimaryGroup() {
+        Set<Entry> parents = this.getParents();
+        if(parents != null && !parents.isEmpty()) {
+            for(Entry e : parents) {
+                if(e instanceof Group)
+                    return (Group) e;
+            }
+        }
+        // What to do here?
+        return null;
     }
 }
